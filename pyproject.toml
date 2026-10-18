@@ -1,0 +1,20 @@
+[project]
+name = "dataderby"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { email = "vickyspatel@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "curl-cffi>=0.16.3",
+    "patchright>=1.63.0",
+]
+
+[project.scripts]
+dataderby = "dataderby:main"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13.0"]
+build-backend = "uv_build"

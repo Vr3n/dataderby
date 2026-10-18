@@ -1,0 +1,168 @@
+{
+  "cookies": [
+    {
+      "name": "ct",
+      "value": "IN",
+      "domain": ".whoscored.com",
+      "path": "/regions/206/tournaments/4/seasons/11213/stages/25662/teamstatistics",
+      "expires": 1793897552.0,
+      "size": 4,
+      "httpOnly": false,
+      "secure": false,
+      "session": false
+    },
+    {
+      "name": "UA-FP-Session-Id",
+      "value": "470645a4-d165-4a76-b2ea-b1b8d68a37c2",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1791307353.193231,
+      "size": 52,
+      "httpOnly": false,
+      "secure": true,
+      "session": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "IHgJB7aD3opZ_PhiXXj9m_OCIROfN2LdQRE9Y5wLdzE-1791305540.5388322-1.0.1.1-s.f9JxivyWxLP9kp4viw9zXR54gsoaw.vDuJTqCyZK0jOKuQNnGsX.cW7EVH_wBjgaLDoMUXW1YbuipM8AWrGbfqxPW20z0QBFPdaTJMsPzN5fBn4I6_OgxVAZoenHcs2uoydtJ0Vxx_6gMjSqmIaw",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1791307340.394217,
+      "size": 228,
+      "httpOnly": true,
+      "secure": true,
+      "session": false,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.569992952.1791305545",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1825865545.198133,
+      "size": 29,
+      "httpOnly": false,
+      "secure": false,
+      "session": false
+    },
+    {
+      "name": "_awl",
+      "value": "2.1791305548.5-00fcaea1229172667b5ac51d4fac782e-6763652d617369612d6561737431-0",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1825433547.424,
+      "size": 82,
+      "httpOnly": false,
+      "secure": true,
+      "session": false,
+      "sameSite": "None"
+    },
+    {
+      "name": "_xpid",
+      "value": "8146381666",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1806857547.0,
+      "size": 15,
+      "httpOnly": false,
+      "secure": true,
+      "session": false
+    },
+    {
+      "name": "_xpkey",
+      "value": "_H02slmpMBo6r8-q5aZ9pdeRpTeAlSNj",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1806857547.0,
+      "size": 38,
+      "httpOnly": false,
+      "secure": true,
+      "session": false
+    },
+    {
+      "name": "_fbp",
+      "value": "fb.1.1791305548118.570624126421407300",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1799081548.0,
+      "size": 41,
+      "httpOnly": false,
+      "secure": false,
+      "session": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ocfp",
+      "value": "v1.67c9659d775a4836.d2F6wV8HDqsgFClcqaM2%2FGgPzZpVfsPeyDr5w0zKXiA%3D",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1825865549.151534,
+      "size": 72,
+      "httpOnly": false,
+      "secure": true,
+      "session": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_16TFZ6BTNV",
+      "value": "GS2.1.s1791305544$o1$g0$t1791305549$j55$l0$h0",
+      "domain": ".whoscored.com",
+      "path": "/",
+      "expires": 1825865549.579038,
+      "size": 59,
+      "httpOnly": false,
+      "secure": false,
+      "session": false
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.whoscored.com",
+      "localStorage": [
+        {
+          "name": "xtremepush.data",
+          "value": "{\"subscription\":true,\"page_views_last\":1791305545,\"page_views\":1,\"appkey\":\"M8ax5RMvTwn3Rz0ipg4YGMm29CknhuTy\",\"params\":{\"type\":\"web\",\"environment\":\"chrome\",\"subscription\":true,\"language\":\"en-US\",\"timezone\":\"-330\",\"lib_version\":\"2.2026.3.1\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36\",\"auth\":2,\"appkey\":\"M8ax5RMvTwn3Rz0ipg4YGMm29CknhuTy\",\"id\":\"8146381666\",\"key\":\"_H02slmpMBo6r8-q5aZ9pdeRpTeAlSNj\"},\"id\":\"8146381666\",\"key\":\"_H02slmpMBo6r8-q5aZ9pdeRpTeAlSNj\",\"device_id\":\"XP_hJ9p3tzQ0GokkmsbgVpAPru7MqgwxCxY\"}"
+        },
+        {
+          "name": "lastExternalReferrer",
+          "value": "empty"
+        },
+        {
+          "name": "BT_tpc",
+          "value": "{\"value\":0,\"expiresAt\":1791319943485}"
+        },
+        {
+          "name": "BT_device",
+          "value": "{\"value\":{\"os\":\"Windows\",\"osv\":\"10.0\",\"ext\":{\"fiftyonedegrees_deviceId\":\"15364-38914-147403-18092\"}},\"expiresAt\":1791319944243}"
+        },
+        {
+          "name": "lastExternalReferrerTime",
+          "value": "1791305548076"
+        },
+        {
+          "name": "BT_AA_DETECTION",
+          "value": "{\"ab\":false,\"aa\":true,\"nlf\":false}"
+        },
+        {
+          "name": "TM_tabList",
+          "value": "[\"0e2874af-47c3-4f39-b5f7-cb4841abadbb\"]"
+        }
+      ],
+      "sessionStorage": [
+        {
+          "name": "BT_sid",
+          "value": "OHhrcTtfAT-EyrTH634-a112216adc"
+        },
+        {
+          "name": "TM_tabId",
+          "value": "0e2874af-47c3-4f39-b5f7-cb4841abadbb"
+        },
+        {
+          "name": "snack_ab",
+          "value": "snack_fix"
+        }
+      ]
+    }
+  ]
+}
