@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dataderby — architecture decisions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0C0E;
+    --fg:#E8E8E4;
+    --dim:#79818B;
+    --dim2:#464D57;
+    --yellow:#FFD23F;
+    --cyan:#4FD1D9;
+    --red:#FF5C4D;
+    --card:#111317;
+    --line:#232A33;
+    --mono:'Martian Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --pad: clamp(20px, 4vw, 64px);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--sans);
+    font-size:clamp(14px,1.05vw,17px);
+    line-height:1.55;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* phosphor scanlines — the one atmospheric flourish */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+    mix-blend-mode:screen;
+  }
+
+  .deck{position:fixed;inset:0}
+
+  .slide{
+    position:absolute;inset:0;
+    display:none;
+    overflow-y:auto;overflow-x:hidden;
+    padding:clamp(56px,7vh,84px) var(--pad) clamp(96px,13vh,120px);
+  }
+  .slide.is-active{display:block}
+  .inner{max-width:1180px;margin:0 auto;min-height:100%}
+
+  /* ---------- primitives ---------- */
+  .eyebrow{
+    font-family:var(--mono);font-weight:500;
+    font-size:clamp(10px,.82vw,12px);
+    letter-spacing:.22em;text-transform:uppercase;
+    color:var(--yellow);
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .eyebrow .pg{
+    color:var(--bg);background:var(--yellow);
+    padding:2px 7px;border-radius:2px;letter-spacing:.1em;font-weight:700;
+  }
+  .eyebrow .sep{color:var(--dim2)}
+
+  h1,h2,h3{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1.06;margin:0}
+  h1{font-size:clamp(30px,5.6vw,74px)}
+  h2{font-size:clamp(24px,3.5vw,46px)}
+  h3{font-size:clamp(15px,1.5vw,20px);letter-spacing:-.01em;line-height:1.2}
+
+  .rule{height:3px;background:var(--yellow);width:min(220px,38vw);margin:20px 0 0;transform-origin:left center}
+  .rule--dim{background:var(--dim2);height:1px}
+
+  p{margin:0 0 1em;max-width:74ch;color:#D6D6D0}
+  .lede{font-size:clamp(16px,1.75vw,23px);line-height:1.45;color:var(--fg);max-width:60ch}
+  .muted{color:var(--dim)}
+  .mono{font-family:var(--mono)}
+  .k{color:var(--yellow);font-family:var(--mono);font-weight:600}
+  .k-cy{color:var(--cyan);font-family:var(--mono);font-weight:600}
+  .k-rd{color:var(--red);font-family:var(--mono);font-weight:600}
+
+  .stack-sm > * + *{margin-top:.55em}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(12px,1.4vw,20px)}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:clamp(12px,1.4vw,18px)}
+
+  .card{
+    border:1px solid var(--line);background:var(--card);
+    padding:clamp(14px,1.5vw,22px);border-radius:3px;position:relative;
+  }
+  .card--pick{border-color:var(--yellow);background:#15140D}
+  .card--pick::before{
+    content:"RECOMMENDED";position:absolute;top:-9px;left:14px;
+    font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.2em;
+    background:var(--yellow);color:var(--bg);padding:2px 7px;border-radius:2px;
+  }
+  .card h3{margin-bottom:.4em}
+  .card .tag{
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+    color:var(--dim);text-transform:uppercase;display:block;margin-bottom:.6em;
+  }
+  .tick{list-style:none;padding:0;margin:.7em 0 0;font-size:.94em}
+  .tick li{padding-left:1.35em;position:relative;margin-bottom:.3em;color:#C9C9C3}
+  .tick li::before{
+    position:absolute;left:0;top:0;font-family:var(--mono);font-weight:700;font-size:.95em;
+  }
+  .tick--pro li::before{content:"+" ; color:var(--cyan)}
+  .tick--con li::before{content:"–" ; color:var(--red)}
+
+  .pill{
+    display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;padding:3px 9px;border-radius:2px;
+    border:1px solid var(--dim2);color:var(--dim);
+  }
+  .pill--yes{border-color:var(--cyan);color:var(--cyan)}
+  .pill--no{border-color:var(--red);color:var(--red)}
+  .pill--mid{border-color:var(--yellow);color:var(--yellow)}
+
+  table{border-collapse:collapse;width:100%;font-size:.9em}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{
+    font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--dim);font-weight:500;
+  }
+  tbody tr:hover{background:#0F1115}
+  td:first-child{font-family:var(--mono);font-weight:500;font-size:.9em;color:var(--fg)}
+
+  /* ---------- title slide extras ---------- */
+  .scramble{
+    font-family:var(--mono);font-size:clamp(10px,.95vw,13px);
+    color:var(--cyan);letter-spacing:.06em;word-break:break-all;
+  }
+  .minitable{
+    font-family:var(--mono);font-size:clamp(10px,.9vw,13px);
+    border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--card);
+  }
+  .minitable .row{display:grid;grid-template-columns:2.2em 1fr 3.6em 3.6em;gap:0}
+  .minitable .row > span{padding:5px 9px;border-bottom:1px solid var(--line)}
+  .minitable .row:last-child > span{border-bottom:0}
+  .minitable .hdr{color:var(--dim);background:#0E1014;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+  .minitable .rk{color:var(--dim2)}
+  .minitable .pts{text-align:right;color:var(--yellow)}
+
+  /* ---------- footer chrome ---------- */
+  .chrome{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    border-top:1px solid var(--line);
+    background:rgba(11,12,14,.92);backdrop-filter:blur(6px);
+    display:flex;align-items:center;gap:clamp(10px,2vw,26px);
+    padding:9px var(--pad);font-family:var(--mono);font-size:11px;
+  }
+  .chrome .pgno{color:var(--yellow);font-weight:700;letter-spacing:.08em;white-space:nowrap}
+  .chrome .pgno small{color:var(--dim2);font-weight:400}
+  .ledger{display:flex;gap:2px;flex:1;min-width:0;overflow:hidden}
+  .ledger i{
+    flex:1;height:12px;background:#1A1F26;border-radius:1px;
+    min-width:3px;transition:none;
+  }
+  .ledger i.on{background:var(--cyan)}
+  .ledger i.cur{background:var(--yellow)}
+  .navs{display:flex;gap:6px;margin-left:auto}
+  .navs button{
+    font-family:var(--mono);font-size:11px;color:var(--fg);
+    background:#161A20;border:1px solid var(--line);border-radius:2px;
+    padding:5px 10px;cursor:pointer;letter-spacing:.05em;
+  }
+  .navs button:hover{border-color:var(--yellow);color:var(--yellow)}
+  .navs button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  .navs button:disabled{opacity:.3;cursor:default}
+  .navs button:disabled:hover{border-color:var(--line);color:var(--fg)}
+
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--yellow);z-index:70;width:0}
+
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  @media (max-width:640px){
+    .ledger{display:none}
+    .slide{padding-top:48px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    body::after{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+  <!-- 01 — TITLE -->
+  <section class="slide" aria-label="Title">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 01</span><span class="sep">/</span> ARCHITECTURE DECISIONS <span class="sep">/</span> 2026-10</div>
+      <h1 data-a="title" style="margin-top:22px">A league table<br>that remembers<br>what it said last week.</h1>
+      <div class="rule" data-a="rule"></div>
+      <p class="lede" data-a="body" style="margin-top:26px">
+        Four decisions stand between the field guide in <span class="mono">docs/</span> and a working
+        historical dataset. Everything else follows from them.
+      </p>
+
+      <div class="grid2" style="margin-top:8px">
+        <div class="minitable" data-a="body">
+          <div class="row hdr"><span>#</span><span>Team</span><span>Pts</span><span>xG</span></div>
+          <div class="row"><span class="rk">1</span><span>Team A</span><span class="pts">28</span><span class="pts">24.1</span></div>
+          <div class="row"><span class="rk">2</span><span>Team B</span><span class="pts">26</span><span class="pts">22.7</span></div>
+          <div class="row"><span class="rk">3</span><span>Team C</span><span class="pts">25</span><span class="pts">19.4</span></div>
+          <div class="row"><span class="rk">4</span><span>Team D</span><span class="pts">21</span><span class="pts">18.9</span></div>
+          <div class="row"><span class="rk">5</span><span>Team E</span><span class="pts">19</span><span class="pts">17.2</span></div>
+        </div>
+        <div data-a="body" style="align-self:end">
+          <div class="mono" style="font-size:10px;letter-spacing:.18em;color:var(--dim);margin-bottom:6px">SOURCE FINGERPRINT</div>
+          <div class="scramble" id="fp">computing…</div>
+          <p class="mono muted" style="font-size:11px;margin-top:14px;line-height:1.7">
+            one accepted observation = one cohort of teams<br>kept forever, never overwritten
+          </p>
+        </div>
+      </div>
+
+      <p class="mono muted" style="font-size:11px;margin-top:36px" data-a="body">
+        use ← → or space · <span class="k">f</span> forks · <span class="k">e</span> evidence · <span class="k">s</span> stack
+      </p>
+    </div>
+  </section>
+
+  <!-- 02 — THE PROBLEM -->
+  <section class="slide" aria-label="The problem">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 02</span><span class="sep">/</span> THE PROBLEM</div>
+      <h2 data-a="title" style="margin-top:20px">One sentence, because<br>everything else is a consequence of it.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <blockquote data-a="body" style="margin:30px 0 0;border-left:3px solid var(--yellow);padding:6px 0 6px 24px;max-width:64ch">
+        <p class="lede" style="margin:0">
+          “At each accepted observation point, the source reports a table of teams and a set of
+          <span class="k">cumulative</span> statistics for those teams. We want to retain every reported state so the
+          same team can be compared with itself and with others across time.”
+        </p>
+      </blockquote>
+
+      <div class="grid3" style="margin-top:44px">
+        <div class="card" data-a="card">
+          <span class="tag">Property 01</span>
+          <h3>Cumulative,<br>not per-event</h3>
+          <p class="muted" style="font-size:.94em;margin:0">
+            Goals-for is a season-to-date total. A difference between snapshots bounds combined
+            activity; it cannot be attributed to a match unless exactly one sits between them.
+          </p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Property 02</span>
+          <h3>Event-driven,<br>irregular cadence</h3>
+          <p class="muted" style="font-size:.94em;margin:0">
+            Triggers are fixtures finishing, and the source publishes late and in batches.
+            Kimball's <em>periodic snapshot</em> assumes a fixed, dense period. We have neither.
+          </p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Property 03</span>
+          <h3>Thin and<br>hostile source</h3>
+          <p class="muted" style="font-size:.94em;margin:0">
+            No update timestamp. No ETag. No revision id. An anti-bot gate. Possible silent
+            corrections. We cannot ask the source what changed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 — WHAT THE GUIDE GOT RIGHT -->
+  <section class="slide" aria-label="What the guide got right">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 03</span><span class="sep">/</span> CREDIT WHERE DUE</div>
+      <h2 data-a="title" style="margin-top:20px">The field guide is better<br>than most published advice.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:22px;max-width:70ch">These four claims I would defend in review, and they should survive into the implementation unchanged.</p>
+
+      <div class="grid2" style="margin-top:26px">
+        <div class="card" data-a="card">
+          <span class="tag">The asymmetry</span>
+          <h3>A changed table may imply ready details.<br>An unchanged table proves nothing.</h3>
+          <p class="muted" style="font-size:.93em;margin:.6em 0 0">Most “hash the page” advice treats a stable hash as safe-to-skip. It is not, unless you have verified the reverse implication against the source.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Atomic publication</span>
+          <h3>Eighteen of twenty teams<br>must never present as “latest”.</h3>
+          <p class="muted" style="font-size:.93em;margin:.6em 0 0">An incomplete capture would read as a smaller league. The cohort is the unit of publication, not the row.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Operational honesty</span>
+          <h3>Run outcome ≠ data outcome.</h3>
+          <p class="muted" style="font-size:.93em;margin:.6em 0 0">“Checked the source, nothing new” is a success. Conflating it with “scrape failed” is what makes dashboards lie.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Correctness</span>
+          <h3>Refusing to invent match-level attribution.</h3>
+          <p class="muted" style="font-size:.93em;margin:.6em 0 0">Deltas between cumulative totals are derived, approximate, and meaningless for rankings, ratios and per-90 rates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 — THE FOUR GAPS -->
+  <section class="slide" aria-label="The four gaps">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 04</span><span class="sep">/</span> WHAT THE LITERATURE ADDS</div>
+      <h2 data-a="title" style="margin-top:20px">Four named patterns the guide<br>re-derives without naming.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:20px;max-width:70ch">Two of these change the design. The other two change how much code we own.</p>
+
+      <div class="grid2" style="margin-top:24px">
+        <div class="card" data-a="card">
+          <span class="tag">Gap 01 · shapes Decision 1</span>
+          <h3><span class="k">SCD Type 2</span> is a solved problem</h3>
+          <p class="muted" style="font-size:.93em;margin:.5em 0 0">The guide builds versioning by hand. <span class="mono">dbt snapshot</span> emits <span class="mono">dbt_valid_from / dbt_valid_to / dbt_scd_id</span> from two built-in strategies; SQLMesh ships an <span class="mono">SCD_TYPE_2</span> model kind. Choose it, don't invent it.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Gap 02 · shapes Decision 1</span>
+          <h3>Identity and measures<br>change at different rates</h3>
+          <p class="muted" style="font-size:.93em;margin:.5em 0 0">Team names, league membership and promotion are the <em>actual</em> slowly-changing dimension. Season-to-date metrics are the fact. The guide versions both on one row — worst of both.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Gap 03 · shapes the cross-cutting layer</span>
+          <h3>Fingerprint the <em>logic</em>, not just the source</h3>
+          <p class="muted" style="font-size:.93em;margin:.5em 0 0">SQLMesh fingerprints a model over its logic <em>and</em> its upstream dependencies. Without that, fixing the parser leaves stale derived tables with no signal that they are stale.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Gap 04 · shapes Decisions 2–4</span>
+          <h3>The guide never asks<br><span class="k">build or buy</span></h3>
+          <p class="muted" style="font-size:.93em;margin:.5em 0 0"><span class="mono">dlt</span> already does schema inference and evolution, incremental state, nested-JSON normalisation and loads to DuckDB. The guide hand-rolls all of it — §3.6 and §5.2 — without noting the alternative.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 — INVARIANTS -->
+  <section class="slide" aria-label="Invariants">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 05</span><span class="sep">/</span> SETTLED</div>
+      <h2 data-a="title" style="margin-top:20px">Not up for debate.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:20px">Supported by both inputs. Every decision below has to live with these.</p>
+
+      <div class="grid2" style="margin-top:24px">
+        <ol class="mono" data-a="body" style="font-size:.9em;line-height:2;padding-left:0;list-style:none;margin:0;color:#C9C9C3">
+          <li><span class="k">01</span> Raw evidence is immutable and append-only.</li>
+          <li><span class="k">02</span> Derived layers are rebuildable from raw.</li>
+          <li><span class="k">03</span> Publication is atomic per observation.</li>
+          <li><span class="k">04</span> The checkpoint advances only after acceptance.</li>
+          <li><span class="k">05</span> A team is identified by a stable source id, never a name.</li>
+        </ol>
+        <ol class="mono" data-a="body" style="font-size:.9em;line-height:2;padding-left:0;list-style:none;margin:0;color:#C9C9C3">
+          <li><span class="k">06</span> Missing is not zero.</li>
+          <li><span class="k">07</span> A season is (tournament, season) — never a calendar year.</li>
+          <li><span class="k">08</span> Deltas are derived, flagged, never for ordinal or ratio metrics.</li>
+          <li><span class="k">09</span> Every observation records when it was observed, in UTC.</li>
+          <li class="muted"><span class="k">—</span> plus: raw is never the input to a query; marts are never the only copy.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 — FORK 01 -->
+  <section class="slide" aria-label="Fork 1 — history model">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 01</span><span class="sep">/</span> 04 <span class="sep">/</span> HISTORY MODEL</div>
+      <h2 data-a="title" style="margin-top:18px">How do we model the history?</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="lede" data-a="body" style="margin-top:20px;max-width:62ch">Three axes hide inside this question, and conflating them is what makes it feel hard.</p>
+
+      <div class="grid3" style="margin-top:22px">
+        <div class="card" data-a="card">
+          <span class="tag">Axis 1</span><h3>The mechanism</h3>
+          <p class="muted" style="font-size:.92em;margin:0">Immutable rows · mutable row + validity period · or the database doing it for you.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Axis 2</span><h3>The shape</h3>
+          <p class="muted" style="font-size:.92em;margin:0">Wide — a column per metric · long — a row per metric · or a hybrid of the two.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Axis 3</span><h3>What gets versioned</h3>
+          <p class="muted" style="font-size:.92em;margin:0">Measures only · or measures <em>and</em> team attributes, at their own separate rates.</p>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:26px">
+        <div class="card" data-a="card">
+          <span class="tag">Option A · Axis 1</span>
+          <h3>Immutable snapshot fact</h3>
+          <p class="muted" style="font-size:.92em;margin:.4em 0 0">One row per team per accepted observation. A header carries the cohort. Nothing is ever updated.</p>
+          <ul class="tick tick--pro">
+            <li>Perfect audit trail; corrections appear as a visible change</li>
+            <li>Insert-only → retries and concurrency are trivially safe</li>
+            <li>The observation cohort is explicit, so incompleteness is a validation failure</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>“Current value” needs a window function or a view</li>
+            <li>Team attributes duplicate on every row</li>
+          </ul>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Option B · Axis 1</span>
+          <h3>SCD Type 2 on the measures</h3>
+          <p class="muted" style="font-size:.92em;margin:.4em 0 0">Mutate in place: close the old version with <span class="mono">valid_to</span>, insert a new one. What dbt and SQLMesh produce.</p>
+          <ul class="tick tick--pro">
+            <li>Idiomatic point-in-time queries</li>
+            <li>Compact — one row per change, not per observation</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>Loses the observation cohort entirely</li>
+            <li>Our measures change for nearly every team every matchday → storage of the snapshot model <em>plus</em> mutation</li>
+            <li>No trusted <span class="mono">updated_at</span> to drive the timestamp strategy</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 — FORK 01 (cont) -->
+  <section class="slide" aria-label="Fork 1 — options C and D">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 01</span><span class="sep">/</span> 04 <span class="sep">/</span> HISTORY MODEL</div>
+      <h2 data-a="title" style="margin-top:18px">Two more options, and a verdict.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <div class="grid2" style="margin-top:24px">
+        <div class="card card--pick" data-a="card">
+          <span class="tag" style="margin-top:6px">Option C · Axis 1 + 3</span>
+          <h3>Snapshot fact for measures,<br>SCD2 for the team dimension</h3>
+          <p class="muted" style="font-size:.92em;margin:.4em 0 0">Split the two rates of change. Measures append forever; names and league membership version independently.</p>
+          <ul class="tick tick--pro">
+            <li>Each thing versioned at its natural rate — names cost ~20 rows a season</li>
+            <li>Fact stays append-only where mutation would hurt</li>
+            <li>Point-in-time team names for free</li>
+            <li>Literally what dimensional modelling prescribes</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>One more table and concept in v1</li>
+          </ul>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Option D · Axis 1</span>
+          <h3>Let the database keep history</h3>
+          <p class="muted" style="font-size:.92em;margin:.4em 0 0">SQL:2011 system-versioned temporal tables. <span class="mono">FOR SYSTEM_TIME AS OF …</span></p>
+          <ul class="tick tick--pro">
+            <li>Point-in-time queries in one clause; compliance-grade</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li><span class="k-rd">DuckDB does not implement it</span> — adopting it means a server database</li>
+            <li>Versions <em>transaction</em> time, not <em>valid</em> time — and our valid time is the thing we care about</li>
+            <li>Microsoft's own docs warn it is unsuitable when loading is significantly delayed — which is exactly our case</li>
+          </ul>
+          <p class="mono muted" style="font-size:10px;margin-top:12px;letter-spacing:.1em">VERDICT: BORROW THE CONCEPT, NOT THE ENGINE</p>
+        </div>
+      </div>
+
+      <div class="card" data-a="card" style="margin-top:20px">
+        <span class="tag">Axis 2 · recommendation</span>
+        <h3>Hybrid shape</h3>
+        <p class="muted" style="font-size:.93em;margin:.4em 0 0">
+          Keep the <span class="k">fact wide</span> for the few stable metrics we actually model — points, goals, xG, ratings.
+          Put the situational and positional tail — potentially hundreds of categories — in a
+          <span class="k">long child table</span> keyed by <span class="mono">(snapshot_id, section, view, category, direction)</span>.
+          That child is a <em>different grain</em> and Kimball says to declare it as such, not smuggle it into the fact row.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 — FORK 01 comparison -->
+  <section class="slide" aria-label="Fork 1 comparison">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 01</span><span class="sep">/</span> 04 <span class="sep">/</span> COMPARISON</div>
+      <h2 data-a="title" style="margin-top:18px">Side by side.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <div data-a="body" style="margin-top:24px;overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th><th>Snapshot fact</th><th>SCD2 on measures</th><th>Both (C)</th><th>System-versioned</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Audit trail</td><td>Perfect</td><td>Good</td><td>Perfect</td><td>Perfect (engine-held)</td></tr>
+            <tr><td>Cohort explicit</td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--no">no</span></td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--no">no</span></td></tr>
+            <tr><td>Runs in DuckDB</td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--no">no</span></td></tr>
+            <tr><td>Retry-safe by construction</td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--mid">needs care</span></td><td><span class="pill pill--mid">fact yes</span></td><td><span class="pill pill--mid">engine-dependent</span></td></tr>
+            <tr><td>Storage at our scale</td><td>Fine</td><td>Worst case</td><td>Best</td><td>Fine</td></tr>
+            <tr><td>Point-in-time attributes</td><td>Awkward</td><td>Idiomatic</td><td>Idiomatic</td><td>One clause</td></tr>
+            <tr><td>Matches the field guide</td><td><span class="pill pill--yes">yes</span></td><td><span class="pill pill--no">no</span></td><td>Mostly</td><td><span class="pill pill--no">no</span></td></tr>
+            <tr><td>Matches Kimball</td><td>Yes (state snapshot)</td><td><span class="pill pill--yes">yes</span> (dimension)</td><td><span class="pill pill--yes">yes</span></td><td>n/a</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card card--pick" data-a="card" style="margin-top:24px">
+        <span class="tag">Decision 01 · recommendation</span>
+        <h3>Take Option C.</h3>
+        <p class="muted" style="font-size:.94em;margin:.5em 0 0">
+          Immutable snapshot fact for measures, a small SCD Type 2 dimension for team attributes, wide core with a
+          long child table for the tail. It is the only option where each thing is versioned at its own rate, and it
+          keeps the guide's two strongest ideas — explicit cohort, atomic publication — while staying append-only
+          where mutation would hurt. <span class="k">Minimum viable version: Option A alone</span>, with the dimension
+          table sketched but not populated.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 — FORK 02 -->
+  <section class="slide" aria-label="Fork 2 — ingest boundary">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 02</span><span class="sep">/</span> 04 <span class="sep">/</span> INGEST BOUNDARY</div>
+      <h2 data-a="title" style="margin-top:18px">Where does the ingest layer's<br>boundary sit?</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="lede" data-a="body" style="margin-top:18px;max-width:64ch">Ingest is where the irreducibly-bespoke work lives <em>and</em> most of the boilerplate lives. Put the line in the wrong place and you either hand-maintain boilerplate forever, or fight a library to do the one thing only this source needs.</p>
+
+      <div class="grid2" style="margin-top:24px">
+        <div class="card" data-a="card">
+          <span class="tag">Option A</span><h3>Hand-roll everything</h3>
+          <ul class="tick tick--pro">
+            <li>Total control over the gate, cookies, backoff, quirks</li>
+            <li>One dependency fewer</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>We re-implement schema evolution, incremental state, normalisation, load bookkeeping</li>
+            <li>Schema drift is the part people get wrong — and the part a library has already solved</li>
+          </ul>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Option C</span><h3>dlt end to end, ingestion included</h3>
+          <ul class="tick tick--pro">
+            <li>Least code overall — if the source were well-behaved</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>Our source is hostile, not paginated. The problem is TLS fingerprinting, not paging</li>
+            <li>dlt's HTTP layer is not <span class="mono">curl_cffi</span> with Chrome impersonation</li>
+            <li>Bolting that in means fighting the abstraction — which removes the reason to use it</li>
+          </ul>
+          <p class="mono muted" style="font-size:10px;margin-top:10px;letter-spacing:.1em">REVISIT IF A WELL-BEHAVED SECOND SOURCE APPEARS</p>
+        </div>
+      </div>
+
+      <div class="card card--pick" data-a="card" style="margin-top:20px">
+        <span class="tag">Option B · Decision 02 recommendation</span>
+        <h3>Hand-rolled client, library-owned loading.</h3>
+        <p class="muted" style="font-size:.93em;margin:.5em 0 0">
+          We own extraction — the gate is bespoke and unavoidable. Start by writing rows with plain DuckDB SQL from
+          pydantic-validated models; add <span class="mono">dlt</span> the moment the payload shape churns more than once
+          or a second source appears. The boundary is the same either way — <em>the client yields dicts</em> — so this
+          is a drop-in later, not a rewrite.
+        </p>
+      </div>
+      <p class="mono muted" data-a="body" style="font-size:11px;margin-top:16px">also considered and set aside: Scrapy (a framework for thousands of HTML pages, not a handful of gated JSON endpoints)</p>
+    </div>
+  </section>
+
+  <!-- 10 — FORK 03 -->
+  <section class="slide" aria-label="Fork 3 — raw evidence">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 03</span><span class="sep">/</span> 04 <span class="sep">/</span> RAW EVIDENCE</div>
+      <h2 data-a="title" style="margin-top:18px">Where does the raw evidence live?</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:18px;max-width:70ch">
+        This layer has one job: given a bug in the field mapping, reproduce the accepted output without touching the
+        source again. Scale check so nobody architects the wrong problem —
+        <span class="k">one capture ≈ a few KB</span>, a snapshot ≈ 9 requests, a season ≈ 40–60 windows. A few megabytes.
+      </p>
+
+      <div class="grid2" style="margin-top:22px">
+        <div class="card card--pick" data-a="card">
+          <span class="tag">Option A · recommendation</span>
+          <h3>Local immutable files + manifest</h3>
+          <p class="mono muted" style="font-size:11px;line-height:1.8;margin:.5em 0">
+            data/raw/tournament=4/season=2026-2027/<br>
+            &nbsp;&nbsp;observed_at=…Z_run=run_0187/<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;manifest.json<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;team_statistics__overall.json
+          </p>
+          <ul class="tick tick--pro">
+            <li>Greppable, diffable, offline, zero infrastructure</li>
+            <li>Naturally replayable — the whole point</li>
+            <li>A retry producing a second file is <em>correct</em>: two attempts are two facts</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li>No content-addressing — identical payloads stored twice</li>
+            <li>Durability is “whatever you back up”</li>
+          </ul>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Option B</span>
+          <h3>Git scraping</h3>
+          <p class="muted" style="font-size:.92em;margin:.4em 0 0">A scheduled job commits each capture. Git becomes the append-only, content-addressed store — <span class="mono">git log -p</span> is your change history.</p>
+          <ul class="tick tick--pro">
+            <li>Immutable, deduplicated, diffable, backed up, portable — all free</li>
+            <li>Exactly our product goal (“when did this value change”) out of the box</li>
+          </ul>
+          <ul class="tick tick--con">
+            <li><span class="k-rd">Simon Willison hit our exact problem</span>: Cloudflare blocked the GitHub Actions IP range, worked around with a Tailscale exit node</li>
+            <li>Actions cron is imprecise; our scheduling is fixture-driven</li>
+            <li>Committing derived data to git is a known anti-pattern</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:18px">
+        <div class="card" data-a="card">
+          <span class="tag">Option D</span><h3>Object storage</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">The production answer — lifecycle rules, versioning, cheap. Solves a durability problem we do not have, at the cost of credentials and a network dependency in the hot loop. <span class="k">Steal the path convention, not the infrastructure.</span></p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Option E</span><h3>Payloads in a database column</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">Named only because it is the tempting shortcut. It couples evidence to the warehouse lifecycle and makes a parser bug a database migration. <span class="k-rd">Don't.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 — FORK 04 -->
+  <section class="slide" aria-label="Fork 4 — orchestration and transformation">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">FORK 04</span><span class="sep">/</span> 04 <span class="sep">/</span> ORCHESTRATION &amp; TRANSFORM</div>
+      <h2 data-a="title" style="margin-top:18px">Two questions people bundle.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:18px;max-width:70ch">
+        <span class="k">When does work run</span> and <span class="k">how are tables produced</span> have different right answers
+        at different scales. The specific pressure: matches finish close together, and the source publishes late and in batches.
+      </p>
+
+      <div data-a="body" style="margin-top:22px;overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th></th><th>Plain Python + DuckDB</th><th>Dagster</th><th>dbt</th><th>SQLMesh</th><th>Airflow / Prefect</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Scheduling</td><td>OS cron</td><td>Schedules + sensors</td><td>—</td><td>Built-in</td><td>Schedules</td></tr>
+            <tr><td>Partitions / backfills</td><td>Hand-rolled</td><td><span class="pill pill--yes">first-class</span></td><td>Incremental models</td><td><span class="pill pill--yes">plan / apply</span></td><td>Catchup</td></tr>
+            <tr><td>Asset lineage</td><td>—</td><td><span class="pill pill--yes">yes</span></td><td>Partial</td><td>Yes</td><td>Partial</td></tr>
+            <tr><td>SCD2 built in</td><td>We write it</td><td>No</td><td><span class="pill pill--yes">dbt snapshot</span></td><td><span class="pill pill--yes">SCD_TYPE_2</span></td><td>No</td></tr>
+            <tr><td>Fingerprints incl. logic</td><td>Ours</td><td>No</td><td>No</td><td><span class="pill pill--yes">yes</span></td><td>No</td></tr>
+            <tr><td>New dependencies</td><td><span class="k-cy">0</span></td><td>1 framework</td><td>1 + adapter</td><td>1</td><td>1 framework</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card card--pick" data-a="card" style="margin-top:22px">
+        <span class="tag">Decision 04 · recommendation</span>
+        <h3>Plain Python + DuckDB for v1. Then adopt by trigger, not by preference.</h3>
+        <p class="muted" style="font-size:.93em;margin:.6em 0 0">
+          A scheduled <span class="mono">run_once(now)</span> owns the fixture-window logic, a checkpoint table, and SQL views.
+          Then: <span class="k">SQLMesh or dbt</span> when the model layer outgrows a handful of views or SCD2 becomes routine —
+          SQLMesh for fingerprint-driven rebuilds, dbt for the larger ecosystem. <span class="k">Dagster</span> when there is a
+          second source, a second consumer, or a backfill you would not dare run by hand.
+          <br><br>
+          <span class="k-rd">Do not adopt Dagster and a transformation framework at the same time</span> — that is two new mental
+          models for one source.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 — CROSS-CUTTING -->
+  <section class="slide" aria-label="Cross-cutting: fingerprints, time, idempotency">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">X-CUT</span><span class="sep">/</span> POINTS EVERY OPTION MUST ANSWER</div>
+      <h2 data-a="title" style="margin-top:18px">Two fingerprints, three identities,<br>one honest clock.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <div class="grid2" style="margin-top:24px">
+        <div class="card" data-a="card">
+          <span class="tag">Change detection — the guide has one; we need two</span>
+          <h3>source_fingerprint / logic_fingerprint</h3>
+          <p class="muted" style="font-size:.92em;margin:.5em 0">
+            <span class="k">source_fingerprint</span> — canonicalised digest of the observed state: sorted by stable team id,
+            key order normalised, volatile fields excluded. Decides <em>append a new observation, or skip</em>.<br><br>
+            <span class="k">logic_fingerprint</span> — a version stamp over parsing code, field mapping and schema version.
+            Decides <em>do derived tables need rebuilding</em>. Without it, fixing the parser leaves stale derived data with
+            no signal that it is stale.
+          </p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Idempotency — three identities, à la the guide and dlt</span>
+          <h3>run_id · capture_id · snapshot_id</h3>
+          <p class="muted" style="font-size:.92em;margin:.5em 0">
+            A candidate whose <span class="mono">source_fingerprint</span> already exists as <em>accepted</em> for the same
+            (tournament, season, stage) is a duplicate — rejected, not published. Raw may hold three captures for that
+            state; the model holds one snapshot. This is what makes retries safe.
+          </p>
+        </div>
+      </div>
+
+      <div class="card" data-a="card" style="margin-top:18px">
+        <span class="tag">The honest clock — bi-temporal, as columns rather than as a database feature</span>
+        <p class="mono muted" style="font-size:11.5px;line-height:2;margin:.5em 0 0">
+          fixture_end_expected_at &nbsp;→ from the fixture list<br>
+          source_published_at &nbsp;&nbsp;&nbsp;&nbsp;→ <span class="k-rd">UNAVAILABLE — leave null, do not invent it</span><br>
+          observed_at &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ our probe time, UTC<br>
+          captured_at &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ per byte-payload<br>
+          accepted_at &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ when the complete snapshot was published<br>
+          valid_from / valid_to &nbsp;&nbsp;→ SCD2 dimension only
+        </p>
+        <p class="muted" style="font-size:.9em;margin:.8em 0 0">
+          <span class="k">source_published_at being genuinely unavailable is itself a finding worth recording</span> — it means
+          “the source was late” can only ever be inferred from <span class="mono">observed_at</span>.
+        </p>
+      </div>
+
+      <div class="card" data-a="card" style="margin-top:18px">
+        <span class="tag">Observability — Monte Carlo's five pillars, borrowed as vocabulary because it is free</span>
+        <p class="muted" style="font-size:.92em;margin:.4em 0 0">
+          <span class="mono">freshness</span> · expected window vs observed_at &nbsp;&nbsp;
+          <span class="mono">volume</span> · teams captured vs expected &nbsp;&nbsp;
+          <span class="mono">schema</span> · fields added, removed, retyped &nbsp;&nbsp;
+          <span class="mono">distribution</span> · plausibility bounds &nbsp;&nbsp;
+          <span class="mono">lineage</span> · capture → staging → snapshot, and which parser version produced it.
+          Tracked as rows in a ledger, not log lines — so “when did this last get a valid observation?” is a query.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 — THE WHOLE THING -->
+  <section class="slide" aria-label="The assembled architecture">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">ASSEMBLED</span><span class="sep">/</span> IF YOU TAKE THE RECOMMENDATIONS</div>
+      <h2 data-a="title" style="margin-top:18px">The whole pipeline, on one page.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <pre data-a="body" class="mono" style="margin-top:22px;font-size:clamp(8.5px,1vw,12.5px);line-height:1.62;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:3px;padding:clamp(14px,1.8vw,26px);color:#C9C9C3">FIXTURES ──▶  run_once(now)            <span style="color:#79818B">plain Python, OS scheduler — zero new deps</span>
+              1. build and close fixture windows
+              2. cheap probe ──▶ source_fingerprint
+              3. unchanged? ──▶ record a <span style="color:#4FD1D9">successful no-op</span>
+              4. else fetch sections  <span style="color:#79818B">gate-aware client, curl_cffi + Chrome TLS</span>
+                        │
+                        ▼
+   data/raw/tournament=4/season=2026-2027/…/    <span style="color:#FFD23F">immutable JSON + manifest</span>
+                        │                       never mutated · never the only copy
+                        ▼
+              staging:  pydantic ─▶ pandera ─▶ typed rows        <span style="color:#79818B">rebuildable</span>
+                        ▼
+        validate the complete cohort ──reject──▶ keep the evidence, mark rejected
+                        │ accept
+                        ▼
+        ┌─────────────── ONE TRANSACTION ───────────────┐
+        │  competition_snapshot   header + cohort        │
+        │  fact_team_snapshot     wide measures, append  │
+        │  fact_team_section      long tail, child grain │
+        │  dim_team_scd2          attributes, valid_from │
+        └────────────────────────────────────────────────┘
+                        ▼
+        checkpoint.commit(snapshot_id, source_fingerprint)   <span style="color:#FFD23F">← only now</span>
+                        ▼
+        marts:  latest_team_state · team_snapshot_history ·
+                team_snapshot_delta · snapshot_completeness · source_freshness</pre>
+
+      <p class="lede" data-a="body" style="margin-top:26px;max-width:74ch">
+        Immutable raw → validated complete cohorts → append-only snapshot fact plus a Type 2 team dimension, in DuckDB,
+        driven by a hand-written fixture-window loop, with two fingerprints and a checkpoint that advances only on acceptance.
+      </p>
+    </div>
+  </section>
+
+  <!-- 14 — GROWTH -->
+  <section class="slide" aria-label="Minimum viable, then grow">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">ROADMAP</span><span class="sep">/</span> ADOPT BY TRIGGER, NOT BY PREFERENCE</div>
+      <h2 data-a="title" style="margin-top:18px">Minimum viable, then grow.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <div data-a="body" style="margin-top:24px;overflow-x:auto">
+        <table>
+          <thead><tr><th>Stage</th><th>Build</th><th>Trigger to move on</th></tr></thead>
+          <tbody>
+            <tr><td>v1</td><td>Client + gate · raw files + manifest · pydantic + pandera · snapshot fact (wide) · latest_team_state view · checkpoint · run_once on cron</td><td>It works end-to-end twice and correctly detects “no change” the second time</td></tr>
+            <tr><td>v2</td><td>dim_team_scd2 · team_snapshot_history · team_snapshot_delta with documented caveats · freshness and completeness views</td><td>First rename or promotion, or first observed correction</td></tr>
+            <tr><td>v3</td><td>logic_fingerprint + rebuild path · long child table for the situational / positional tail</td><td>The parser changes once, or the tail outgrows comfort</td></tr>
+            <tr><td>v4</td><td>SQLMesh or dbt over the model layer · dlt for loading</td><td>Model count &gt; ~10, or a second source</td></tr>
+            <tr><td>v5</td><td>Dagster</td><td>A second source <em>and</em> a dangerous backfill</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" data-a="card" style="margin-top:22px;border-color:var(--cyan)">
+        <span class="tag" style="color:var(--cyan)">The gate for v1 — the guide's own milestone, and it is right</span>
+        <h3>One competition scraped twice · the second run correctly deciding “no new state” · a failed detail capture retried without losing the update · every accepted snapshot complete under one snapshot_id.</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 — REPO SHAPE -->
+  <section class="slide" aria-label="Proposed repo shape">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">SHAPE</span><span class="sep">/</span> BOUNDARIES MADE EXPLICIT</div>
+      <h2 data-a="title" style="margin-top:18px">The repo the decisions imply.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:18px;max-width:72ch">This restores the <span class="mono">src/dataderby</span> package deleted earlier — but with the ingest / parse / validate / publish boundaries made explicit, which is the shape the guide's ten-step run suggests and the shape every source above converges on.</p>
+
+      <pre data-a="body" class="mono" style="margin-top:20px;font-size:clamp(10px,1.05vw,13.5px);line-height:1.75;background:var(--card);border:1px solid var(--line);border-radius:3px;padding:clamp(14px,1.8vw,26px);overflow-x:auto;color:#C9C9C3">dataderby/
+  pyproject.toml                 <span style="color:#79818B">uv — curl-cffi, pydantic, pandera, duckdb</span>
+  docs/
+    whoscored-api.md             <span style="color:#79818B">the source contract the guide keeps deferring to</span>
+    architecture-decisions.md    <span style="color:#FFD23F">the options paper — full reasoning + sources</span>
+    architecture-slides.html     <span style="color:#FFD23F">this deck</span>
+  src/dataderby/
+    source.py        <span style="color:#79818B">client: gate, cookies, backoff, fingerprint</span>
+    contract.py      <span style="color:#79818B">pydantic models for the raw envelope</span>
+    schema.py        <span style="color:#79818B">pandera schemas for the typed tables</span>
+    ingest.py        <span style="color:#79818B">capture → raw files + manifest</span>
+    parse.py         <span style="color:#79818B">raw → typed records</span>
+    validate.py      <span style="color:#79818B">completeness / consistency / plausibility</span>
+    publish.py       <span style="color:#79818B">atomic snapshot transaction</span>
+    checkpoint.py    <span style="color:#79818B">last_seen vs last_committed</span>
+    windows.py       <span style="color:#79818B">fixture windows</span>
+    run.py           <span style="color:#FFD23F">run_once(now) — the entrypoint</span>
+  sql/
+    001_schema.sql · 002_scd2_merge.sql
+    views/latest_team_state.sql · team_snapshot_history.sql
+    views/team_snapshot_delta.sql · snapshot_completeness.sql
+  data/raw/…                    <span style="color:#79818B">immutable captures (git-ignored)</span>
+  tests/</pre>
+    </div>
+  </section>
+
+  <!-- 16 — OPEN QUESTIONS -->
+  <section class="slide" aria-label="Open questions to verify against the source">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">PROBE</span><span class="sep">/</span> NOT ANSWERABLE FROM THE LITERATURE</div>
+      <h2 data-a="title" style="margin-top:18px">Eight things only the source<br>can tell us.</h2>
+      <div class="rule" data-a="rule"></div>
+      <p class="muted" data-a="body" style="margin-top:18px;max-width:70ch">These gate the change-detection design in particular. Until #2 is measured, treat skipping the detail fetch as unsafe.</p>
+
+      <ol class="stack-sm" data-a="body" style="margin-top:22px;padding-left:0;list-style:none;font-size:.97em;line-height:1.7">
+        <li><span class="k mono">01</span> Is there a cheap league-table endpoint to act as the probe, or is the smallest request already the detail feed?</li>
+        <li><span class="k mono">02</span> <strong>Does an unchanged table imply unchanged details?</strong> Hold the table fingerprint fixed across a fixture and see whether any detail field moves.</li>
+        <li><span class="k mono">03</span> Does the source expose any update timestamp, ETag, or revision id? If yes, this gets much easier.</li>
+        <li><span class="k mono">04</span> Are values ever corrected retroactively? Compare an accepted snapshot against a re-fetch days later.</li>
+        <li><span class="k mono">05</span> Is <span class="mono">teamId</span> stable across seasons and competitions?</li>
+        <li><span class="k mono">06</span> How long after a final whistle does the source publish? This sets the grace period and retry cadence.</li>
+        <li><span class="k mono">07</span> What does the anti-bot gate look like now — TLS only, or cookie/session-bound? Determines whether the client can be stateless.</li>
+        <li><span class="k mono">08</span> What is the real metric count across sections and views? Decides wide vs long for the tail.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 17 — CLOSE -->
+  <section class="slide" aria-label="Close">
+    <div class="inner">
+      <div class="eyebrow" data-a="eyebrow"><span class="pg">P 17</span><span class="sep">/</span> THE FOUR CALLS</div>
+      <h2 data-a="title" style="margin-top:18px">What I need from you.</h2>
+      <div class="rule" data-a="rule"></div>
+
+      <div class="grid2" style="margin-top:26px">
+        <div class="card" data-a="card">
+          <span class="tag">Decision 01 · history model</span>
+          <h3>Snapshot fact + SCD2 dimension</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">Minimum viable: snapshot fact alone, dimension sketched.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Decision 02 · ingest boundary</span>
+          <h3>Hand-rolled client, library-owned loading</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">Plain DuckDB inserts first, <span class="mono">dlt</span> when the shape churns.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Decision 03 · raw evidence</span>
+          <h3>Local immutable files + manifest</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">Git mirror optional, and it costs us the hosted scheduler.</p>
+        </div>
+        <div class="card" data-a="card">
+          <span class="tag">Decision 04 · stack</span>
+          <h3>Plain Python + DuckDB, adopt by trigger</h3>
+          <p class="muted" style="font-size:.9em;margin:.3em 0 0">SQLMesh or dbt next; Dagster last.</p>
+        </div>
+      </div>
+
+      <p class="mono muted" data-a="body" style="margin-top:32px;font-size:11px;line-height:1.9">
+        full reasoning, all four option sets, the comparison tables and the sources:<br>
+        <span class="k">docs/architecture-decisions.md</span> — in this same folder<br><br>
+        confirm, reject or redirect any of the four, and I'll turn the agreed set into the build plan.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<footer class="chrome">
+  <div class="pgno" id="pgno">P 01 <small>/ 17</small></div>
+  <div class="ledger" id="ledger" aria-hidden="true"></div>
+  <div class="navs">
+    <button id="prev" aria-label="Previous slide">◀ prev</button>
+    <button id="next" aria-label="Next slide">next ▶</button>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var ledger = document.getElementById("ledger");
+  var pgno = document.getElementById("pgno");
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+  var progress = document.getElementById("progress");
+  var total = slides.length;
+  var idx = 0;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var hasGsap = typeof window.gsap !== "undefined";
+
+  /* ---- the snapshot ledger: 20 cells, one per team in the cohort ---- */
+  var CELLS = 20;
+  for (var c = 0; c < CELLS; c++) {
+    ledger.appendChild(document.createElement("i"));
+  }
+  var cells = Array.prototype.slice.call(ledger.children);
+
+  function paintLedger(i) {
+    var fill = Math.round(((i + 1) / total) * CELLS);
+    cells.forEach(function (cell, n) {
+      cell.classList.toggle("on", n < fill - 1);
+      cell.classList.toggle("cur", n === fill - 1);
+    });
+  }
+
+  /* ---- fingerprint scramble, on the title slide only ---- */
+  var HEX = "0123456789abcdef";
+  var fpEl = document.getElementById("fp");
+  var fpTimers = [];
+
+  function clearFp() {
+    fpTimers.forEach(clearTimeout);
+    fpTimers = [];
+  }
+
+  function runFingerprint(el) {
+    if (!el) return;
+    clearFp();
+    var target = "";
+    for (var i = 0; i < 64; i++) target += HEX[Math.floor(Math.random() * 16)];
+    var frames = reduce ? 1 : 26;
+    for (var f = 0; f <= frames; f++) {
+      (function (frame) {
+        fpTimers.push(setTimeout(function () {
+          var shown = "";
+          var settled = Math.floor((frame / frames) * 64);
+          for (var i = 0; i < 64; i++) {
+            shown += i < settled ? target[i] : HEX[Math.floor(Math.random() * 16)];
+          }
+          el.textContent = shown;
+        }, reduce ? 0 : frame * 38));
+      })(f);
+    }
+  }
+
+  /* ---- per-slide entrance ---- */
+  function animateIn(slide) {
+    clearFp();
+
+    if (!hasGsap || reduce) {
+      slide.querySelectorAll("[data-a]").forEach(function (n) {
+        n.style.opacity = "";
+        n.style.transform = "";
+      });
+      var fp = slide.querySelector("#fp");
+      if (fp) fp.textContent = "9f2c4a7e81b30d5c6a1f8e2d4b7093ac5512ef8d6c0a3b47e19d8f2a0c5b6e13";
+      return;
+    }
+
+    var tl = window.gsap.timeline({ defaults: { ease: "power2.out" } });
+
+    tl.fromTo(slide.querySelectorAll('[data-a="eyebrow"]'),
+      { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.3 });
+
+    tl.fromTo(slide.querySelectorAll('[data-a="title"]'),
+      { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45 }, "-=0.12");
+
+    tl.fromTo(slide.querySelectorAll('[data-a="rule"]'),
+      { scaleX: 0 }, { scaleX: 1, duration: 0.55, transformOrigin: "left center" }, "-=0.30");
+
+    tl.fromTo(slide.querySelectorAll('[data-a="body"]'),
+      { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.42, stagger: 0.07 }, "-=0.34");
+
+    tl.fromTo(slide.querySelectorAll('[data-a="card"]'),
+      { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.42, stagger: 0.08 }, "-=0.38");
+
+    tl.add(function () {
+      var fp = slide.querySelector("#fp");
+      if (fp) runFingerprint(fp);
+    }, 0.05);
+
+    return tl;
+  }
+
+  var currentTl = null;
+
+  function render(n) {
+    if (currentTl) { currentTl.kill(); currentTl = null; }
+
+    slides.forEach(function (s, i) {
+      var active = i === n;
+      s.classList.toggle("is-active", active);
+      s.setAttribute("aria-hidden", active ? "false" : "true");
+      if (!active) s.scrollTop = 0;
+    });
+
+    pgno.innerHTML = "P " + String(n + 1).padStart(2, "0") + " <small>/ " + total + "</small>";
+    paintLedger(n);
+    prevBtn.disabled = n === 0;
+    nextBtn.disabled = n === total - 1;
+    progress.style.width = ((n + 1) / total) * 100 + "%";
+
+    currentTl = animateIn(slides[n]) || null;
+  }
+
+  /* hard page flip — no queued transitions, presses are never dropped */
+  function go(delta) {
+    var next = Math.min(Math.max(idx + delta, 0), total - 1);
+    if (next === idx) return;
+    idx = next;
+    render(idx);
+    history.replaceState(null, "", "#" + (idx + 1));
+  }
+
+  function goTo(n) {
+    n = Math.min(Math.max(n, 0), total - 1);
+    if (n === idx) return;
+    idx = n;
+    render(idx);
+    history.replaceState(null, "", "#" + (idx + 1));
+  }
+
+  /* ---- input ---- */
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    switch (e.key) {
+      case "ArrowRight": case "ArrowDown": case "PageDown": case " ": case "Enter":
+        e.preventDefault(); go(1); break;
+      case "ArrowLeft": case "ArrowUp": case "PageUp":
+        e.preventDefault(); go(-1); break;
+      case "Home": e.preventDefault(); goTo(0); break;
+      case "End": e.preventDefault(); goTo(total - 1); break;
+      case "f": goTo(5); break;
+      case "e": goTo(9); break;
+      case "s": goTo(10); break;
+    }
+  });
+
+  prevBtn.addEventListener("click", function () { go(-1); });
+  nextBtn.addEventListener("click", function () { go(1); });
+
+  /* swipe */
+  var x0 = null;
+  document.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 55) go(dx < 0 ? 1 : -1);
+    x0 = null;
+  }, { passive: true });
+
+  /* ---- deep links + back/forward ---- */
+  function depthFromHash() {
+    var n = parseInt((location.hash || "").replace("#", ""), 10);
+    return (n >= 1 && n <= total) ? n - 1 : 0;
+  }
+  window.addEventListener("hashchange", function () {
+    var n = depthFromHash();
+    if (n !== idx) goTo(n);
+  });
+
+  /* ---- boot ---- */
+  idx = depthFromHash();
+  render(idx);
+})();
+</script>
+</body>
+</html>

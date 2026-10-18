@@ -320,10 +320,12 @@ Top-level keys include: `events` (all Opta events), `home`, `away`, `score`,
 `htScore`, `ftScore`, `incidentEvents`, `playerIdNameDictionary`, `formations`,
 `shotZones`, `referee`, `venueName`, `attendance`.
 
-A parser that brace-matches from `matchCentreData:` is in
-`src/dataderby/client.py::_extract_match_centre_data`. Full event/qualifier
-enumeration is in `recon/analyze_match.py` and the sample
-`samples/match_1914253.json`.
+The parser that brace-matches from `matchCentreData:`, and the full
+event/qualifier enumeration, were written under
+`src/dataderby/client.py::_extract_match_centre_data` and
+`recon/analyze_match.py`, with a raw sample at
+`samples/match_1914253.json`. Those paths were removed in the clean-slate
+reset — recover them from commit `f5c1e35`.
 
 ---
 
@@ -379,7 +381,8 @@ else:
 teams = data["teamTableStats"]                   # list[dict], 20 rows for La Liga
 ```
 
-Runnable example: `examples/team_season_stats.py`.
+A runnable example lived at `examples/team_season_stats.py` (removed in the
+clean-slate reset; recover from `f5c1e35`).
 
 ---
 
@@ -393,7 +396,11 @@ Runnable example: `examples/team_season_stats.py`.
 
 ---
 
-## 10. Repo artifacts
+## 10. Artifacts from the first attempt (removed)
+
+The first scraper attempt was deleted in the clean-slate reset. Everything
+below is still readable from commit `f5c1e35`; the right-hand column stays
+useful as a description of what the problem needed.
 
 | Path | What |
 |---|---|
