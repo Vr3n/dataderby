@@ -15,6 +15,12 @@ _THREADS = 4
 def connect(path: Path, *, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     """Open a DuckDB connection with the v1 settings.
 
+    The session timezone is pinned to UTC because every timestamp the pipeline
+    writes is a timezone-aware UTC ``datetime``. DuckDB binds those into
+    ``TIMESTAMP`` columns using the session timezone, so a local session would
+    silently store local wall time and make ``TIMESTAMP`` ordering depend on
+    the machine that happened to write the row.
+
     Args:
         path: Database file. Its parent is created for a writable connection.
         read_only: Open the existing file without allowing writes.
@@ -27,6 +33,7 @@ def connect(path: Path, *, read_only: bool = False) -> duckdb.DuckDBPyConnection
 
     con = duckdb.connect(str(path), read_only=read_only)
     con.execute(f"PRAGMA threads={_THREADS}")
+    con.execute("SET TimeZone='UTC'")
     return con
 
 

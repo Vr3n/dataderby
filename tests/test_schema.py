@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -63,12 +64,30 @@ def _insert_team(
     )
 
 
+def test_connection_pins_the_session_timezone_to_utc(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    assert con.execute("SELECT current_setting('TimeZone')").fetchone()[0] == "UTC"
+
+
+def test_aware_utc_timestamps_are_stored_as_utc(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    con.execute("CREATE TABLE stamp_probe (ts TIMESTAMP)")
+    value = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
+    con.execute("INSERT INTO stamp_probe VALUES (?)", [value])
+
+    stored = con.execute("SELECT ts FROM stamp_probe").fetchone()[0]
+
+    assert stored == value.replace(tzinfo=None)
+
+
 def test_schema_can_be_applied_twice(con: duckdb.DuckDBPyConnection) -> None:
     migrate(con)
 
     tables = con.execute(
         "SELECT table_name FROM information_schema.tables "
-        "WHERE table_schema = 'main' ORDER BY table_name"
+        "WHERE table_schema = 'main' AND table_type = 'BASE TABLE' ORDER BY table_name"
     ).fetchall()
     assert [row[0] for row in tables] == [
         "competition_snapshot",
