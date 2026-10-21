@@ -32,15 +32,15 @@ _TEAMS = [100 + index for index in range(20)]
 _NOW = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
 
 
-def _source_value(source: str, team_id: int) -> object:
+def _source_value(source: str, team_id: int, view: View) -> object:
     if source == "apps":
-        return 7
+        return {"overall": 7, "home": 4, "away": 3}[view]
     if source == "shotsPerGame":
         return 10.0 + team_id / 10.0
     if source == "goal":
-        return float(team_id)
+        return {"overall": float(team_id), "home": float(team_id - 1), "away": 1.0}[view]
     if source == "yellowCard":
-        return 1.0
+        return {"overall": 1.0, "home": 1.0, "away": 0.0}[view]
     if source == "redCard":
         return 0.0
     if source == "possession":
@@ -91,7 +91,7 @@ def _body(
         for source in EXPECTED_STAT_COLUMNS[(section, view)]:
             if omit and source in omit:
                 continue
-            row[source] = _source_value(source, team_id)
+            row[source] = _source_value(source, team_id, view)
         if overrides and team_id in overrides:
             row.update(overrides[team_id])
         rows.append(row)
@@ -118,7 +118,10 @@ def _captures(
             body=_body(section, view, selected, overrides=overrides, omit=omit),
             captured_at=_NOW,
             content_type="text/html",
-            url=f"https://www.whoscored.com/feed?section={section}&view={view}",
+            url=(
+                "https://www.whoscored.com/feed"
+                f"?stageId={_SPEC.whoscored_stage_id}&section={section}&view={view}"
+            ),
         )
         for section in SECTIONS
         for view in VIEWS

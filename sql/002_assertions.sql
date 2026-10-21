@@ -1,0 +1,317 @@
+-- Publish assertions for the WhoScored snapshot pipeline.
+--
+-- This file is deliberately comment-only: migrate() can execute it safely,
+-- while validate.py reads the marker-delimited SQL below. Each query returns
+-- offending rows; an empty result means the assertion passed.
+--
+-- @@A1|BLOCK
+-- SELECT count(*) AS actual, (SELECT expected_teams FROM _assert_run) AS expected
+-- FROM _assert_team
+-- HAVING count(*) <> (SELECT expected_teams FROM _assert_run)
+--
+-- @@A2|BLOCK
+-- SELECT whoscored_team_id, count(*) AS rows
+-- FROM _assert_team
+-- GROUP BY 1
+-- HAVING count(*) > 1
+--
+-- @@A3|BLOCK
+-- WITH expected(section, view) AS (
+--     VALUES
+--         ('summary', 'overall'), ('summary', 'home'), ('summary', 'away'),
+--         ('defensive', 'overall'), ('defensive', 'home'), ('defensive', 'away'),
+--         ('offensive', 'overall'), ('offensive', 'home'), ('offensive', 'away')
+-- ),
+-- feed AS (
+--     SELECT section, view, count(*) AS n
+--     FROM _assert_capture
+--     WHERE section IN ('summary', 'defensive', 'offensive')
+--     GROUP BY 1, 2
+-- )
+-- SELECT e.section, e.view, COALESCE(f.n, 0) AS captures
+-- FROM expected e
+-- LEFT JOIN feed f ON f.section = e.section AND f.view = e.view
+-- WHERE COALESCE(f.n, 0) <> 1
+-- UNION ALL
+-- SELECT f.section, f.view, f.n AS captures
+-- FROM feed f
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM expected e
+--     WHERE e.section = f.section AND e.view = f.view
+-- )
+--
+-- @@A4|RETRY
+-- WITH expected(section, view) AS (
+--     VALUES
+--         ('summary', 'overall'), ('summary', 'home'), ('summary', 'away'),
+--         ('defensive', 'overall'), ('defensive', 'home'), ('defensive', 'away'),
+--         ('offensive', 'overall'), ('offensive', 'home'), ('offensive', 'away')
+-- ),
+-- per_capture AS (
+--     SELECT section, view, whoscored_team_id
+--     FROM _assert_feed_team
+-- ),
+-- base AS (
+--     SELECT whoscored_team_id
+--     FROM per_capture
+--     WHERE section = 'summary' AND view = 'overall'
+-- )
+-- SELECT p.section, p.view, p.whoscored_team_id, 'missing_from_base' AS reason
+-- FROM per_capture p
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM base b WHERE b.whoscored_team_id = p.whoscored_team_id
+-- )
+-- UNION ALL
+-- SELECT e.section, e.view, b.whoscored_team_id, 'missing_from_feed' AS reason
+-- FROM expected e
+-- CROSS JOIN base b
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM per_capture p
+--     WHERE p.section = e.section
+--       AND p.view = e.view
+--       AND p.whoscored_team_id = b.whoscored_team_id
+-- )
+--
+-- @@A5|RETRY
+-- SELECT whoscored_team_id
+-- FROM _assert_team
+-- WHERE (
+--         apps_overall IS NOT NULL
+--         AND apps_home IS NOT NULL
+--         AND apps_away IS NOT NULL
+--         AND apps_home + apps_away <> apps_overall
+--     )
+--    OR (
+--         summary_overall_goal IS NOT NULL
+--         AND summary_home_goal IS NOT NULL
+--         AND summary_away_goal IS NOT NULL
+--         AND summary_home_goal + summary_away_goal <> summary_overall_goal
+--     )
+--    OR (
+--         summary_overall_yellow_card IS NOT NULL
+--         AND summary_home_yellow_card IS NOT NULL
+--         AND summary_away_yellow_card IS NOT NULL
+--         AND summary_home_yellow_card + summary_away_yellow_card
+--             <> summary_overall_yellow_card
+--     )
+--    OR (
+--         summary_overall_red_card IS NOT NULL
+--         AND summary_home_red_card IS NOT NULL
+--         AND summary_away_red_card IS NOT NULL
+--         AND summary_home_red_card + summary_away_red_card
+--             <> summary_overall_red_card
+--     )
+--
+-- @@A6|RETRY
+-- SELECT whoscored_team_id, column_name, count(DISTINCT value) AS values_seen
+-- FROM _assert_shared
+-- WHERE value IS NOT NULL
+-- GROUP BY 1, 2
+-- HAVING count(DISTINCT value) > 1
+--
+-- @@A7|BLOCK
+-- SELECT section, view, whoscored_team_id, ranking
+-- FROM _assert_rank
+-- WHERE ranking IS NULL
+--    OR ranking < 1
+--    OR ranking > (SELECT count(*) FROM _assert_team)
+--
+-- @@A7U|WARN
+-- SELECT section, view, ranking, count(*) AS rows
+-- FROM _assert_rank
+-- WHERE ranking IS NOT NULL
+-- GROUP BY 1, 2, 3
+-- HAVING count(*) > 1
+--
+-- @@A8|BLOCK
+-- SELECT whoscored_team_id, column_name, value
+-- FROM _assert_measure
+-- WHERE value IS NOT NULL
+--   AND (
+--       value < 0
+--       OR isnan(value)
+--       OR isinf(value)
+--       OR (column_name LIKE 'rating_%' AND value > 10)
+--       OR (column_name LIKE 'summary_%_possession' AND value > 1)
+--       OR (column_name LIKE 'summary_%_pass_success' AND value > 1)
+--   )
+--
+-- @@A9|BLOCK
+-- SELECT 'team' AS source, whoscored_team_id, snapshot_id, whoscored_team_name
+-- FROM _assert_team
+-- WHERE snapshot_id IS NULL OR whoscored_team_id IS NULL OR whoscored_team_name IS NULL
+-- UNION ALL
+-- SELECT 'standings' AS source, whoscored_team_id, snapshot_id, whoscored_team_name
+-- FROM _assert_standings
+-- WHERE snapshot_id IS NULL OR whoscored_team_id IS NULL OR whoscored_team_name IS NULL
+--
+-- @@A10|BLOCK
+-- WITH latest AS (
+--     SELECT h.snapshot_id
+--     FROM competition_snapshot h
+--     WHERE h.whoscored_tournament_id = (SELECT whoscored_tournament_id FROM _assert_run)
+--       AND h.whoscored_season_id = (SELECT whoscored_season_id FROM _assert_run)
+--       AND h.whoscored_stage_id = (SELECT whoscored_stage_id FROM _assert_run)
+--       AND h.observed_at < (SELECT observed_at FROM _assert_run)
+--     ORDER BY h.observed_at DESC, h.accepted_at DESC
+--     LIMIT 1
+-- )
+-- SELECT c.whoscored_team_id, c.apps_overall, p.apps_overall
+-- FROM _assert_team c
+-- JOIN latest l ON TRUE
+-- JOIN fact_team_snapshot p
+--   ON p.snapshot_id = l.snapshot_id
+--  AND p.whoscored_team_id = c.whoscored_team_id
+-- WHERE (c.apps_overall IS NOT NULL AND p.apps_overall IS NOT NULL
+--        AND c.apps_overall < p.apps_overall)
+--    OR (c.apps_home IS NOT NULL AND p.apps_home IS NOT NULL
+--        AND c.apps_home < p.apps_home)
+--    OR (c.apps_away IS NOT NULL AND p.apps_away IS NOT NULL
+--        AND c.apps_away < p.apps_away)
+--
+-- @@A11|BLOCK
+-- SELECT section, view, url
+-- FROM _assert_capture
+-- WHERE section IN ('summary', 'defensive', 'offensive')
+--   AND (
+--       url IS NULL
+--       OR strpos(
+--           url,
+--           'stageId=' || CAST((SELECT whoscored_stage_id FROM _assert_run) AS VARCHAR)
+--       ) = 0
+--   )
+--
+-- @@A12|BLOCK
+-- SELECT whoscored_page_url
+-- FROM _assert_run
+-- WHERE strpos(
+--     whoscored_page_url,
+--     '/seasons/' || CAST(whoscored_season_id AS VARCHAR)
+--     || '/stages/' || CAST(whoscored_stage_id AS VARCHAR) || '/'
+-- ) = 0
+--
+-- @@A13|BLOCK
+-- SELECT section, view, whoscored_tournament_id, is_opta
+-- FROM _assert_feed_team
+-- WHERE whoscored_tournament_id <> (SELECT whoscored_tournament_id FROM _assert_run)
+--    OR is_opta <> (SELECT is_opta FROM _assert_run)
+--
+-- @@A14|RETRY
+-- SELECT observed_at, capture_span_seconds
+-- FROM _assert_run
+-- WHERE capture_span_seconds > 180
+--
+-- @@A15|BLOCK
+-- SELECT detail
+-- FROM _assert_feed_error
+--
+-- @@A16|BLOCK
+-- SELECT f.snapshot_id, f.whoscored_team_id
+-- FROM fact_team_snapshot f
+-- LEFT JOIN competition_snapshot s ON s.snapshot_id = f.snapshot_id
+-- WHERE s.snapshot_id IS NULL
+-- UNION ALL
+-- SELECT s.snapshot_id, s.whoscored_team_id
+-- FROM fact_standings_snapshot s
+-- LEFT JOIN competition_snapshot h ON h.snapshot_id = s.snapshot_id
+-- WHERE h.snapshot_id IS NULL
+--
+-- @@A17|RETRY
+-- SELECT 'page' AS part, count(*) AS captures
+-- FROM _assert_capture
+-- WHERE section = 'page' AND view = 'show'
+-- HAVING count(*) <> 1
+-- UNION ALL
+-- SELECT 'standings' AS part, count(*) AS captures
+-- FROM _assert_capture
+-- WHERE section = 'standings'
+-- HAVING (SELECT has_league_table FROM _assert_run)
+--    AND count(*) <> 3
+--
+-- @@A18|RETRY
+-- SELECT COALESCE(c.whoscored_team_id, s.whoscored_team_id) AS whoscored_team_id
+-- FROM _assert_team c
+-- FULL OUTER JOIN _assert_standings s
+--   ON s.whoscored_team_id = c.whoscored_team_id
+-- WHERE (SELECT has_league_table FROM _assert_run)
+--   AND (c.whoscored_team_id IS NULL OR s.whoscored_team_id IS NULL)
+--
+-- @@A19|BLOCK
+-- SELECT whoscored_team_id, view
+-- FROM _assert_standings_long
+-- WHERE played IS NULL
+--    OR won IS NULL
+--    OR drawn IS NULL
+--    OR lost IS NULL
+--    OR goals_for IS NULL
+--    OR goals_against IS NULL
+--    OR goal_difference IS NULL
+--    OR points IS NULL
+--    OR won + drawn + lost <> played
+--    OR points <> 3 * won + drawn
+--    OR goal_difference <> goals_for - goals_against
+--    OR (played = 0 AND form IS NOT NULL)
+--    OR (
+--        played > 0
+--        AND (
+--            form IS NULL
+--            OR length(form) <> least(played, 6)
+--            OR regexp_matches(form, '[^wdl]')
+--        )
+--    )
+--
+-- @@A20|RETRY
+-- SELECT whoscored_team_id
+-- FROM _assert_standings
+-- WHERE (
+--         played_overall IS NOT NULL
+--         AND played_home IS NOT NULL
+--         AND played_away IS NOT NULL
+--         AND played_home + played_away <> played_overall
+--     )
+--    OR (
+--         won_overall IS NOT NULL
+--         AND won_home IS NOT NULL
+--         AND won_away IS NOT NULL
+--         AND won_home + won_away <> won_overall
+--     )
+--    OR (
+--         drawn_overall IS NOT NULL
+--         AND drawn_home IS NOT NULL
+--         AND drawn_away IS NOT NULL
+--         AND drawn_home + drawn_away <> drawn_overall
+--     )
+--    OR (
+--         lost_overall IS NOT NULL
+--         AND lost_home IS NOT NULL
+--         AND lost_away IS NOT NULL
+--         AND lost_home + lost_away <> lost_overall
+--     )
+--    OR (
+--         goals_for_overall IS NOT NULL
+--         AND goals_for_home IS NOT NULL
+--         AND goals_for_away IS NOT NULL
+--         AND goals_for_home + goals_for_away <> goals_for_overall
+--     )
+--    OR (
+--         goals_against_overall IS NOT NULL
+--         AND goals_against_home IS NOT NULL
+--         AND goals_against_away IS NOT NULL
+--         AND goals_against_home + goals_against_away <> goals_against_overall
+--     )
+--    OR (
+--         points_overall IS NOT NULL
+--         AND points_home IS NOT NULL
+--         AND points_away IS NOT NULL
+--         AND points_home + points_away <> points_overall
+--     )
+--
+-- @@A21|BLOCK
+-- SELECT view
+-- FROM _assert_standings_long
+-- GROUP BY view
+-- HAVING count(*) <> (SELECT count(*) FROM _assert_team)
+--    OR count(DISTINCT rank) <> count(*)
+--    OR min(rank) <> 1
+--    OR max(rank) <> count(*)
+--    OR sum(CASE WHEN rank IS NULL THEN 1 ELSE 0 END) <> 0
