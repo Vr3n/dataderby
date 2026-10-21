@@ -1,0 +1,81 @@
+{
+  "source": "whoscored",
+  "note": "statColumns only; raw payloads stay ignored",
+  "captures": {
+    "all__Overall": [
+      "apps",
+      "goal",
+      "shotsPerGame",
+      "yellowCard",
+      "redCard",
+      "possession",
+      "passSuccess",
+      "aerialWonPerGame"
+    ],
+    "all__Home": [
+      "apps",
+      "goal",
+      "shotsPerGame",
+      "yellowCard",
+      "redCard",
+      "possession",
+      "passSuccess",
+      "aerialWonPerGame"
+    ],
+    "all__Away": [
+      "apps",
+      "goal",
+      "shotsPerGame",
+      "yellowCard",
+      "redCard",
+      "possession",
+      "passSuccess",
+      "aerialWonPerGame"
+    ],
+    "defensive__Overall": [
+      "apps",
+      "shotsConcededPerGame",
+      "tacklePerGame",
+      "interceptionPerGame",
+      "foulsPerGame",
+      "offsideGivenPerGame"
+    ],
+    "defensive__Home": [
+      "apps",
+      "shotsConcededPerGame",
+      "tacklePerGame",
+      "interceptionPerGame",
+      "foulsPerGame",
+      "offsideGivenPerGame"
+    ],
+    "defensive__Away": [
+      "apps",
+      "shotsConcededPerGame",
+      "tacklePerGame",
+      "interceptionPerGame",
+      "foulsPerGame",
+      "offsideGivenPerGame"
+    ],
+    "offensive__Overall": [
+      "apps",
+      "shotsPerGame",
+      "shotOnTargetPerGame",
+      "dribbleWonPerGame",
+      "foulGivenPerGame"
+    ],
+    "offensive__Home": [
+      "apps",
+      "shotsPerGame",
+      "shotOnTargetPerGame",
+      "dribbleWonPerGame",
+      "foulGivenPerGame"
+    ],
+    "offensive__Away": [
+      "apps",
+      "shotsPerGame",
+      "shotOnTargetPerGame",
+      "dribbleWonPerGame",
+      "foulGivenPerGame"
+    ]
+  }
+}
