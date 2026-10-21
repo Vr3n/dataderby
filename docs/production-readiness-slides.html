@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dataderby — production readiness, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0C0E; --fg:#E8E8E4; --dim:#79818B; --dim2:#464D57;
+    --yellow:#FFD23F; --cyan:#4FD1D9; --red:#FF5C4D;
+    --green:#7CE38B; --amber:#FFA94D;
+    --card:#111317; --line:#232A33;
+    --pad:clamp(20px,4vw,64px); --maxw:1200px;
+    --mono:'Martian Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:var(--sans);font-size:clamp(16px,1.08vw,18px);line-height:1.55;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+
+  /* ambient motion: a slow technical grid, masked to the centre */
+  body::before{
+    content:"";position:fixed;inset:-90px;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(to right,rgba(255,255,255,.04) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(255,255,255,.04) 1px,transparent 1px);
+    background-size:72px 72px;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 32%,#000 0%,transparent 76%);
+    mask-image:radial-gradient(ellipse at 50% 32%,#000 0%,transparent 76%);
+    animation:drift 34s linear infinite;
+  }
+  @keyframes drift{to{background-position:72px 72px,72px 72px}}
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    background:repeating-linear-gradient(to bottom,rgba(255,255,255,.022) 0 1px,transparent 1px 3px);
+    mix-blend-mode:screen;
+  }
+
+  .deck{position:fixed;inset:0;z-index:1}
+  .slide{
+    position:absolute;inset:0;display:none;overflow-y:auto;overflow-x:hidden;
+    padding:clamp(44px,6.4vh,78px) var(--pad) clamp(92px,12vh,116px);
+  }
+  .slide.is-active{display:block}
+  .inner{max-width:var(--maxw);margin:0 auto;min-height:100%}
+  .inner > *:first-child{margin-top:0}
+
+  /* ---------- type ---------- */
+  h1,h2,h3{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1.06;margin:0}
+  h1{font-size:clamp(32px,5.2vw,68px)}
+  h2{font-size:clamp(25px,3.3vw,42px)}
+  h3{font-size:clamp(15px,1.34vw,19px);line-height:1.25;letter-spacing:-.01em}
+  p{margin:0 0 1em;max-width:74ch;color:#D2D2CC}
+  .lede{font-size:clamp(16.5px,1.55vw,21px);line-height:1.45;color:var(--fg);max-width:64ch}
+  .muted{color:var(--dim)}
+  .mono{font-family:var(--mono)}
+  .k{color:var(--yellow);font-family:var(--mono);font-weight:600}
+  .kc{color:var(--cyan);font-family:var(--mono);font-weight:600}
+  .kr{color:var(--red);font-family:var(--mono);font-weight:600}
+  .kg{color:var(--green);font-family:var(--mono);font-weight:600}
+  .ka{color:var(--amber);font-family:var(--mono);font-weight:600}
+  small{font-size:.86em}
+
+  .eyebrow{
+    font-family:var(--mono);font-weight:500;font-size:clamp(10px,.8vw,12px);
+    letter-spacing:.2em;text-transform:uppercase;color:var(--yellow);
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .eyebrow .pg{
+    color:var(--bg);background:var(--yellow);padding:2px 7px;border-radius:2px;
+    letter-spacing:.1em;font-weight:700;
+  }
+  .eyebrow .sep{color:var(--dim2)}
+  .eyebrow--c{color:var(--cyan)}
+  .eyebrow--c .pg{background:var(--cyan)}
+  .eyebrow--r{color:var(--red)}
+  .eyebrow--r .pg{background:var(--red)}
+
+  .rule{height:3px;background:var(--yellow);width:min(210px,36vw);margin:18px 0 0;transform-origin:left center}
+  .rule--dim{background:var(--dim2);height:1px;margin-top:14px}
+
+  /* ---------- layout ---------- */
+  .stack>*+*{margin-top:.7em}
+  .mt-s{margin-top:12px}
+  .mt-m{margin-top:22px}
+  .mt-l{margin-top:34px}
+  .cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(14px,1.6vw,24px)}
+  .cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:clamp(11px,1.3vw,18px)}
+  .cols4{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .side{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(18px,2.4vw,38px);align-items:start}
+  @media (max-width:860px){.side{grid-template-columns:1fr}}
+
+  /* ---------- cards and frames ---------- */
+  .card{
+    border:1px solid var(--line);background:var(--card);
+    padding:clamp(13px,1.4vw,20px);border-radius:3px;position:relative;
+  }
+  .card h3{margin-bottom:.35em}
+  .card p{font-size:.93em;margin:0;color:#C6C6C0}
+  .card .tag{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--dim);display:block;margin-bottom:.55em;
+  }
+  .card--y{border-color:#5A4A12;background:#14130C}
+  .card--c{border-color:#1E4A4D;background:#0D1415}
+  .card--r{border-color:#54231E;background:#150F0E}
+  .card--g{border-color:#234A2C;background:#0D140F}
+
+  .frame{
+    border:1px solid var(--line);border-left:3px solid var(--c,var(--dim));
+    background:#0E1014;padding:12px 15px;border-radius:2px;
+  }
+  .frame__lbl{
+    display:block;font-family:var(--mono);font-size:9.5px;font-weight:600;
+    letter-spacing:.19em;text-transform:uppercase;color:var(--c,var(--dim));margin-bottom:5px;
+  }
+  .frame p{margin:0;font-size:.92em;color:#CFCFC9;max-width:none}
+  .frame--feyn{--c:var(--cyan)}
+  .frame--fp{--c:var(--yellow)}
+  .frame--so{--c:var(--amber)}
+  .frame--do{--c:var(--green)}
+  .frame--warn{--c:var(--red)}
+
+  .quote{
+    margin:0;border-left:3px solid var(--yellow);padding:4px 0 4px 22px;max-width:70ch;
+  }
+  .quote p{font-size:clamp(17px,1.6vw,22px);line-height:1.42;margin:0;color:var(--fg)}
+
+  /* ---------- chips ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+    border:1px solid var(--dim2);color:var(--dim);padding:3px 8px;border-radius:2px;
+    white-space:nowrap;
+  }
+  .chip--y{border-color:#6A5A18;color:var(--yellow)}
+  .chip--c{border-color:#24565A;color:var(--cyan)}
+  .chip--r{border-color:#5E2A24;color:var(--red)}
+  .chip--g{border-color:#2A5A35;color:var(--green)}
+
+  /* ---------- tables ---------- */
+  .tblwrap{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:.89em;min-width:520px}
+  .tbl th{
+    font-family:var(--mono);font-size:9.3px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--dim);text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);
+    font-weight:500;vertical-align:bottom;
+  }
+  .tbl td{padding:8px 10px;border-bottom:1px solid #1A1F26;vertical-align:top;color:#C9C9C3}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl td.num,.tbl th.num{text-align:right;font-family:var(--mono);color:var(--yellow)}
+  .tbl code{font-size:.92em}
+
+  /* ---------- code ---------- */
+  code,pre{font-family:var(--mono)}
+  code{font-size:.88em;color:#DCDCD4;background:#15181D;padding:1px 5px;border-radius:2px}
+  pre{
+    margin:0;background:#0D0F13;border:1px solid var(--line);border-left:2px solid var(--dim2);
+    padding:12px 14px;border-radius:2px;font-size:clamp(10.5px,.82vw,12.5px);line-height:1.65;
+    overflow-x:auto;color:#C9C9C3;
+  }
+  pre .c{color:var(--dim2)}
+  pre .y{color:var(--yellow)}
+  pre .r{color:var(--red)}
+  pre .g{color:var(--green)}
+  pre .c2{color:var(--cyan)}
+
+  /* ---------- compact ordered list ---------- */
+  .order{border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--card)}
+  .order__row{display:grid;grid-template-columns:2.4em 1fr;gap:8px;padding:8px 12px;align-items:start}
+  .order__row + .order__row{border-top:1px solid #1A1F26}
+  .order__n{font-family:var(--mono);font-size:10px;color:var(--yellow);padding-top:3px}
+  .order b{font-family:var(--mono);font-size:12px;font-weight:600;display:block;letter-spacing:-.01em}
+  .order .d{font-size:.84em;color:var(--dim);display:block;margin-top:1px;line-height:1.4}
+
+  .gloss{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .gloss .card{padding:11px 13px}
+  .gloss .card h3{font-size:13.5px;margin-bottom:.2em}
+  .gloss .card p{font-size:.83em;line-height:1.45}
+  @media (max-width:1000px){.gloss{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  /* ---------- citation ---------- */
+  .cite{
+    display:inline-flex;align-items:baseline;gap:6px;font-family:var(--mono);
+    font-size:10px;color:var(--dim);text-decoration:none;
+    border-bottom:1px dotted var(--dim2);padding-bottom:1px;
+  }
+  .cite:hover{color:var(--cyan);border-color:var(--cyan)}
+  .cite::after{content:"↗";font-size:10px;opacity:.8}
+  .src{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+  .src .lbl{
+    font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim2);
+  }
+
+  .check{
+    border-top:1px dashed var(--dim2);margin-top:16px;padding-top:10px;
+    font-size:.9em;color:var(--dim);
+  }
+  .check b{color:var(--fg);font-family:var(--mono);font-weight:600;font-size:.95em}
+  .check em{color:var(--dim);font-style:normal}
+
+  .note{
+    border:1px solid #5A4A12;background:#14130C;border-radius:2px;
+    padding:10px 14px;font-size:.9em;color:#D8CFA8;
+  }
+  .note b{color:var(--yellow);font-family:var(--mono);font-size:.92em;letter-spacing:.04em}
+
+  /* ---------- diagrams ---------- */
+  .viz{margin:16px 0 4px}
+  .viz svg{width:100%;height:auto;display:block;overflow:visible}
+  .viz text{font-family:var(--mono);fill:var(--fg)}
+  .viz .t{font-size:12px;font-weight:600;letter-spacing:-.01em}
+  .viz .s{font-size:10px;fill:var(--dim)}
+  .viz .xs{font-size:9px;fill:var(--dim2);letter-spacing:.1em}
+  .viz .box{fill:#12151A;stroke:#2A323D;stroke-width:1.1}
+  .viz .box-y{fill:#15140C;stroke:#6A5A18}
+  .viz .box-c{fill:#0D1415;stroke:#24565A}
+  .viz .box-r{fill:#150F0E;stroke:#5E2A24}
+  .viz .box-g{fill:#0D140F;stroke:#2A5A35}
+  .viz .ln{stroke:#3A434F;stroke-width:1.2;fill:none}
+  .viz .ln-y{stroke:var(--yellow);stroke-width:1.4;fill:none}
+  .viz .ln-c{stroke:var(--cyan);stroke-width:1.4;fill:none}
+  .viz .ln-r{stroke:var(--red);stroke-width:1.4;fill:none}
+  .viz .ln-g{stroke:var(--green);stroke-width:1.4;fill:none}
+  .viz .dash{stroke-dasharray:4 5;animation:dashmove 1.5s linear infinite}
+  .viz .accent{fill:var(--yellow)}
+  .viz .accent-c{fill:var(--cyan)}
+  .viz .accent-r{fill:var(--red)}
+  .viz .lbl{fill:var(--yellow)}
+  .viz .lbl-c{fill:var(--cyan)}
+  .viz .lbl-r{fill:var(--red)}
+  .viz .dimfill{fill:var(--dim)}
+  @keyframes dashmove{to{stroke-dashoffset:-18}}
+
+  .draw{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 1.7s cubic-bezier(.2,.7,.2,1) forwards .35s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .draw-slow{stroke-dasharray:2200;stroke-dashoffset:2200;animation:draw 2.6s cubic-bezier(.2,.7,.2,1) forwards .3s}
+
+  /* pipeline flow */
+  .flow .packet{animation:packet 9s linear infinite}
+  @keyframes packet{
+    0%{transform:translateX(0);opacity:0}
+    4%{opacity:1}
+    96%{opacity:1}
+    100%{transform:translateX(930px);opacity:0}
+  }
+
+  /* snapshot chain */
+  .chain .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 3.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+  /* latest snapshot breathing highlight */
+  .scanner-card .box-y{animation:latestPulse 3.6s ease-in-out infinite}
+  @keyframes latestPulse{0%,100%{stroke-opacity:.5}50%{stroke-opacity:1}}
+
+  /* latest-scanner */
+  .scanner{position:relative;overflow:hidden}
+  .scanner::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--yellow),transparent);
+    animation:sweep 4.6s ease-in-out infinite;opacity:.75;
+  }
+  @keyframes sweep{0%{transform:translateY(0);opacity:0}12%{opacity:.9}88%{opacity:.9}100%{transform:translateY(190px);opacity:0}}
+
+  /* pull-quote marker */
+  .marker{display:inline-block;width:8px;height:8px;background:var(--yellow);border-radius:1px;margin-right:8px;vertical-align:1px}
+
+  /* ---------- chrome ---------- */
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--yellow);z-index:70;width:0}
+  .chrome{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;border-top:1px solid var(--line);
+    background:rgba(11,12,14,.93);backdrop-filter:blur(6px);
+    display:flex;align-items:center;gap:clamp(10px,1.8vw,22px);
+    padding:8px var(--pad);font-family:var(--mono);font-size:10.5px;
+  }
+  .chrome .brand{color:var(--dim2);letter-spacing:.18em;white-space:nowrap}
+  .chrome .pgno{color:var(--yellow);font-weight:700;letter-spacing:.06em;white-space:nowrap}
+  .chrome .pgno small{color:var(--dim2);font-weight:400}
+  .ledger{display:flex;gap:2px;flex:1;min-width:0}
+  .ledger button{
+    flex:1;height:10px;background:#1A1F26;border:0;border-radius:1px;padding:0;
+    min-width:3px;cursor:pointer;
+  }
+  .ledger button:hover{background:#2C3644}
+  .ledger button.on{background:var(--cyan);opacity:.55}
+  .ledger button.cur{background:var(--yellow);opacity:1}
+  .navs{display:flex;gap:6px;margin-left:auto}
+  .navs button{
+    font-family:var(--mono);font-size:11px;color:var(--fg);background:#161A20;
+    border:1px solid var(--line);border-radius:2px;padding:4px 10px;cursor:pointer;
+  }
+  .navs button:hover{border-color:var(--yellow);color:var(--yellow)}
+  .navs button:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+  .navs button:disabled{opacity:.28;cursor:default}
+  .keyhint{color:var(--dim2);white-space:nowrap}
+  @media (max-width:760px){.keyhint,.chrome .brand{display:none}}
+
+  /* ---------- overlays ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:80;background:rgba(8,9,11,.97);
+    display:none;overflow:auto;padding:clamp(26px,5vh,64px) var(--pad) 96px;
+  }
+  .overlay.is-open{display:block}
+  .overlay h2{font-size:clamp(20px,2.4vw,30px)}
+  .ov-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .ov-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:8px;margin-top:26px;
+  }
+  .ov-item{
+    text-align:left;background:var(--card);border:1px solid var(--line);color:var(--fg);
+    padding:9px 12px;font-family:var(--sans);font-size:13px;cursor:pointer;border-radius:2px;
+    display:flex;gap:10px;align-items:baseline;
+  }
+  .ov-item:hover{border-color:var(--yellow)}
+  .ov-item .n{font-family:var(--mono);font-size:10px;color:var(--yellow);min-width:2.2em}
+  .ov-item .ch{font-family:var(--mono);font-size:9px;color:var(--dim2);margin-left:auto;white-space:nowrap}
+  kbd{
+    font-family:var(--mono);font-size:11px;border:1px solid var(--dim2);border-bottom-width:2px;
+    padding:1px 6px;border-radius:3px;color:var(--fg);background:#15181D;
+  }
+  .help-rows{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin-top:24px;font-size:.95em;align-items:baseline}
+  .help-rows div:nth-child(odd){text-align:right}
+
+  /* ---------- print ---------- */
+  @media print{
+    body{overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body::before,body::after,.chrome,.progress,.overlay{display:none!important}
+    .deck{position:static}
+    .slide{display:block!important;position:static;overflow:visible;page-break-after:always;padding:24px 0}
+    .slide[aria-hidden="true"]{display:block!important}
+    .inner{max-width:none}
+    .card,.frame,pre{break-inside:avoid}
+    a{color:#111}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms!important;animation-iteration-count:1!important;
+      transition-duration:.001ms!important;scroll-behavior:auto!important;
+    }
+    body::before{animation:none}
+  }
+  @media (max-width:640px){
+    .slide{padding-top:38px}
+    .ledger{display:none}
+    .flow .packet{display:none}
+  }
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<a class="sr" href="#deck">Skip to slides</a>
+
+<main class="deck" id="deck">
+
+<!-- ============================================================ 01 -->
+<section class="slide" aria-label="Title">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">01</span><span class="sep">/</span> PRODUCTION READINESS REVIEW <span class="sep">/</span> V1 · 2026-10</div>
+    <h1 data-a="title" style="margin-top:24px">It remembers.<br>That was the<br><span class="k">hard part.</span></h1>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:26px">
+      A beginner's tour of the Dataderby pipeline: every concept, why it exists,
+      what production teams do the same way, and what this project still owes them.
+    </p>
+
+    <div class="chips" data-a="body" style="margin-top:22px">
+      <span class="chip chip--y">P0–P7 shipped</span>
+      <span class="chip">6 tables</span>
+      <span class="chip">6 views</span>
+      <span class="chip">21 assertions</span>
+      <span class="chip">165 tests</span>
+      <span class="chip">1 open gap list</span>
+    </div>
+
+    <div class="viz" data-a="viz" style="margin-top:34px">
+      <svg viewBox="0 0 900 120" role="img" aria-label="A chain of snapshots, each pointing to its parent">
+        <path class="ln" d="M60 60 H840"/>
+        <g class="chain">
+          <circle class="accent" cx="60" cy="60" r="7"/>
+          <circle cx="255" cy="60" r="6" fill="#2A323D"/>
+          <circle cx="450" cy="60" r="6" fill="#2A323D"/>
+          <circle cx="645" cy="60" r="6" fill="#2A323D"/>
+          <circle class="accent" cx="840" cy="60" r="8"/>
+          <circle class="pulse" cx="840" cy="60" r="14" fill="none" stroke="#FFD23F" stroke-width="1"/>
+        </g>
+        <text class="s" x="60" y="92" text-anchor="middle">genesis</text>
+        <text class="s" x="255" y="92" text-anchor="middle">obs 01</text>
+        <text class="s" x="450" y="92" text-anchor="middle">obs 02</text>
+        <text class="s" x="645" y="92" text-anchor="middle">obs 03</text>
+        <text class="lbl" x="840" y="92" text-anchor="middle">latest</text>
+        <text class="xs" x="60" y="30">EVERY ACCEPTED OBSERVATION IS KEPT</text>
+        <text class="xs" x="840" y="30" text-anchor="end">NOTHING IS OVERWRITTEN</text>
+      </svg>
+    </div>
+
+    <p class="mono muted" data-a="body" style="font-size:11px;margin-top:26px">
+      → / space next · ← back · <span class="k">o</span> overview · <span class="k">?</span> keys · print to PDF
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ 02 -->
+<section class="slide" aria-label="How to read this deck">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">02</span><span class="sep">/</span> HOW TO READ THIS</div>
+    <h2 data-a="title" style="margin-top:18px">Four habits, repeated<br>on every slide.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · explain it simply</span>
+        <p>Plain words, then an analogy. If the analogy breaks, the understanding is incomplete. Each concept slide carries one.</p>
+      </div>
+      <div class="frame frame--fp" data-a="card">
+        <span class="frame__lbl">First principles · derive it</span>
+        <p>Start from what must be true about the data. Do not start from a tool. The mechanism should be the consequence, not the fashion.</p>
+      </div>
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order · and then what?</span>
+        <p>Every decision has a cost that arrives later. Named explicitly: what breaks in six months if we skip this?</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">Source + recommendation</span>
+        <p>Every concept ends with a citation and one concrete action. A claim without a source is an opinion; an action without an owner is a wish.</p>
+      </div>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="card card--c" data-a="card">
+        <span class="tag">What this deck is</span>
+        <p>A review of commits <code>ace7897</code> → <code>b898900</code>, the P0–P7 reports, <code>sql/001–003</code>, and the tests. Written for a developer or an agent joining the project.</p>
+      </div>
+      <div class="card card--r" data-a="card">
+        <span class="tag">What it is not</span>
+        <p>A live-data review. There is no <code>data/dataderby.duckdb</code> yet and no committed real capture. Every fixture is synthetic. Runtime behaviour on real WhoScored pages is unproven.</p>
+      </div>
+    </div>
+
+    <p class="check" data-a="body"><b>Check yourself.</b> Can you say why a review of design and a review of operations are different claims? <em>(One is "the shape is right"; the other is "it survives Tuesday".)</em></p>
+  </div>
+</section>
+
+<!-- ============================================================ 03 -->
+<section class="slide" aria-label="The problem">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">03</span><span class="sep">/</span> THE PROBLEM</div>
+    <h2 data-a="title" style="margin-top:18px">One sentence.<br>Everything else follows.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <blockquote class="quote" data-a="body" style="margin-top:28px">
+      <p>“At each accepted observation, the source reports a table of teams and a set of
+      <span class="k">cumulative</span> statistics. Keep every reported state so the same team can be
+      compared with itself across time.”</p>
+    </blockquote>
+
+    <div class="cols3 mt-l">
+      <div class="card" data-a="card">
+        <span class="tag">Property 01</span>
+        <h3>Cumulative, not per-event</h3>
+        <p>Goals-for is a season total. The difference between two snapshots bounds activity; it cannot be attributed to one match.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">Property 02</span>
+        <h3>Irregular cadence</h3>
+        <p>Triggers are fixtures finishing. The source publishes late and in batches, so "one row per day" is a lie.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">Property 03</span>
+        <h3>Thin, hostile source</h3>
+        <p>No update timestamp, no ETag, no revision id, an anti-bot gate, and possible silent corrections. You cannot ask the source what changed.</p>
+      </div>
+    </div>
+
+    <div class="frame frame--feyn" data-a="card" style="margin-top:26px">
+      <span class="frame__lbl">Feynman · the photograph</span>
+      <p>A normal dashboard is a painting: you keep repainting it, and last week's version is gone.
+      This pipeline is a photograph album: every matchday gets a new print, and old prints are never
+      touched. Comparing two prints tells you what changed. Repainting tells you nothing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 04 -->
+<section class="slide" aria-label="First principles">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">04</span><span class="sep">/</span> FIRST PRINCIPLES</div>
+    <h2 data-a="title" style="margin-top:18px">Five requirements,<br>before any tool is chosen.</h2>
+    <div class="rule" data-a="rule"></div>
+    <p class="muted" data-a="body" style="margin-top:18px;max-width:72ch">
+      Strip away DuckDB, Python and the file names. What must be true for the sentence on the
+      previous slide to hold? Only five things.
+    </p>
+
+    <div class="tblwrap mt-m" data-a="viz">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Requirement</th><th>Mechanism in v1</th><th>Where it lives</th></tr></thead>
+        <tbody>
+          <tr><td class="num">01</td><td>An observation must have an address</td><td><code>UNIQUE(tournament, season, stage, observed_at)</code></td><td><code>competition_snapshot</code></td></tr>
+          <tr><td class="num">02</td><td>The same observation must not write twice</td><td>Unique edge + insert in the same transaction</td><td><code>publish.py</code></td></tr>
+          <tr><td class="num">03</td><td>A published row must never change</td><td>Append-only tables, no <code>UPDATE</code> path</td><td><code>sql/001_schema.sql</code></td></tr>
+          <tr><td class="num">04</td><td>Half a sweep must never look complete</td><td>Cohort assertion + one transaction</td><td>A1, <code>publish.py</code></td></tr>
+          <tr><td class="num">05</td><td>Anyone must be able to ask "what is true now?"</td><td>Snapshot chosen first, then joined</td><td><code>v_latest_*</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order</span>
+        <p>Every future bug is one of these five leaking. Duplicate rows: #2. A chart changing without new data: #3 or #5.
+        A 19-team league table: #4. When something breaks, name the invariant first.</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">Do this</span>
+        <p>Put these five in the README before the architecture diagram. A diagram explains the shape; the invariants explain why the shape is not negotiable.</p>
+      </div>
+    </div>
+
+    <p class="mono muted" data-a="body" style="font-size:10px;margin-top:14px">
+      SOURCE · <code>docs/adr/0001-history-model.md</code> · grain rule after Kimball.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ 05 -->
+<section class="slide" aria-label="Pipeline end to end">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">05</span><span class="sep">/</span> THE PIPELINE, END TO END</div>
+    <h2 data-a="title" style="margin-top:18px">Six stages.<br>One direction of flow.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="viz flow" data-a="viz" style="margin-top:26px">
+      <svg viewBox="0 0 1080 210" role="img" aria-label="Pipeline: probe page, nine feeds, raw files, parse, audit, commit">
+        <g class="ln">
+          <line x1="150" y1="98" x2="186" y2="98" class="dash"/>
+          <line x1="336" y1="98" x2="372" y2="98" class="dash"/>
+          <line x1="522" y1="98" x2="558" y2="98" class="dash"/>
+          <line x1="708" y1="98" x2="744" y2="98" class="dash"/>
+          <line x1="894" y1="98" x2="930" y2="98" class="dash"/>
+        </g>
+        <circle class="accent packet" cx="78" cy="98" r="3.5"/>
+        <circle class="accent packet" cx="78" cy="98" r="3.5" style="animation-delay:-4.5s"/>
+
+        <g>
+          <rect class="box box-c" x="0" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="14" y="76">PROBE</text>
+          <text class="s" x="14" y="94">stage page</text>
+          <text class="s" x="14" y="110">token + standings</text>
+        </g>
+        <g>
+          <rect class="box" x="186" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="200" y="76">9 FEEDS</text>
+          <text class="s" x="200" y="94">statisticsfeed</text>
+          <text class="s" x="200" y="110">1.2 s apart</text>
+        </g>
+        <g>
+          <rect class="box box-y" x="372" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="386" y="76">RAW</text>
+          <text class="s" x="386" y="94">sha256 + ledger</text>
+          <text class="s" x="386" y="110">never rewritten</text>
+        </g>
+        <g>
+          <rect class="box" x="558" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="572" y="76">PARSE</text>
+          <text class="s" x="572" y="94">60 + 30 columns</text>
+          <text class="s" x="572" y="110">canonical JSON</text>
+        </g>
+        <g>
+          <rect class="box box-r" x="744" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="758" y="76">AUDIT</text>
+          <text class="s" x="758" y="94">A1–A21</text>
+          <text class="s" x="758" y="110">zero rows = pass</text>
+        </g>
+        <g>
+          <rect class="box box-g" x="930" y="52" width="150" height="92" rx="3"/>
+          <text class="t" x="944" y="76">COMMIT</text>
+          <text class="s" x="944" y="94">one snapshot</text>
+          <text class="s" x="944" y="110">atomic</text>
+        </g>
+
+        <text class="s" x="0" y="190">if any stage fails, the visible database does not change.</text>
+      </svg>
+    </div>
+
+    <div class="cols3 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · the grocery run</span>
+        <p>Keep the receipts (raw), cook once (parse), taste before serving (audit), then put the dish in the window (commit). If it tastes wrong, you still have the receipts.</p>
+      </div>
+      <div class="frame frame--fp" data-a="card">
+        <span class="frame__lbl">First principles</span>
+        <p>Raw is the only irreplaceable layer. Everything after it is a deterministic function of bytes. That is why replay is possible at all.</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">Do this</span>
+        <p>When debugging, walk the arrows backwards. Most errors are visible before the database: a missing capture, a gate page, a drifted column.</p>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://docs.databricks.com/aws/en/lakehouse/medallion" target="_blank" rel="noopener">Databricks · medallion layers</a>
+      <span class="mono muted" style="font-size:10px">· raw, conformed, published; raw is append-only</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 06 -->
+<section class="slide" aria-label="Raw is append-only">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">06</span><span class="sep">/</span> CONCEPT 01</div>
+    <h2 data-a="title" style="margin-top:18px">Raw is the system of record.<br>The database is derived.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m">
+      <div>
+        <p class="lede" data-a="body">Every payload is written once, with a SHA-256, a path and a run id. Nothing under <code>data/raw/</code> is ever edited.</p>
+        <div class="stack" style="margin-top:18px">
+          <div class="frame frame--fp" data-a="card">
+            <span class="frame__lbl">Why it matters</span>
+            <p>If the parser is wrong, you rebuild from bytes. If the parser is right and the database is lost, you rebuild from bytes. Without an immutable landing zone, neither is possible.</p>
+          </div>
+          <div class="frame frame--feyn" data-a="card">
+            <span class="frame__lbl">Feynman · the lab notebook</span>
+            <p>You write the experiment down before you interpret it. You may add pages. You never tear one out because the result was inconvenient.</p>
+          </div>
+          <div class="frame frame--so" data-a="card">
+            <span class="frame__lbl">Second order</span>
+            <p>The backup policy inverts. Back up <code>data/raw/</code>, not the <code>.duckdb</code> file. The first person on call will reach for the database; the runbook has to say otherwise.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="viz" data-a="viz">
+          <svg viewBox="0 0 460 260" role="img" aria-label="Raw bundles with hashes and a ledger">
+            <rect class="box box-y" x="0" y="20" width="250" height="52" rx="3"/>
+            <text class="t" x="14" y="42">raw/2026-10-24/run-a/</text>
+            <text class="s" x="14" y="60">summary_overall.json · 41 KB</text>
+
+            <rect class="box" x="18" y="82" width="250" height="52" rx="3"/>
+            <text class="t" x="32" y="104">defensive_overall.json</text>
+            <text class="s" x="32" y="122">sha256 · 8f2c…a91d</text>
+
+            <rect class="box" x="36" y="144" width="250" height="52" rx="3"/>
+            <text class="t" x="50" y="166">offensive_overall.json</text>
+            <text class="s" x="50" y="184">sha256 · 1b77…e40c</text>
+
+            <rect class="box box-c" x="300" y="20" width="160" height="176" rx="3"/>
+            <text class="xs" x="314" y="42">RAW_CAPTURE</text>
+            <line class="ln" x1="314" y1="54" x2="446" y2="54"/>
+            <text class="s" x="314" y="76">run_id</text>
+            <text class="s" x="314" y="98">section + view</text>
+            <text class="s" x="314" y="120">attempt</text>
+            <text class="s" x="314" y="142">byte_count</text>
+            <text class="s" x="314" y="164">sha256</text>
+            <text class="s" x="314" y="186">is_gate</text>
+
+            <path class="ln-y" d="M286 130 H300" marker-end="url(#arw)"/>
+            <defs><marker id="arw" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#FFD23F"/></marker></defs>
+
+            <text class="xs" x="0" y="228">ONE LEDGER ROW PER RUN / SECTION / VIEW</text>
+            <text class="s" x="0" y="248">no overwrite · byte count and attempt are checked</text>
+          </svg>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://docs.databricks.com/aws/en/lakehouse/medallion" target="_blank" rel="noopener">Databricks · medallion architecture</a>
+        </div>
+        <p class="check" data-a="body"><b>Check yourself.</b> Why is the hash stored next to the file instead of inside it? <em>(So the check survives a re-encode, and the file stays byte-identical to what the source sent.)</em></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 07 -->
+<section class="slide" aria-label="Snapshots, not overwrites">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">07</span><span class="sep">/</span> CONCEPT 02</div>
+    <h2 data-a="title" style="margin-top:18px">History is a sequence<br>of snapshots.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:18px">
+      One row per team per accepted observation. Never an <code>UPDATE</code>. This is Kimball's
+      <b>periodic snapshot fact</b>, not SCD Type 2.
+    </p>
+
+    <div class="side mt-m" style="grid-template-columns:1.15fr .85fr">
+      <div class="tblwrap" data-a="viz">
+        <table class="tbl">
+          <thead><tr><th></th><th>SCD Type 2</th><th>This pipeline</th></tr></thead>
+          <tbody>
+            <tr><td>Old row</td><td>gets a <code>valid_to</code></td><td>never touched</td></tr>
+            <tr><td>"Current"</td><td><code>WHERE valid_to IS NULL</code></td><td>a view over the newest snapshot</td></tr>
+            <tr><td>Late fact</td><td>re-point the dimension key</td><td>insert a snapshot in sequence</td></tr>
+            <tr><td>Rebuild cost</td><td>rewrite validity windows</td><td>recompute ids; content unchanged</td></tr>
+          </tbody>
+        </table>
+        <p class="mono muted" style="font-size:10.5px;margin-top:10px">SCD2 needs UPDATE permission. This table needs INSERT only, which is why the replay guarantee is one sentence.</p>
+      </div>
+
+      <div>
+        <div class="frame frame--feyn" data-a="card">
+          <span class="frame__lbl">Feynman · bank statements</span>
+          <p>Your balance today cannot explain how you got there. The statement lines can. A snapshot is a statement line; "latest" is just the most recent line.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>Storage grows by ~1,240 rows per snapshot, which is nothing. The real long-term cost is the <em>rule</em> that picks "latest". Get it wrong once and every chart drifts.</p>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Sources</span>
+          <a class="cite" href="https://www.kimballgroup.com/2005/03/slowly-changing-dimensions-are-not-always-as-easy-as-1-2-3/" target="_blank" rel="noopener">Kimball · SCDs</a>
+          <a class="cite" href="https://iceberg.apache.org/spec/" target="_blank" rel="noopener">Iceberg · snapshots</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="viz" data-a="viz" style="margin-top:8px">
+      <svg viewBox="0 0 1000 120" role="img" aria-label="Snapshot chain with a backfill inserted below the newest">
+        <path class="ln" d="M60 48 H940"/>
+        <circle cx="60" cy="48" r="5" fill="#2A323D"/>
+        <circle cx="250" cy="48" r="5" fill="#2A323D"/>
+        <circle cx="440" cy="48" r="5" fill="#2A323D"/>
+        <circle cx="630" cy="48" r="5" fill="#2A323D"/>
+        <circle class="accent" cx="940" cy="48" r="7"/>
+        <circle cx="530" cy="96" r="4" fill="none" stroke="#FF5C4D" stroke-width="1.3" stroke-dasharray="3 3"/>
+        <path class="ln-r" d="M530 92 V60" stroke-dasharray="3 3"/>
+        <text class="s" x="60" y="30" text-anchor="middle">S1</text>
+        <text class="s" x="250" y="30" text-anchor="middle">S2</text>
+        <text class="s" x="440" y="30" text-anchor="middle">S3</text>
+        <text class="s" x="630" y="30" text-anchor="middle">S4</text>
+        <text class="lbl" x="940" y="30" text-anchor="middle">S5 · latest</text>
+        <text class="lbl-r" x="530" y="114" text-anchor="middle">backfill (older observed_at)</text>
+        <text class="xs" x="60" y="114">ORDER BY observed_at DESC, accepted_at DESC, snapshot_id DESC</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 08 -->
+<section class="slide" aria-label="The edge key">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">08</span><span class="sep">/</span> CONCEPT 03</div>
+    <h2 data-a="title" style="margin-top:18px">A snapshot is identified by<br>its parent <span class="k">and</span> its content.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:18px">
+      Three keys are possible. Only one survives a retry, a backfill and a revert.
+    </p>
+
+    <div class="tblwrap" data-a="viz" style="margin-top:20px">
+      <table class="tbl">
+        <thead><tr><th>Key</th><th>Retry-safe</th><th>Keeps a revert</th><th>Survives a backfill</th></tr></thead>
+        <tbody>
+          <tr><td><code>content_fingerprint</code> alone</td><td class="kg">yes</td><td class="kr">no — A→B→A collapses</td><td>n/a</td></tr>
+          <tr><td>A random <code>snapshot_id</code> alone</td><td class="kr">no — new id each retry</td><td class="kg">yes</td><td class="kg">yes</td></tr>
+          <tr><td><code>(parent_snapshot_id, content_fingerprint)</code></td><td class="kg">yes</td><td class="kg">yes</td><td class="kg">yes — as new rows</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="card card--r" data-a="card">
+        <span class="tag">Content only · what breaks</span>
+        <div class="viz" style="margin:8px 0 0">
+          <svg viewBox="0 0 440 110" role="img" aria-label="A then B then A collapses to two rows without an edge key">
+            <circle cx="50" cy="44" r="15" fill="#1A1F26" stroke="#3A434F"/>
+            <text class="s" x="50" y="48" text-anchor="middle">A</text>
+            <circle cx="170" cy="44" r="15" fill="#1A1F26" stroke="#3A434F"/>
+            <text class="s" x="170" y="48" text-anchor="middle">B</text>
+            <circle cx="290" cy="44" r="15" fill="#150F0E" stroke="#5E2A24"/>
+            <text class="s" x="290" y="48" text-anchor="middle">A</text>
+            <path class="ln" d="M65 44 H155"/>
+            <path class="ln" d="M185 44 H275"/>
+            <path class="ln-r" d="M305 44 H380" stroke-dasharray="3 3"/>
+            <text class="lbl-r" x="342" y="36" text-anchor="middle">2 rows</text>
+            <text class="lbl-r" x="342" y="62" text-anchor="middle">revert lost</text>
+            <text class="s" x="50" y="90" text-anchor="middle">S1</text>
+            <text class="s" x="170" y="90" text-anchor="middle">S2</text>
+            <text class="s" x="290" y="90" text-anchor="middle">S3</text>
+          </svg>
+        </div>
+        <p>The third state is byte-identical to the first, so it is treated as a duplicate. History silently keeps the wrong shape.</p>
+      </div>
+
+      <div class="card card--g" data-a="card">
+        <span class="tag">Parent + content · what holds</span>
+        <div class="viz" style="margin:8px 0 0">
+          <svg viewBox="0 0 440 110" role="img" aria-label="The same sequence with parent edges keeps three distinct rows">
+            <circle cx="50" cy="44" r="15" fill="#0D140F" stroke="#2A5A35"/>
+            <text class="s" x="50" y="48" text-anchor="middle">A</text>
+            <circle cx="170" cy="44" r="15" fill="#0D140F" stroke="#2A5A35"/>
+            <text class="s" x="170" y="48" text-anchor="middle">B</text>
+            <circle cx="290" cy="44" r="15" fill="#15140C" stroke="#6A5A18"/>
+            <text class="s" x="290" y="48" text-anchor="middle">A</text>
+            <path class="ln-c" d="M65 44 H155"/>
+            <path class="ln-c" d="M185 44 H275"/>
+            <path class="ln-y" d="M305 44 H380"/>
+            <text class="lbl" x="342" y="36" text-anchor="middle">3 rows</text>
+            <text class="lbl" x="342" y="62" text-anchor="middle">revert kept</text>
+            <text class="s" x="50" y="90" text-anchor="middle">S1</text>
+            <text class="s" x="170" y="90" text-anchor="middle">S2</text>
+            <text class="s" x="290" y="90" text-anchor="middle">S3</text>
+            <text class="xs" x="50" y="24" text-anchor="middle">genesis</text>
+            <text class="xs" x="170" y="24" text-anchor="middle">S1 → S2</text>
+            <text class="xs" x="290" y="24" text-anchor="middle">S2 → S3</text>
+          </svg>
+        </div>
+        <p>The third node has a different parent, so it is a new observation of the same content. That is exactly what a reverted stat line is.</p>
+      </div>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · the conversation</span>
+        <p>“We agree” means nothing without knowing who said it and what it was replying to. The content is the sentence; the parent is the turn in the conversation.</p>
+      </div>
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order</span>
+        <p>With content-only keys the bug is invisible for months: the delta series flattens and nobody can tell which observation was swallowed. Measured here, content-only produced 2 rows where 3 were correct.</p>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://www.kimballgroup.com/2005/03/slowly-changing-dimensions-are-not-always-as-easy-as-1-2-3/" target="_blank" rel="noopener">Kimball · periodic snapshots</a>
+      <span class="mono muted" style="font-size:10px">· measured in <code>experiments/id-scheme/</code></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 09 -->
+<section class="slide" aria-label="Idempotency">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">09</span><span class="sep">/</span> CONCEPT 04</div>
+    <h2 data-a="title" style="margin-top:18px">Run it twice.<br>Get one result.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1.05fr .95fr">
+      <div>
+        <p class="lede" data-a="body">Idempotent means a retry converges to the same state. Not "usually", not "if the checkpoint survived".</p>
+        <div class="stack" style="margin-top:18px">
+          <div class="frame frame--fp" data-a="card">
+            <span class="frame__lbl">The honest guarantee</span>
+            <p>Exactly-once <em>delivery</em> across a network is not achievable. At-least-once delivery plus an idempotent write is. Production systems are built on the second.</p>
+          </div>
+          <div class="frame frame--feyn" data-a="card">
+            <span class="frame__lbl">Feynman · the invoice</span>
+            <p>If the same invoice arrives twice, the ledger must still show one charge. The invoice number is the claim; the unique constraint is the referee.</p>
+          </div>
+          <div class="frame frame--so" data-a="card">
+            <span class="frame__lbl">Second order</span>
+            <p>A checkpoint is an optimisation, not a correctness mechanism. Teams that trust "last processed" lose data the first time it is written before the data, or the process dies between the two.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="viz" data-a="viz">
+          <svg viewBox="0 0 500 268" role="img" aria-label="Three retries pass through a unique constraint and produce one row">
+            <rect class="box" x="0" y="16" width="120" height="44" rx="3"/>
+            <text class="s" x="12" y="42">attempt 1</text>
+            <rect class="box" x="0" y="98" width="120" height="44" rx="3"/>
+            <text class="s" x="12" y="124">attempt 2</text>
+            <rect class="box" x="0" y="180" width="120" height="44" rx="3"/>
+            <text class="s" x="12" y="206">attempt 3</text>
+
+            <path class="ln" d="M120 38 H210"/>
+            <path class="ln" d="M120 120 H210"/>
+            <path class="ln" d="M120 202 C 170 202, 170 120, 210 120"/>
+
+            <rect class="box box-y" x="210" y="72" width="90" height="96" rx="3"/>
+            <text class="lbl" x="255" y="108" text-anchor="middle">UNIQUE</text>
+            <text class="s" x="255" y="126" text-anchor="middle">parent +</text>
+            <text class="s" x="255" y="142" text-anchor="middle">content</text>
+
+            <path class="ln-y" d="M300 120 H360"/>
+            <rect class="box box-g" x="360" y="98" width="120" height="44" rx="3"/>
+            <text class="t" x="374" y="126" style="font-size:11px">1 row</text>
+
+            <text class="xs" x="0" y="236">THE CONSTRAINT SETTLES THE RACE; THE KEY ONLY RECOGNISES THE RETRY</text>
+            <text class="s" x="0" y="256">a check-then-insert leaves a gap for two rows.</text>
+          </svg>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Sources</span>
+          <a class="cite" href="https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html" target="_blank" rel="noopener">Airflow · idempotent tasks</a>
+          <a class="cite" href="https://duckdb.org/docs/lts/sql/statements/insert.html" target="_blank" rel="noopener">DuckDB · ON CONFLICT</a>
+        </div>
+      </div>
+    </div>
+
+    <pre class="mt-s" data-a="body"><span class="c">-- the whole mechanism, in one statement</span>
+INSERT INTO competition_snapshot (...) VALUES (...)
+<span class="y">ON CONFLICT</span> (parent_snapshot_id, content_fingerprint) <span class="y">DO NOTHING</span>
+<span class="y">RETURNING</span> snapshot_id;   <span class="c">-- empty result = the conflict was confirmed</span></pre>
+
+    <p class="check" data-a="body"><b>Check yourself.</b> Why is a checkpoint not enough? <em>(Because it can be stale, lost, or written before the data. The constraint is checked on every write, forever.)</em></p>
+  </div>
+</section>
+
+<!-- ============================================================ 10 -->
+<section class="slide" aria-label="Write audit publish">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">10</span><span class="sep">/</span> CONCEPT 05</div>
+    <h2 data-a="title" style="margin-top:18px">The transaction is<br>the staging area.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:18px">
+      Write-Audit-Publish normally needs a staging table. Here, uncommitted writes are already
+      invisible to every reader, so the transaction does the job.
+    </p>
+
+    <div class="cols4 mt-m">
+      <div class="card" data-a="card">
+        <span class="tag">Step 01 · cheap precheck</span>
+        <h3>Fingerprint</h3>
+        <p>If the checkpoint already holds this fingerprint, return <code>NO_CHANGE</code> before opening a transaction.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">Step 02 · begin</span>
+        <h3>Write privately</h3>
+        <p>Header, 20 team rows, 20 standings rows. Nobody else can see any of it yet.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">Step 03 · audit</span>
+        <h3>A1–A21</h3>
+        <p>Any BLOCK or RETRY failure raises <code>PublishBlocked</code>. The write is already invisible; now it is also discarded.</p>
+      </div>
+      <div class="card card--g" data-a="card">
+        <span class="tag">Step 04 · publish</span>
+        <h3>Commit once</h3>
+        <p>Facts, checkpoint and run outcome commit together. There is no window where a run is "accepted" without data.</p>
+      </div>
+    </div>
+
+    <div class="side mt-m" style="grid-template-columns:1fr 1fr">
+      <div>
+        <pre><span class="c"># the shape that must not change</span>
+con.execute(<span class="y">"BEGIN"</span>)
+<span class="y">try</span>:
+    ...
+<span class="y">except</span> BaseException:
+    con.execute(<span class="y">"ROLLBACK"</span>)
+    <span class="y">raise</span>
+<span class="y">else</span>:
+    con.execute(<span class="y">"COMMIT"</span>)</pre>
+        <p class="mono muted" style="font-size:10.5px;margin-top:8px">No <code>COMMIT</code> in <code>finally</code>. That is not style; it is correctness.</p>
+      </div>
+      <div>
+        <div class="frame frame--warn" data-a="card">
+          <span class="frame__lbl">The DuckDB trap (measured)</span>
+          <p>A constraint violation aborts the transaction. A later bare <code>COMMIT</code> does not raise — it silently
+          commits nothing. A <code>finally: COMMIT</code> would therefore discard a whole run and report success.</p>
+        </div>
+        <div class="frame frame--feyn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Feynman · taste before serving</span>
+          <p>Cook, taste, then serve. Do not serve while tasting. The diner (the reader) should never see the half-corrected dish.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://dagster.io/blog/python-write-audit-publish" target="_blank" rel="noopener">Dagster · write-audit-publish</a>
+      <a class="cite" href="https://duckdb.org/docs/current/connect/concurrency.html" target="_blank" rel="noopener">DuckDB · transactions</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 11 -->
+<section class="slide" aria-label="Constraints">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">11</span><span class="sep">/</span> CONCEPT 06</div>
+    <h2 data-a="title" style="margin-top:18px">Validation belongs in the schema,<br>not only in the writer.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols3 mt-m">
+      <div class="card card--g" data-a="card">
+        <span class="tag">UNIQUE</span>
+        <h3>The duplicate edge</h3>
+        <p>A replayed observation cannot create a second header with the same parent and content. The database, not the retry logic, decides.</p>
+      </div>
+      <div class="card card--c" data-a="card">
+        <span class="tag">FOREIGN KEY</span>
+        <h3>The orphan fact</h3>
+        <p>A team row without a snapshot is impossible, even if a future script forgets to insert the header first.</p>
+      </div>
+      <div class="card card--y" data-a="card">
+        <span class="tag">CHECK</span>
+        <h3>The impossible value</h3>
+        <p>Negative counts and invalid run outcomes are rejected at write time. A missing measure is allowed and stored as <code>NULL</code>.</p>
+      </div>
+    </div>
+
+    <div class="side mt-m" style="grid-template-columns:1.1fr .9fr">
+      <div>
+        <div class="frame frame--fp" data-a="card">
+          <span class="frame__lbl">The NULL rule that surprises everyone</span>
+          <p>In SQL, <code>NULL &gt;= 0</code> evaluates to <code>NULL</code>, not <code>false</code>. A CHECK constraint passes when its
+          expression is NULL. So a missing measure passes the non-negative check, while <code>-3</code> fails. That is the
+          behaviour we want: missing is honest, negative is impossible.</p>
+        </div>
+        <div class="frame frame--feyn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Feynman · building code</span>
+          <p>Application validation is a sign on the door. Constraints are the load-bearing wall. A second script, a notebook, or a
+          future you can walk past a sign; nobody walks through a wall.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>A constraint added after launch is a migration with a validation scan. Design them with the table; the cost is paid
+          once, at the cheapest moment.</p>
+        </div>
+      </div>
+
+      <div class="viz" data-a="viz">
+        <svg viewBox="0 0 420 280" role="img" aria-label="Three rows approaching a constraint gate; one is rejected">
+          <rect class="box" x="0" y="18" width="130" height="40" rx="2"/>
+          <text class="s" x="12" y="43">apps = 12</text>
+          <path class="ln-y" d="M134 38 H188"/>
+          <path class="ln" d="M134 100 H188"/>
+          <path class="ln" d="M134 162 H188"/>
+
+          <rect class="box box-y" x="188" y="0" width="18" height="270" rx="2"/>
+          <text class="xs" x="197" y="286" text-anchor="middle" transform="rotate(-90 197 286)">CHECK</text>
+
+          <rect class="box" x="0" y="80" width="130" height="40" rx="2"/>
+          <text class="s" x="12" y="105">apps = NULL</text>
+          <rect class="box" x="0" y="142" width="130" height="40" rx="2"/>
+          <text class="s" x="12" y="167">apps = -3</text>
+
+          <rect class="box box-g" x="240" y="18" width="90" height="40" rx="2"/>
+          <text class="s" x="252" y="43">accepted</text>
+          <rect class="box box-g" x="240" y="80" width="90" height="40" rx="2"/>
+          <text class="s" x="252" y="105">accepted</text>
+          <path class="ln-g" d="M206 38 H240"/>
+          <path class="ln-g" d="M206 100 H240"/>
+
+          <path class="ln-r" d="M206 162 H240" stroke-dasharray="3 3"/>
+          <rect class="box box-r" x="240" y="142" width="90" height="40" rx="2"/>
+          <text class="s" x="252" y="167">rejected</text>
+          <path class="ln-r" d="M240 182 C 220 210, 200 210, 180 190" stroke-dasharray="3 3"/>
+
+          <text class="xs" x="0" y="232">NULL PASSES · NEGATIVE FAILS</text>
+          <text class="s" x="0" y="254">missing data is honest; an impossible value is a bug.</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://www.postgresql.org/docs/current/ddl-constraints.html" target="_blank" rel="noopener">PostgreSQL · constraints</a>
+      <span class="mono muted" style="font-size:10px">· semantics match DuckDB</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section class="slide" aria-label="Assertions">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">12</span><span class="sep">/</span> CONCEPT 07</div>
+    <h2 data-a="title" style="margin-top:18px">Refuse to publish<br>an incoherent sweep.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols4 mt-m">
+      <div class="card card--r" data-a="card">
+        <span class="tag">14 assertions</span>
+        <h3 class="kr">BLOCK</h3>
+        <p>Permanent or incoherent. Do not try again without a human or a config change.</p>
+      </div>
+      <div class="card card--y" data-a="card">
+        <span class="tag">7 assertions</span>
+        <h3 class="k">RETRY</h3>
+        <p>Transient, usually a mid-publish source. Fetch again, then give up.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">1 assertion</span>
+        <h3>WARN</h3>
+        <p>Recorded, does not block. A7U: duplicate ranking is suspicious but survivable.</p>
+      </div>
+      <div class="card card--c" data-a="card">
+        <span class="tag">21 + 1</span>
+        <h3>Contract</h3>
+        <p>A1–A21 plus A7U, loaded from a comment-delimited SQL file so it migrates like schema.</p>
+      </div>
+    </div>
+
+    <div class="side mt-m" style="grid-template-columns:1fr 1fr">
+      <div>
+        <pre><span class="c">-- sql/002_assertions.sql</span>
+<span class="c">-- @@A1|BLOCK</span>
+<span class="c">-- returns offending rows; zero rows = pass</span>
+SELECT ... FROM _assert_candidate
+WHERE ...;</pre>
+        <p class="mono muted" style="font-size:10.5px;margin-top:8px">The query is the assertion. No framework, no results store, no extra dependency.</p>
+
+        <div class="frame frame--feyn" data-a="card" style="margin-top:14px">
+          <span class="frame__lbl">Feynman · the smoke alarm</span>
+          <p>An alarm you have never tested is decoration. Every assertion ships with a fixture that must fail it and one that must pass.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="frame frame--so" data-a="card">
+          <span class="frame__lbl">The cohort rule</span>
+          <p>19 teams out of 20 is not a smaller league. It is a wrong league. The cohort is the unit of publication, so A1 blocks
+          before the transaction can commit.</p>
+        </div>
+        <div class="frame frame--do" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Do this</span>
+          <p>For every new assertion, write the trap fixture first. An assertion that never fires is worse than no assertion, because it
+          creates false confidence.</p>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://docs.getdbt.com/docs/build/data-tests" target="_blank" rel="noopener">dbt · data tests</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="check" data-a="body"><b>Check yourself.</b> Why is "one value missing" neither RETRY nor BLOCK? <em>(Store NULL. A NULL is honest; a dropped row is indistinguishable from a team that did not play.)</em></p>
+  </div>
+</section>
+
+<!-- ============================================================ 13 -->
+<section class="slide" aria-label="Views">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">13</span><span class="sep">/</span> CONCEPT 08</div>
+    <h2 data-a="title" style="margin-top:18px">Pick the snapshot first.<br>Then join the facts.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:16px">
+      All six views rank <code>competition_snapshot</code> per stage, keep rank 1, and only then join.
+      The order is the whole point.
+    </p>
+
+    <div class="side" style="grid-template-columns:.9fr 1.1fr;margin-top:22px">
+      <div class="stack">
+        <div class="card" data-a="card" style="padding:12px 14px">
+          <span class="tag">Wrong order</span>
+          <h3 class="kr" style="font-size:15px">Join, then filter</h3>
+          <p>A team missing from the newest snapshot is resurrected by an older fact row.</p>
+        </div>
+        <div class="card card--g" data-a="card" style="padding:12px 14px">
+          <span class="tag">Right order</span>
+          <h3 class="kg" style="font-size:15px">Filter, then join</h3>
+          <p>The snapshot is chosen before any fact is read, so nothing older can leak in.</p>
+        </div>
+        <div class="card card--c" data-a="card" style="padding:12px 14px">
+          <span class="tag">No-table stage</span>
+          <h3 class="kc" style="font-size:15px">LEFT JOIN</h3>
+          <p>The teams stay, with NULL standings, rather than disappearing.</p>
+        </div>
+      </div>
+
+      <div class="viz" data-a="viz" style="margin-top:0">
+        <svg viewBox="0 0 560 290" role="img" aria-label="Two snapshots, the newest missing team D, and a result that does not resurrect it">
+          <rect class="box" x="0" y="10" width="205" height="96" rx="3" opacity=".55"/>
+          <text class="xs" x="14" y="32">S4 · OLDER</text>
+          <text class="s" x="14" y="58">A · B · C · D</text>
+          <text class="s" x="14" y="78">observed 12:30 · accepted 12:33</text>
+          <text class="lbl-r" x="14" y="96" style="font-size:9px">not selected</text>
+
+          <g class="scanner-card">
+            <rect class="box box-y" x="0" y="138" width="205" height="96" rx="3"/>
+            <text class="lbl" x="14" y="160" style="font-size:9px">S5 · LATEST</text>
+            <text class="s" x="14" y="186">A · B · C</text>
+            <text class="lbl-r" x="14" y="206">D absent</text>
+            <text class="s" x="14" y="226">observed 13:00 · accepted 13:02</text>
+          </g>
+
+          <path class="ln-r" d="M209 56 H250" stroke-dasharray="3 4"/>
+          <text class="xs" x="229" y="46" text-anchor="middle">no</text>
+
+          <path class="ln-y" d="M209 186 H250 V130 H286"/>
+          <text class="xs" x="211" y="206">rank 1</text>
+
+          <rect class="box box-g" x="290" y="52" width="255" height="156" rx="3"/>
+          <text class="xs" x="306" y="76">v_latest_team_state</text>
+          <text class="s" x="306" y="108">A · B · C</text>
+          <text class="s" x="306" y="132">no D row</text>
+          <text class="s" x="306" y="164">3 teams, not 4</text>
+
+          <text class="xs" x="0" y="268">RANK BY observed_at DESC, accepted_at DESC, snapshot_id DESC · KEEP RANK 1</text>
+          <text class="s" x="0" y="286">an older observed_at never wins, even when accepted_at is newer.</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="cols2" style="margin-top:16px">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · the class photo</span>
+        <p>Choose this year's photo first, then label the faces. Label every face you have ever seen and last year's album leaks into this year's.</p>
+      </div>
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order</span>
+        <p>Without the rule, "latest" changes with any backfill. A chart redraws itself for no visible reason, and yesterday's number is no longer reproducible.</p>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://docs.databricks.com/aws/en/lakehouse/medallion" target="_blank" rel="noopener">Databricks · gold layer</a>
+      <span class="mono muted" style="font-size:10px">· see also <code>docs/reports/p7-views.md</code></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 14 -->
+<section class="slide" aria-label="Deltas">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">14</span><span class="sep">/</span> CONCEPT 09</div>
+    <h2 data-a="title" style="margin-top:18px">A delta is derived,<br>and only where it means something.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1.05fr .95fr">
+      <div class="viz" data-a="viz">
+        <svg viewBox="0 0 700 270" role="img" aria-label="Apps over five snapshots with a gap where no delta is emitted">
+          <line class="ln" x1="60" y1="210" x2="660" y2="210"/>
+          <line class="ln" x1="60" y1="30" x2="60" y2="210"/>
+          <text class="xs" x="60" y="228" text-anchor="middle">S1</text>
+          <text class="xs" x="200" y="228" text-anchor="middle">S2</text>
+          <text class="xs" x="340" y="228" text-anchor="middle">S3</text>
+          <text class="xs" x="480" y="228" text-anchor="middle">S4</text>
+          <text class="xs" x="620" y="228" text-anchor="middle">S5</text>
+          <text class="xs" x="30" y="40" text-anchor="middle">apps</text>
+
+          <path class="ln-y draw" d="M100 180 L240 146 L380 112"/>
+          <circle class="accent" cx="100" cy="180" r="5"/>
+          <circle class="accent" cx="240" cy="146" r="5"/>
+          <circle class="accent" cx="380" cy="112" r="5"/>
+
+          <path class="ln" d="M380 112 L620 78" stroke-dasharray="4 5"/>
+          <circle cx="620" cy="78" r="5" fill="none" stroke="#FF5C4D" stroke-width="2"/>
+          <text class="lbl-r" x="620" y="60" text-anchor="middle">no delta</text>
+          <text class="s" x="500" y="120" text-anchor="middle">team absent at S4</text>
+
+          <path class="ln-c" d="M100 196 H240"/>
+          <path class="ln-c" d="M100 190 V202"/>
+          <path class="ln-c" d="M240 190 V202"/>
+          <text class="lbl-c" x="170" y="188" text-anchor="middle">+2</text>
+
+          <text class="s" x="60" y="256">only apps, goals, yellow cards and red cards are differenced.</text>
+        </svg>
+      </div>
+
+      <div>
+        <div class="frame frame--fp" data-a="card">
+          <span class="frame__lbl">The three rules</span>
+          <p><b>1.</b> Difference additive measures only. A rating difference is not "rating gained".<br>
+          <b>2.</b> Emit a row only when the team was in the immediately preceding snapshot.<br>
+          <b>3.</b> A negative apps delta is a correction, not a match. Flag it, do not hide it.</p>
+        </div>
+        <div class="frame frame--feyn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Feynman · the bank balance</span>
+          <p>The change in your balance is not your salary. It is the net of everything, including corrections. Useful, but only if you know
+          which transactions sit between the two statements.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>A diff across a missing observation looks like a huge match haul. One gap in the series and every trend chart lies. The gap rule
+          costs a few rows and buys trustworthy trends.</p>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://www.kimballgroup.com/2005/03/slowly-changing-dimensions-are-not-always-as-easy-as-1-2-3/" target="_blank" rel="noopener">Kimball · snapshot facts</a>
+          <span class="mono muted" style="font-size:10px">· <code>v_snapshot_delta</code></span>
+        </div>
+      </div>
+    </div>
+
+    <p class="check" data-a="body"><b>Label it honestly.</b> These are changes <em>between observations</em>, not per-match totals. A comment or a column name should say so.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 15 -->
+<section class="slide" aria-label="The UTC bug">
+  <div class="inner">
+    <div class="eyebrow eyebrow--r" data-a="eyebrow"><span class="pg">15</span><span class="sep">/</span> CASE STUDY · A REAL DEFECT CAUGHT BY P7</div>
+    <h2 data-a="title" style="margin-top:18px">The same instant,<br>two different numbers.</h2>
+    <div class="rule" data-a="rule" style="background:var(--red)"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1fr 1fr">
+      <div class="viz" data-a="viz">
+        <svg viewBox="0 0 560 280" role="img" aria-label="A UTC observation at 10:00 stored as 15:30 local time">
+          <text class="xs" x="0" y="26">WHAT THE PIPELINE MEANT (UTC)</text>
+          <line class="ln" x1="40" y1="64" x2="500" y2="64"/>
+          <line class="ln" x1="120" y1="56" x2="120" y2="72"/>
+          <line class="ln" x1="300" y1="56" x2="300" y2="72"/>
+          <line class="ln" x1="480" y1="56" x2="480" y2="72"/>
+          <text class="s" x="120" y="90" text-anchor="middle">09:00Z</text>
+          <text class="lbl" x="300" y="90" text-anchor="middle">10:00Z</text>
+          <text class="s" x="480" y="90" text-anchor="middle">11:00Z</text>
+          <circle class="accent" cx="300" cy="64" r="6"/>
+
+          <path class="ln-r" d="M300 100 V170" stroke-dasharray="4 4"/>
+          <text class="lbl-r" x="312" y="140">+5:30 on this host</text>
+
+          <text class="xs" x="0" y="196">WHAT DUCKDB STORED (LOCAL SESSION)</text>
+          <line class="ln-r" x1="40" y1="234" x2="500" y2="234"/>
+          <line class="ln" x1="120" y1="226" x2="120" y2="242"/>
+          <line class="ln" x1="300" y1="226" x2="300" y2="242"/>
+          <line class="ln" x1="480" y1="226" x2="480" y2="242"/>
+          <text class="s" x="120" y="262" text-anchor="middle">14:30</text>
+          <text class="lbl-r" x="300" y="262" text-anchor="middle">15:30</text>
+          <text class="s" x="480" y="262" text-anchor="middle">16:30</text>
+          <circle class="accent-r" cx="300" cy="234" r="6"/>
+        </svg>
+      </div>
+
+      <div>
+        <div class="frame frame--warn" data-a="card">
+          <span class="frame__lbl">What happened</span>
+          <p>P7's freshness test expected an age near five minutes and got one offset by the host's UTC offset. DuckDB was binding
+          timezone-aware UTC <code>datetime</code> values into <code>TIMESTAMP</code> columns through the session timezone
+          (<code>Asia/Calcutta</code>). The row said <code>15:30</code>; the observation was <code>10:00Z</code>.</p>
+        </div>
+        <div class="frame frame--do" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">The fix</span>
+          <p><code>db.connect()</code> now runs <code>SET TimeZone='UTC'</code>. Two tests guard the session, and the freshness test traps a
+          local-time comparison.</p>
+        </div>
+        <div class="frame frame--feyn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Feynman · the shared clock</span>
+          <p>Two people in different cities agree to meet at "10". They need to agree on the timezone before they need to agree on the place.
+          A timestamp without a timezone is the word "10" with no city.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order</span>
+        <p>Unfixed, ordering and freshness would depend on which machine wrote the row. The failure is silent, appears only on a non-UTC
+        host, and corrupts "latest" without changing a single measure.</p>
+      </div>
+      <div class="frame frame--fp" data-a="card">
+        <span class="frame__lbl">The general lesson</span>
+        <p>Implicit global state is an input: session timezone, locale, working directory, environment variables. Make each one explicit at the
+        boundary, or it becomes a bug with a five-and-a-half-hour delay.</p>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Sources</span>
+      <a class="cite" href="https://www.postgresql.org/docs/current/datatype-datetime.html" target="_blank" rel="noopener">PostgreSQL · date/time types</a>
+      <a class="cite" href="https://duckdb.org/docs/current/sql/data_types/timestamp.html" target="_blank" rel="noopener">DuckDB · TIMESTAMP</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 16 -->
+<section class="slide" aria-label="Scorecard">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">16</span><span class="sep">/</span> THE SCORECARD</div>
+    <h2 data-a="title" style="margin-top:18px">The shape matches production.<br>The envelope does not.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="muted" data-a="body" style="margin-top:18px;max-width:74ch">
+      "Production" is not a tool list. It is four properties. Each one can be checked without reading the code.
+    </p>
+
+    <div class="cols4 mt-s">
+      <div class="card" data-a="card"><span class="tag">Property 01</span><h3>Repeatable</h3><p>A re-run converges to the same state, on any machine.</p></div>
+      <div class="card" data-a="card"><span class="tag">Property 02</span><h3>Observable</h3><p>What ran, when, and did it work? No log scraping.</p></div>
+      <div class="card" data-a="card"><span class="tag">Property 03</span><h3>Recoverable</h3><p>A crash has a deterministic restart path.</p></div>
+      <div class="card" data-a="card"><span class="tag">Property 04</span><h3>Changeable</h3><p>A schema change is routine, not an incident.</p></div>
+    </div>
+
+    <div class="tblwrap mt-s" data-a="viz" style="margin-top:14px">
+      <table class="tbl">
+        <thead><tr><th>Practice</th><th>Where</th><th>Status</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Append-only snapshot history with an edge key</td><td><code>competition_snapshot</code></td><td><span class="chip chip--g">matches</span></td><td>Iceberg · Kimball</td></tr>
+          <tr><td>Idempotent write settled by a unique constraint</td><td><code>publish.py</code></td><td><span class="chip chip--g">matches</span></td><td>Airflow · DuckDB</td></tr>
+          <tr><td>Write-audit-publish inside one transaction</td><td><code>validate.py</code> + <code>publish.py</code></td><td><span class="chip chip--g">matches</span></td><td>Dagster</td></tr>
+          <tr><td>Constraints enforced by the database</td><td><code>sql/001_schema.sql</code></td><td><span class="chip chip--g">matches</span></td><td>PostgreSQL</td></tr>
+          <tr><td>Data assertions that block promotion</td><td>A1–A21</td><td><span class="chip chip--g">matches</span></td><td>dbt</td></tr>
+          <tr><td>Tested column contract for consumers</td><td><code>contract.py</code> + tests</td><td><span class="chip chip--g">matches</span></td><td>dbt contracts</td></tr>
+          <tr><td>Single writer, multiple read-only readers</td><td><code>connect()</code>, <code>lock.py</code></td><td><span class="chip chip--y">partial</span></td><td>DuckDB</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note" data-a="body" style="margin-top:12px">
+      <b>Verdict.</b> Every row above is how good teams build. The gaps on the next slides are not design mistakes; they are the
+      operations that have not been wired yet.
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Sources</span>
+      <a class="cite" href="https://duckdb.org/docs/current/connect/concurrency.html" target="_blank" rel="noopener">DuckDB</a>
+      <a class="cite" href="https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html" target="_blank" rel="noopener">Airflow</a>
+      <a class="cite" href="https://dagster.io/blog/python-write-audit-publish" target="_blank" rel="noopener">Dagster</a>
+      <a class="cite" href="https://www.postgresql.org/docs/current/ddl-constraints.html" target="_blank" rel="noopener">PostgreSQL</a>
+      <a class="cite" href="https://docs.getdbt.com/docs/build/data-tests" target="_blank" rel="noopener">dbt</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 17 -->
+<section class="slide" aria-label="Gap map">
+  <div class="inner">
+    <div class="eyebrow eyebrow--r" data-a="eyebrow"><span class="pg">17</span><span class="sep">/</span> THE GAP MAP</div>
+    <h2 data-a="title" style="margin-top:18px">Eight gaps.<br>Each has a trigger.</h2>
+    <div class="rule" data-a="rule" style="background:var(--red)"></div>
+
+    <div class="tblwrap mt-m" data-a="viz">
+      <table class="tbl">
+        <thead><tr><th>Gap</th><th>Severity</th><th>What actually breaks</th><th>Fix when</th></tr></thead>
+        <tbody>
+          <tr><td>No migration ledger</td><td><span class="chip chip--r">high</span></td><td>The first <code>ALTER</code> or backfill double-applies or fails with no record</td><td>before the second SQL file</td></tr>
+          <tr><td>No CI</td><td><span class="chip chip--r">high</span></td><td>"Gates passed" means "on my machine"</td><td>now</td></tr>
+          <tr><td>Synthetic fixtures only</td><td><span class="chip chip--r">high</span></td><td>The parser has never seen a real capture; the first live run is the test</td><td>before P10</td></tr>
+          <tr><td>Run entry point not wired</td><td><span class="chip chip--y">medium</span></td><td><code>lock.py</code> exists and is tested, but nothing acquires it</td><td>P8</td></tr>
+          <tr><td>Naive <code>TIMESTAMP</code> columns</td><td><span class="chip chip--y">medium</span></td><td>Any client that skips <code>connect()</code> reads the host timezone</td><td>before first real capture</td></tr>
+          <tr><td>No schedule or alert</td><td><span class="chip chip--y">medium</span></td><td>Freshness is computed but nobody is told when it goes stale</td><td>P10</td></tr>
+          <tr><td>No post-publish checks</td><td><span class="chip">low</span></td><td>Drift after commit is invisible</td><td>when a consumer exists</td></tr>
+          <tr><td>No partitioning or retention</td><td><span class="chip">low</span></td><td>One file grows forever; fine at ~1,240 rows per snapshot</td><td>when reads slow down</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · the house inspection</span>
+        <p>A house can be well designed and still not have smoke alarms. You do not knock it down. You install the alarms, and you write down
+        which ones are missing so nobody assumes they are there.</p>
+      </div>
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order</span>
+        <p>A gap without a trigger becomes permanent. Write the trigger down, or "we'll add it later" silently becomes "we decided not to".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 18 -->
+<section class="slide" aria-label="Migration ledger">
+  <div class="inner">
+    <div class="eyebrow eyebrow--r" data-a="eyebrow"><span class="pg">18</span><span class="sep">/</span> GAP 01 · HIGH</div>
+    <h2 data-a="title" style="margin-top:18px">Migrations need a memory,<br>not just an order.</h2>
+    <div class="rule" data-a="rule" style="background:var(--red)"></div>
+
+    <div class="side" style="grid-template-columns:.95fr 1.05fr;margin-top:20px">
+      <div>
+        <p class="lede" data-a="body" style="font-size:clamp(16px,1.4vw,19px)">Today <code>migrate()</code> runs every <code>*.sql</code>
+        file in lexical order and relies on <code>CREATE ... IF NOT EXISTS</code> to make a second run harmless.</p>
+
+        <div class="frame frame--warn" data-a="card" style="margin-top:12px">
+          <span class="frame__lbl">What breaks</span>
+          <p>The first non-idempotent migration: <code>ALTER TABLE</code>, a backfill, a <code>DROP</code>, a constraint change. It either
+          fails on the second run or applies twice. There is no record of what has already run, so recovery is guesswork.</p>
+        </div>
+
+        <div class="frame frame--feyn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Feynman · the recipe book</span>
+          <p>A recipe with no checkmarks. You cannot tell whether you already added the salt. With one recipe it is obvious; with ten it is
+          dinner ruined.</p>
+        </div>
+
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>The first schema change is the cheapest one you will ever make. Add the ledger while the history is three files long, not thirty.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" data-a="card" style="padding:14px 16px">
+          <span class="tag">schema_migration · the missing table</span>
+          <table class="tbl" style="min-width:0;font-size:12px">
+            <thead><tr><th>File</th><th>Checksum</th><th>Applied</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">001_schema.sql</td><td class="mono muted">8c1f…4a2</td><td class="mono">10:02</td></tr>
+              <tr><td class="mono">002_assertions.sql</td><td class="mono muted">4a90…d17</td><td class="mono">10:02</td></tr>
+              <tr><td class="mono">003_views.sql</td><td class="mono muted">e77b…0c9</td><td class="mono">10:03</td></tr>
+              <tr><td class="mono kr">004_alter_team_key.sql</td><td class="mono muted">—</td><td class="mono kr">pending</td></tr>
+            </tbody>
+          </table>
+          <p class="mono muted" style="font-size:10px;margin-top:10px;margin-bottom:0">a changed checksum means someone edited applied history.</p>
+        </div>
+
+        <div class="frame frame--do" data-a="card" style="margin-top:12px">
+          <span class="frame__lbl">Do this</span>
+          <p>Add <code>schema_migration(version, checksum, applied_at)</code> <b>before</b> the second migration, not after. Make applied files
+          immutable. Verify the checksum before executing. One file, one change.</p>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://alembic.sqlalchemy.org/en/latest/tutorial.html" target="_blank" rel="noopener">Alembic · versioned migrations</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 19 -->
+<section class="slide" aria-label="Single writer">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">19</span><span class="sep">/</span> GAP 02 · MEDIUM</div>
+    <h2 data-a="title" style="margin-top:18px">One writer. That is a rule,<br>not a suggestion.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1.05fr .95fr">
+      <div>
+        <div class="viz" data-a="viz">
+          <svg viewBox="0 0 520 240" role="img" aria-label="Two writer processes, one acquires the lock and one is refused">
+            <rect class="box" x="0" y="20" width="120" height="52" rx="3"/>
+            <text class="s" x="14" y="42">cron run A</text>
+            <text class="xs" x="14" y="60">09:00</text>
+            <rect class="box" x="0" y="120" width="120" height="52" rx="3"/>
+            <text class="s" x="14" y="142">cron run B</text>
+            <text class="xs" x="14" y="160">09:00:30</text>
+
+            <path class="ln-y" d="M124 46 H206"/>
+            <path class="ln-r" d="M124 146 H206" stroke-dasharray="4 4"/>
+
+            <rect class="box box-y" x="206" y="61" width="90" height="90" rx="3"/>
+            <text class="lbl" x="251" y="100" text-anchor="middle">LOCK</text>
+            <text class="s" x="251" y="118" text-anchor="middle">file</text>
+
+            <path class="ln-y" d="M300 106 H340"/>
+            <rect class="box box-g" x="340" y="80" width="160" height="52" rx="3"/>
+            <text class="s" x="354" y="102">writes</text>
+            <text class="xs" x="354" y="120">then commits</text>
+
+            <path class="ln-r" d="M251 155 V190"/>
+            <text class="lbl-r" x="251" y="212" text-anchor="middle">exit 5 · locked</text>
+            <text class="xs" x="340" y="212">the OS releases the lock if the process dies</text>
+          </svg>
+        </div>
+        <div class="frame frame--feyn" data-a="card">
+          <span class="frame__lbl">Feynman · the bathroom key</span>
+          <p>One key, one occupant. The second person does not queue inside the room; they wait outside or come back. A lock file left behind
+          is not a lock if the OS releases it when the process dies.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="frame frame--fp" data-a="card">
+          <span class="frame__lbl">What is already true</span>
+          <p><code>lock.py</code> implements a cross-platform exclusive lock (<code>msvcrt</code> on Windows, <code>flock</code> elsewhere).
+          It is tested. What is missing is a caller: the P8 <code>run</code> command that acquires it before touching config.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>Without a caller, two overlapping schedules either crash at the DuckDB file (confusing) or, worse, one retries blindly. The lock
+          turns an ambiguous failure into a named exit code.</p>
+        </div>
+        <div class="frame frame--do" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Do this</span>
+          <p>Acquire before config, release in <code>finally</code>, return exit code <code>5</code> when held. Open every reader with
+          <code>read_only=True</code>.</p>
+        </div>
+        <div class="src" data-a="body">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://duckdb.org/docs/current/connect/concurrency.html" target="_blank" rel="noopener">DuckDB · concurrency</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 20 -->
+<section class="slide" aria-label="Timestamps">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">20</span><span class="sep">/</span> GAP 03 · MEDIUM</div>
+    <h2 data-a="title" style="margin-top:18px">Make the type carry<br>the guarantee.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <p class="lede" data-a="body" style="margin-top:18px">
+      The UTC fix lives in <code>connect()</code>. That protects every caller that uses it. It does not protect the BI tool,
+      the notebook, or the <code>duckdb</code> CLI.
+    </p>
+
+    <div class="cols3 mt-m">
+      <div class="card card--r" data-a="card">
+        <span class="tag">Option A · today</span>
+        <h3>Naive <code>TIMESTAMP</code></h3>
+        <p>Small, simple, and correct only while every writer and reader remembers the session rule. The guarantee is tribal knowledge.</p>
+      </div>
+      <div class="card card--g" data-a="card">
+        <span class="tag">Option B · recommended</span>
+        <h3><code>TIMESTAMP WITH TIME ZONE</code></h3>
+        <p>The instant is unambiguous at the type level. A client cannot accidentally reinterpret it. Slightly larger, and comparisons
+        need care at DST boundaries.</p>
+      </div>
+      <div class="card" data-a="card">
+        <span class="tag">Option C · fallback</span>
+        <h3>UTC epoch <code>BIGINT</code></h3>
+        <p>No timezone semantics at all. Perfect for machines, hostile to humans reading the table. Document the unit or it becomes a
+        different bug.</p>
+      </div>
+    </div>
+
+    <div class="side mt-m" style="grid-template-columns:1.1fr .9fr">
+      <div class="frame frame--so" data-a="card">
+        <span class="frame__lbl">Second order · why this is medium, not low</span>
+        <p>The pipeline is single-writer and every internal caller uses <code>connect()</code>, so today the risk is contained. The moment a
+        dashboard, an analyst, or a second service opens the file, "the numbers depend on the machine" returns. That is the trigger.</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">Do this</span>
+        <p>Decide before the first real capture, while the change is free. There is no committed data to migrate, so the cost is one schema
+        edit and one test, not a backfill.</p>
+      </div>
+    </div>
+
+    <div class="src" data-a="body">
+      <span class="lbl">Source</span>
+      <a class="cite" href="https://www.postgresql.org/docs/current/datatype-datetime.html" target="_blank" rel="noopener">PostgreSQL · timestamp with time zone</a>
+      <span class="mono muted" style="font-size:10px">· the semantics DuckDB follows</span>
+    </div>
+
+    <p class="check" data-a="body"><b>Check yourself.</b> If a column is <code>TIMESTAMP</code> and a client in Tokyo reads it, what does the value mean?
+      <em>(Whatever the writer's session meant. The type does not say, so the answer is "it depends".)</em></p>
+  </div>
+</section>
+
+<!-- ============================================================ 21 -->
+<section class="slide" aria-label="CI and scheduling">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">21</span><span class="sep">/</span> GAPS 04–05 · OPERATIONS</div>
+    <h2 data-a="title" style="margin-top:18px">A gate that only runs locally<br>is a habit, not a gate.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols2 mt-m">
+      <div class="card" data-a="card">
+        <span class="tag">Gap 04 · high</span>
+        <h3>No CI</h3>
+        <p>The four gates are real: <code>ruff format</code>, <code>ruff check</code>, <code>mypy main.py</code>, <code>pytest</code>.
+        They run before a commit because a human remembers. That is the failure mode.</p>
+        <div class="frame frame--feyn" style="margin-top:12px">
+          <span class="frame__lbl">Feynman · the fire drill</span>
+          <p>A drill that only happens when someone feels like it is not a drill. It is a story about a drill.</p>
+        </div>
+        <div class="frame frame--do" style="margin-top:10px">
+          <span class="frame__lbl">Do this</span>
+          <p>One workflow, four steps, on every push. Fail the build on formatting drift, not just on failing tests. Keep the phase reports as
+          artifacts.</p>
+        </div>
+        <div class="src" style="margin-top:10px">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://docs.github.com/en/actions" target="_blank" rel="noopener">GitHub Actions</a>
+        </div>
+      </div>
+
+      <div class="card" data-a="card">
+        <span class="tag">Gap 05 · medium</span>
+        <h3>No schedule, no alert</h3>
+        <p><code>v_pipeline_freshness</code> computes <code>age_seconds</code>, but nothing reads it on a timer. A freshness view nobody
+        watches is a dashboard, not an alert.</p>
+        <div class="frame frame--feyn" style="margin-top:12px">
+          <span class="frame__lbl">Feynman · the smoke detector</span>
+          <p>The sensor is installed. The battery and the siren are not. You find out about the fire when you smell smoke.</p>
+        </div>
+        <div class="frame frame--do" style="margin-top:10px">
+          <span class="frame__lbl">Do this</span>
+          <p>Cron + lock + run ledger is enough for one pipeline and nine requests a day. Alert when <code>age_seconds</code> exceeds the
+          expected window. Add an orchestrator when a second source or a cross-pipeline dependency appears.</p>
+        </div>
+        <div class="src" style="margin-top:10px">
+          <span class="lbl">Source</span>
+          <a class="cite" href="https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html" target="_blank" rel="noopener">Airflow · best practices</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" data-a="body" style="margin-top:18px">
+      <b>Why not add an orchestrator now?</b> One pipeline, one schedule, one writer. An orchestrator adds a scheduler, a metadata database,
+      a UI and an upgrade path to solve a dependency problem this project does not have yet. The trigger is the second source, not the
+      calendar.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 22 -->
+<section class="slide" aria-label="Second order timeline">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">22</span><span class="sep">/</span> SECOND ORDER</div>
+    <h2 data-a="title" style="margin-top:18px">What the gaps cost,<br>if nothing changes.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="viz" data-a="viz" style="margin-top:26px">
+      <svg viewBox="0 0 1080 120" role="img" aria-label="Timeline at six, twelve and twenty-four months">
+        <line class="ln" x1="40" y1="60" x2="1040" y2="60"/>
+        <line class="ln-c draw" x1="40" y1="60" x2="1040" y2="60" stroke-width="2"/>
+        <circle cx="120" cy="60" r="7" fill="#0B0C0E" stroke="#4FD1D9" stroke-width="2"/>
+        <circle cx="540" cy="60" r="7" fill="#0B0C0E" stroke="#FFD23F" stroke-width="2"/>
+        <circle cx="960" cy="60" r="7" fill="#0B0C0E" stroke="#FF5C4D" stroke-width="2"/>
+        <text class="lbl-c" x="120" y="34" text-anchor="middle">6 MONTHS</text>
+        <text class="lbl" x="540" y="34" text-anchor="middle">12 MONTHS</text>
+        <text class="lbl-r" x="960" y="34" text-anchor="middle">24 MONTHS</text>
+        <text class="xs" x="120" y="90" text-anchor="middle">the first schema change</text>
+        <text class="xs" x="540" y="90" text-anchor="middle">the first analyst with a notebook</text>
+        <text class="xs" x="960" y="90" text-anchor="middle">the first second writer</text>
+      </svg>
+    </div>
+
+    <div class="cols3 mt-s">
+      <div class="card card--c" data-a="card">
+        <span class="tag">6 months · the schema change</span>
+        <p>A new source column arrives. Without a ledger, the <code>ALTER</code> is applied by hand, or applied twice. The migration gap stops
+        being theoretical on the first Tuesday it is needed.</p>
+        <p style="margin-top:8px"><span class="chip chip--c">trigger</span> the second SQL file</p>
+      </div>
+      <div class="card card--y" data-a="card">
+        <span class="tag">12 months · the second reader</span>
+        <p>A notebook opens the file and gets a different <code>observed_at</code> than the pipeline. Or two schedules overlap and one run dies
+        inside the publish transaction. Both look like "the data is wrong".</p>
+        <p style="margin-top:8px"><span class="chip chip--y">trigger</span> the first external client</p>
+      </div>
+      <div class="card card--r" data-a="card">
+        <span class="tag">24 months · the second writer</span>
+        <p>Analytics reads compete with ingestion. The single-writer model is now a constraint on the team, not a feature. The documented
+        escape is Parquet files or a read replica.</p>
+        <p style="margin-top:8px"><span class="chip chip--r">trigger</span> a second writer or read load</p>
+      </div>
+    </div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · interest on a loan</span>
+        <p>A missing migration ledger is not a bug today. It is interest accruing on a loan you have not drawn down yet. The bill arrives when
+        you make the second change, and it is paid in outage time.</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">The honest reading</span>
+        <p>None of these mean "rewrite the pipeline". They mean: add the ledger, wire the lock, run the four gates in CI, and decide the
+        timestamp type. Four small changes with four clear triggers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 23 -->
+<section class="slide" aria-label="Invariant recap">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">23</span><span class="sep">/</span> THE CHEAT SHEET</div>
+    <h2 data-a="title" style="margin-top:18px">Five invariants.<br>Where each one lives.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="tblwrap mt-m" data-a="viz">
+      <table class="tbl">
+        <thead><tr><th>Invariant</th><th>Enforced by</th><th>Proven by</th><th>If it breaks, look at</th></tr></thead>
+        <tbody>
+          <tr><td>One observation, one address</td><td><code>UNIQUE(stage, observed_at)</code></td><td><code>test_schema.py</code></td><td><code>competition_snapshot</code></td></tr>
+          <tr><td>A retry does not duplicate</td><td>Edge unique + one transaction</td><td><code>test_publish.py</code></td><td><code>publish.py</code></td></tr>
+          <tr><td>Published rows never change</td><td>Insert-only DDL</td><td>A → B → A test</td><td><code>sql/001_schema.sql</code></td></tr>
+          <tr><td>No partial sweep is visible</td><td>Transaction + A1</td><td>19-team trap fixture</td><td><code>validate.py</code></td></tr>
+          <tr><td>"Latest" is deterministic</td><td>Rank snapshots, then join</td><td><code>test_views.py</code></td><td><code>sql/003_views.sql</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols3 mt-m">
+      <div class="frame frame--feyn" data-a="card">
+        <span class="frame__lbl">Feynman · the five questions</span>
+        <p>When a number looks wrong, ask in order: was it observed? was it written once? has it changed? was the sweep complete? which snapshot
+        did I read?</p>
+      </div>
+      <div class="frame frame--fp" data-a="card">
+        <span class="frame__lbl">Why a cheat sheet</span>
+        <p>Beginners debug by reading code top to bottom. Engineers debug by naming the invariant that failed. This table is the shorter path.</p>
+      </div>
+      <div class="frame frame--do" data-a="card">
+        <span class="frame__lbl">Do this</span>
+        <p>Print this table. Paste it into the README. When an agent is asked to fix a data bug, make it state which invariant is violated first.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 24 -->
+<section class="slide" aria-label="Repo map">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">24</span><span class="sep">/</span> ONBOARDING</div>
+    <h2 data-a="title" style="margin-top:18px">Where everything is,<br>and what it is for.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1.15fr .85fr">
+      <div>
+        <pre style="font-size:clamp(9.5px,.75vw,11.5px);line-height:1.7"><span class="c">main.py</span>                 entry point → <span class="r">fixture CLI, not the WhoScored pipeline yet</span>
+<span class="c">src/dataderby/</span>
+  <span class="y">config.py</span>             stage registry, typed
+  <span class="y">contract.py</span>           60 + 30 columns, source → warehouse names
+  <span class="y">page.py</span>               headed page capture, token, standings
+  <span class="y">fetch.py</span>              nine feeds, pacing, retries, gate detection
+  <span class="y">raw.py</span>                atomic bundle, SHA-256, no overwrite
+  <span class="y">landing.py</span>            one sweep → raw files + ledger rows
+  <span class="y">parse.py</span>              nine feeds → Candidate (60 measures)
+  <span class="y">parse_standings.py</span>    page → 30 standings measures
+  <span class="y">canonical.py</span>          sort, encode, fingerprint
+  <span class="y">validate.py</span>           A1–A21, actions, PublishBlocked
+  <span class="y">publish.py</span>            one transaction, no-change, reconcile
+  <span class="y">db.py</span>                 connect, migrate, transaction
+  <span class="y">lock.py</span>               exclusive file lock <span class="r">(tested, no caller yet)</span>
+  <span class="y">observe.py</span>            append-only JSONL events
+<span class="c">sql/</span>
+  <span class="y">001_schema.sql</span>        six tables, constraints
+  <span class="y">002_assertions.sql</span>    A1–A21 + A7U (comment-delimited)
+  <span class="y">003_views.sql</span>         six consumer views
+<span class="c">tests/</span>                  the executable specification
+<span class="c">docs/reports/</span>          P0–P7: what was built, what deviated
+<span class="c">docs/adr/</span>              the <i>why</i> behind the irreversible choices</pre>
+      </div>
+
+      <div>
+        <div class="frame frame--fp" data-a="card">
+          <span class="frame__lbl">Commands that actually exist today</span>
+          <p><code>uv sync</code><br>
+          <code>uv run pytest</code><br>
+          <code>uv run ruff format --check</code><br>
+          <code>uv run ruff check</code><br>
+          <code>uv run mypy main.py</code></p>
+        </div>
+        <div class="frame frame--warn" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Explicit, because it wastes an afternoon</span>
+          <p><code>uv run python main.py run</code> does <b>not</b> exist yet. <code>main.py</code> currently delegates to the fixture CLI.
+          The WhoScored run command lands with P8 in <code>src/dataderby/cli.py</code>.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">Second order</span>
+          <p>An onboarding doc that lists commands which do not exist is worse than no doc: it teaches the newcomer that the docs are
+          unreliable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 25 -->
+<section class="slide" aria-label="Reading order">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">25</span><span class="sep">/</span> READING ORDER</div>
+    <h2 data-a="title" style="margin-top:18px">Read the reports before<br>the code. They disagree.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="side mt-m" style="grid-template-columns:1.1fr .9fr">
+      <div class="order" data-a="viz">
+        <div class="order__row"><span class="order__n">01</span><div><b>AGENTS.md</b><span class="d">The rules: uv only, no pandas, source-prefixed names, the four gates, docstrings.</span></div></div>
+        <div class="order__row"><span class="order__n">02</span><div><b>README.md</b><span class="d">What exists today, including the fixture pipeline that is deliberately separate.</span></div></div>
+        <div class="order__row"><span class="order__n">03</span><div><b>plans/v1-build-plan.md</b><span class="d">The order of work and the proof required to close each phase.</span></div></div>
+        <div class="order__row"><span class="order__n">04</span><div><b>docs/reports/p0 … p7</b><span class="d">What was built, what deviated, what is still open. More current than the plan.</span></div></div>
+        <div class="order__row"><span class="order__n">05</span><div><b>sql/001 → 003</b><span class="d">The contract as DDL: tables, assertions, views. Read in that order.</span></div></div>
+        <div class="order__row"><span class="order__n">06</span><div><b>src/ in pipeline order</b><span class="d"><code>page → fetch → raw → landing → parse → canonical → validate → publish</code>.</span></div></div>
+        <div class="order__row"><span class="order__n">07</span><div><b>tests/</b><span class="d">The executable spec. A test name is a claim the system makes.</span></div></div>
+        <div class="order__row"><span class="order__n">08</span><div><b>docs/adr/</b><span class="d">Six decisions that are expensive to reverse: history model, precision, two clocks, raw as record, DuckDB, source use.</span></div></div>
+      </div>
+
+      <div>
+        <div class="frame frame--fp" data-a="card">
+          <span class="frame__lbl">For an agent joining the repo</span>
+          <p>Read <code>docs/reports/</code> first. Each report ends with "deviations and open items"; those are the places where the plan
+          and the code disagree. Do not "fix" a deviation without reading why it was recorded.</p>
+        </div>
+        <div class="frame frame--so" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">For a human joining the repo</span>
+          <p>Run <code>uv run pytest -q</code> before changing anything. A baseline you have seen pass is the difference between "my change
+          broke it" and "it was already broken".</p>
+        </div>
+        <div class="frame frame--do" data-a="card" style="margin-top:10px">
+          <span class="frame__lbl">The one rule</span>
+          <p>When the plan and a report disagree, the report wins — and it says so. When a report and the code disagree, the code wins, and
+          the report is the bug.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 26 -->
+<section class="slide" aria-label="Glossary">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">26</span><span class="sep">/</span> GLOSSARY</div>
+    <h2 data-a="title" style="margin-top:18px">The words this codebase<br>uses without explaining.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols4 gloss mt-m">
+      <div class="card" data-a="card"><h3>Snapshot</h3><p>One complete observation of a stage at one instant. Never edited after it is accepted.</p></div>
+      <div class="card" data-a="card"><h3>Grain</h3><p>What one row means, in one sentence. "One team per snapshot." If it is ambiguous, every aggregate is.</p></div>
+      <div class="card" data-a="card"><h3>Idempotent</h3><p>Running it twice has the same effect as running it once.</p></div>
+      <div class="card" data-a="card"><h3>Transaction</h3><p>A group of writes that either all commit or all disappear. Readers never see the middle.</p></div>
+      <div class="card" data-a="card"><h3>Write-Audit-Publish</h3><p>Write privately, check the result, publish only if it passes. The transaction is the private area here.</p></div>
+      <div class="card" data-a="card"><h3>Assertion</h3><p>A query that returns bad rows. Zero rows means pass. A1–A21 are these.</p></div>
+      <div class="card" data-a="card"><h3>Contract</h3><p>A promised shape: 60 team measures, 30 standings measures, in a fixed order.</p></div>
+      <div class="card" data-a="card"><h3>View</h3><p>A saved query. Reads like a table, stores nothing.</p></div>
+      <div class="card" data-a="card"><h3>Delta</h3><p>The difference between two observations. Only meaningful for additive measures.</p></div>
+      <div class="card" data-a="card"><h3>Backfill</h3><p>Adding an observation after newer ones already exist. Older <code>observed_at</code>, newer <code>accepted_at</code>.</p></div>
+      <div class="card" data-a="card"><h3>Checkpoint</h3><p>A note about the last successful work. An optimisation; never the correctness mechanism.</p></div>
+      <div class="card" data-a="card"><h3>Fingerprint</h3><p>A SHA-256 of the canonical payload. Equal content means an equal hash, regardless of row order.</p></div>
+      <div class="card" data-a="card"><h3>Foreign key</h3><p>A rule that a child row must point at an existing parent. No orphan facts.</p></div>
+      <div class="card" data-a="card"><h3>DDL</h3><p>The statements that define tables. <code>sql/001_schema.sql</code> is DDL.</p></div>
+      <div class="card" data-a="card"><h3>TOCTOU</h3><p>Time-of-check to time-of-use: the gap between "is it there?" and "insert it" where a race fits.</p></div>
+      <div class="card" data-a="card"><h3>Medallion</h3><p>Bronze / silver / gold layering: raw, conformed, published. This project's "gold" is a set of views.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 27 -->
+<section class="slide" aria-label="Sources">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">27</span><span class="sep">/</span> SOURCES</div>
+    <h2 data-a="title" style="margin-top:18px">Every claim has a<br>place to check it.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols2 mt-m">
+      <div class="card" data-a="card">
+        <span class="tag">Databases and transactions</span>
+        <p><a class="cite" href="https://duckdb.org/docs/current/connect/concurrency.html" target="_blank" rel="noopener">DuckDB · concurrency</a><br>
+        <span class="muted" style="font-size:.85em">One read-write process; many read-only readers.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://duckdb.org/docs/lts/sql/statements/insert.html" target="_blank" rel="noopener">DuckDB · INSERT / ON CONFLICT</a><br>
+        <span class="muted" style="font-size:.85em">The conflict signal used by the publisher.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://www.postgresql.org/docs/current/ddl-constraints.html" target="_blank" rel="noopener">PostgreSQL · constraints</a><br>
+        <span class="muted" style="font-size:.85em">CHECK, UNIQUE, FK, and the NULL semantics.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://www.postgresql.org/docs/current/datatype-datetime.html" target="_blank" rel="noopener">PostgreSQL · date/time types</a><br>
+        <span class="muted" style="font-size:.85em">Why <code>timestamptz</code> exists.</span></p>
+      </div>
+
+      <div class="card" data-a="card">
+        <span class="tag">Modelling and layering</span>
+        <p><a class="cite" href="https://www.kimballgroup.com/2005/03/slowly-changing-dimensions-are-not-always-as-easy-as-1-2-3/" target="_blank" rel="noopener">Kimball · slowly changing dimensions</a><br>
+        <span class="muted" style="font-size:.85em">Why SCD2 is not the right fit for this fact.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://iceberg.apache.org/spec/" target="_blank" rel="noopener">Apache Iceberg · table spec</a><br>
+        <span class="muted" style="font-size:.85em">Snapshots as immutable table states.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://docs.databricks.com/aws/en/lakehouse/medallion" target="_blank" rel="noopener">Databricks · medallion architecture</a><br>
+        <span class="muted" style="font-size:.85em">Raw / conformed / published layers, append-only bronze.</span></p>
+      </div>
+
+      <div class="card" data-a="card">
+        <span class="tag">Quality and publishing</span>
+        <p><a class="cite" href="https://docs.getdbt.com/docs/build/data-tests" target="_blank" rel="noopener">dbt · data tests</a><br>
+        <span class="muted" style="font-size:.85em">unique / not_null / accepted_values / relationships.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://docs.getdbt.com/docs/collaborate/govern/model-contracts" target="_blank" rel="noopener">dbt · model contracts</a><br>
+        <span class="muted" style="font-size:.85em">A tested column shape consumers can rely on.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://dagster.io/blog/python-write-audit-publish" target="_blank" rel="noopener">Dagster · write-audit-publish</a><br>
+        <span class="muted" style="font-size:.85em">The pattern the publish transaction implements.</span></p>
+      </div>
+
+      <div class="card" data-a="card">
+        <span class="tag">Operations and change</span>
+        <p><a class="cite" href="https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html" target="_blank" rel="noopener">Airflow · best practices</a><br>
+        <span class="muted" style="font-size:.85em">Idempotent tasks; re-runs must not change the outcome.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://alembic.sqlalchemy.org/en/latest/tutorial.html" target="_blank" rel="noopener">Alembic · tutorial</a><br>
+        <span class="muted" style="font-size:.85em">Versioned migrations and the environment that records them.</span></p>
+        <p style="margin-top:10px"><a class="cite" href="https://docs.github.com/en/actions" target="_blank" rel="noopener">GitHub Actions</a><br>
+        <span class="muted" style="font-size:.85em">Running the four gates on every push.</span></p>
+      </div>
+    </div>
+
+    <p class="mono muted" data-a="body" style="font-size:10.5px;margin-top:18px">
+      Local evidence lives in <code>experiments/id-scheme/</code>, <code>docs/reports/</code>, and the test suite. Where this deck says
+      "measured", it means reproduced in this repository, not borrowed from a vendor.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ 28 -->
+<section class="slide" aria-label="Close">
+  <div class="inner">
+    <div class="eyebrow" data-a="eyebrow"><span class="pg">28</span><span class="sep">/</span> THE HONEST VERDICT</div>
+    <h2 data-a="title" style="margin-top:18px">The hard part is done.<br>The rest is discipline.</h2>
+    <div class="rule" data-a="rule"></div>
+
+    <div class="cols2 mt-m">
+      <div class="frame frame--g" data-a="card" style="--c:var(--green)">
+        <span class="frame__lbl">What matches production</span>
+        <p>Append-only history, an edge key, idempotent writes, a transactional write-audit-publish, database constraints, blocking
+        assertions, and a tested consumer contract. These are the patterns the sources describe, implemented at the right size for the
+        data.</p>
+      </div>
+      <div class="frame frame--warn" data-a="card">
+        <span class="frame__lbl">What does not, yet</span>
+        <p>No migration ledger, no CI, no schedule or alert, no run entry point wiring the lock, a timestamp guarantee that lives in a
+        helper, and a parser that has never seen a real page.</p>
+      </div>
+    </div>
+
+    <h3 data-a="body" style="margin-top:26px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim)">BEFORE CALLING IT PRODUCTION</h3>
+
+    <div class="cols2 mt-s" data-a="body">
+      <div class="stack" style="font-size:.94em">
+        <p><span class="kr">01</span> &nbsp;Add <code>schema_migration</code> before the second SQL file.</p>
+        <p><span class="kr">02</span> &nbsp;Wire <code>lock.py</code> into the run entry point; exit <code>5</code> when held.</p>
+        <p><span class="kr">03</span> &nbsp;Run the four gates in CI on every push.</p>
+      </div>
+      <div class="stack" style="font-size:.94em">
+        <p><span class="kr">04</span> &nbsp;Decide the timestamp type before the first real capture.</p>
+        <p><span class="kr">05</span> &nbsp;Capture one real stage end to end and commit a redacted fixture.</p>
+        <p><span class="kr">06</span> &nbsp;Schedule the run and alert on <code>v_pipeline_freshness</code>.</p>
+      </div>
+    </div>
+
+    <p class="lede" data-a="body" style="margin-top:34px;max-width:60ch">
+      The pipeline already does the hard thing: it remembers. The remaining work is making it remember the
+      <span class="k">same thing on every machine, every time</span>.
+    </p>
+
+    <p class="mono muted" data-a="body" style="font-size:11px;margin-top:24px">
+      dataderby · P0–P7 review · built from commit <span class="k">b898900</span> · sources on the previous slide
+    </p>
+  </div>
+</section>
+
+<!-- SLIDES:REST -->
+
+</main>
+
+<div class="chrome" id="chrome">
+  <span class="brand">DATADERBY</span>
+  <span class="pgno" id="pgno">P 01 <small>/ 28</small></span>
+  <div class="ledger" id="ledger" aria-label="Slide navigation"></div>
+  <span class="keyhint">? keys</span>
+  <div class="navs">
+    <button id="prev" aria-label="Previous slide">←</button>
+    <button id="next" aria-label="Next slide">→</button>
+  </div>
+</div>
+
+<div class="overlay" id="overview" role="dialog" aria-modal="true" aria-label="Slide overview">
+  <div class="ov-head">
+    <h2>Overview</h2>
+    <button class="ov-item" id="ov-close" style="padding:6px 12px">esc to close</button>
+  </div>
+  <div class="ov-grid" id="ov-grid"></div>
+</div>
+
+<div class="overlay" id="help" role="dialog" aria-modal="true" aria-label="Keyboard help">
+  <div class="ov-head">
+    <h2>Keys</h2>
+    <button class="ov-item" id="help-close" style="padding:6px 12px">esc to close</button>
+  </div>
+  <div class="help-rows">
+    <div><kbd>→</kbd> <kbd>space</kbd></div><div>next slide</div>
+    <div><kbd>←</kbd></div><div>previous slide</div>
+    <div><kbd>Home</kbd> <kbd>End</kbd></div><div>first / last</div>
+    <div><kbd>o</kbd></div><div>overview grid</div>
+    <div><kbd>?</kbd></div><div>this panel</div>
+    <div><kbd>Esc</kbd></div><div>close overlay</div>
+  </div>
+  <p class="muted" style="margin-top:26px;font-size:.9em">Deep links work: add <code>#12</code> to the URL. Print (Ctrl+P) stacks every slide for PDF export.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var idx = 0;
+  var currentTl = null;
+
+  var pgno = document.getElementById("pgno");
+  var progress = document.getElementById("progress");
+  var ledger = document.getElementById("ledger");
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+  var overview = document.getElementById("overview");
+  var help = document.getElementById("help");
+  var ovGrid = document.getElementById("ov-grid");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- chrome: ledger + overview ---------- */
+  slides.forEach(function (slide, i) {
+    var label = slide.getAttribute("aria-label") || ("Slide " + (i + 1));
+    var chapter = slide.querySelector(".eyebrow");
+    var chapterText = chapter ? chapter.textContent.replace(/\s+/g, " ").trim() : "";
+
+    var bar = document.createElement("button");
+    bar.type = "button";
+    bar.title = label;
+    bar.setAttribute("aria-label", "Go to slide " + (i + 1) + ": " + label);
+    bar.addEventListener("click", function () { goTo(i); });
+    ledger.appendChild(bar);
+
+    var item = document.createElement("button");
+    item.type = "button";
+    item.className = "ov-item";
+    item.innerHTML =
+      '<span class="n">' + String(i + 1).padStart(2, "0") + "</span>" +
+      "<span>" + label + "</span>" +
+      '<span class="ch">' + chapterText.split("/")[1]?.trim() + "</span>";
+    item.addEventListener("click", function () { closeOverlays(); goTo(i); });
+    ovGrid.appendChild(item);
+  });
+
+  /* ---------- animation ---------- */
+  /* Offline fallback: the same entrance choreography through the Web Animations
+     API, so the deck still moves when the GSAP CDN is unreachable. */
+  function fallbackAnimate(slide) {
+    if (reduceMotion || !Element.prototype.animate) return null;
+
+    var animations = [];
+    function play(el, frames, duration, delay) {
+      if (!el) return;
+      animations.push(el.animate(frames, {
+        duration: duration,
+        delay: delay || 0,
+        easing: "cubic-bezier(.2,.7,.2,1)",
+        fill: "both"
+      }));
+    }
+
+    var eye = slide.querySelector('[data-a="eyebrow"]');
+    var title = slide.querySelector('[data-a="title"]');
+    var rule = slide.querySelector('[data-a="rule"]');
+    var items = slide.querySelectorAll('[data-a="body"],[data-a="card"],[data-a="viz"]');
+
+    play(eye, [{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], 300, 0);
+    play(title, [{ opacity: 0, transform: "translateY(22px)" }, { opacity: 1, transform: "none" }], 480, 90);
+    if (rule) {
+      rule.style.transformOrigin = "left center";
+      play(rule, [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], 420, 170);
+    }
+    Array.prototype.forEach.call(items, function (el, i) {
+      play(el, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], 400, 210 + Math.min(i, 8) * 42);
+    });
+
+    return {
+      kill: function () { animations.forEach(function (a) { a.cancel(); }); },
+      progress: function () { animations.forEach(function (a) { try { a.finish(); } catch (e) {} }); }
+    };
+  }
+
+  function animateIn(slide) {
+    if (currentTl) { currentTl.kill(); currentTl = null; }
+    if (reduceMotion) return null;
+    if (!window.gsap) return fallbackAnimate(slide);
+
+    var eye = slide.querySelector('[data-a="eyebrow"]');
+    var title = slide.querySelector('[data-a="title"]');
+    var rule = slide.querySelector('[data-a="rule"]');
+    var items = slide.querySelectorAll('[data-a="body"],[data-a="card"],[data-a="viz"]');
+
+    var tl = window.gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    if (eye) tl.from(eye, { opacity: 0, y: -8, duration: 0.3 });
+    if (title) tl.from(title, { opacity: 0, y: 22, duration: 0.5 }, eye ? "-=0.16" : 0);
+    if (rule) tl.from(rule, { scaleX: 0, duration: 0.42, transformOrigin: "left center" }, "-=0.3");
+    if (items.length) {
+      tl.from(items, { opacity: 0, y: 12, duration: 0.4, stagger: 0.04 }, "-=0.26");
+    }
+    return tl;
+  }
+
+  /* ---------- render ---------- */
+  function render(n) {
+    slides.forEach(function (slide, i) {
+      var active = i === n;
+      slide.classList.toggle("is-active", active);
+      slide.setAttribute("aria-hidden", active ? "false" : "true");
+      if (!active) slide.scrollTop = 0;
+    });
+
+    pgno.innerHTML = "P " + String(n + 1).padStart(2, "0") + " <small>/ " + total + "</small>";
+    progress.style.width = ((n + 1) / total) * 100 + "%";
+
+    Array.prototype.forEach.call(ledger.children, function (bar, i) {
+      bar.classList.toggle("on", i < n);
+      bar.classList.toggle("cur", i === n);
+      bar.setAttribute("aria-current", i === n ? "true" : "false");
+    });
+
+    prevBtn.disabled = n === 0;
+    nextBtn.disabled = n === total - 1;
+
+    currentTl = animateIn(slides[n]);
+  }
+
+  /* ---------- navigation ---------- */
+  function go(delta) {
+    var next = Math.min(Math.max(idx + delta, 0), total - 1);
+    if (next === idx) return;
+    idx = next;
+    render(idx);
+    setHash(idx + 1);
+  }
+
+  function goTo(n) {
+    n = Math.min(Math.max(n, 0), total - 1);
+    if (n === idx) { closeOverlays(); return; }
+    idx = n;
+    render(idx);
+    setHash(idx + 1);
+  }
+
+  function fromHash() {
+    var n = parseInt((location.hash || "").replace("#", ""), 10);
+    return n >= 1 && n <= total ? n - 1 : 0;
+  }
+
+  function setHash(n) {
+    try { history.replaceState(null, "", "#" + n); } catch (err) { /* file:// in strict browsers */ }
+  }
+
+  /* ---------- overlays ---------- */
+  var lastFocus = null;
+
+  function openOverlay(el) {
+    lastFocus = document.activeElement;
+    el.classList.add("is-open");
+    var close = el.querySelector("button");
+    if (close) close.focus();
+  }
+
+  function closeOverlays() {
+    overview.classList.remove("is-open");
+    help.classList.remove("is-open");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function anyOverlayOpen() {
+    return overview.classList.contains("is-open") || help.classList.contains("is-open");
+  }
+
+  document.getElementById("ov-close").addEventListener("click", closeOverlays);
+  document.getElementById("help-close").addEventListener("click", closeOverlays);
+
+  [overview, help].forEach(function (el) {
+    el.addEventListener("click", function (e) {
+      if (e.target === el) closeOverlays();
+    });
+  });
+
+  /* ---------- input ---------- */
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === "Escape") {
+      if (anyOverlayOpen()) { e.preventDefault(); closeOverlays(); }
+      return;
+    }
+    if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
+      e.preventDefault(); openOverlay(help); return;
+    }
+    if (e.key === "o" || e.key === "O") {
+      e.preventDefault(); openOverlay(overview); return;
+    }
+    if (anyOverlayOpen()) return;
+
+    switch (e.key) {
+      case "ArrowRight": case "ArrowDown": case "PageDown": case " ": case "Enter":
+        e.preventDefault(); go(1); break;
+      case "ArrowLeft": case "ArrowUp": case "PageUp":
+        e.preventDefault(); go(-1); break;
+      case "Home": e.preventDefault(); goTo(0); break;
+      case "End": e.preventDefault(); goTo(total - 1); break;
+    }
+  });
+
+  prevBtn.addEventListener("click", function () { go(-1); });
+  nextBtn.addEventListener("click", function () { go(1); });
+
+  var touchX = null;
+  document.addEventListener("touchstart", function (e) {
+    touchX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 55 && !anyOverlayOpen()) go(dx < 0 ? 1 : -1);
+    touchX = null;
+  }, { passive: true });
+
+  window.addEventListener("hashchange", function () {
+    var n = fromHash();
+    if (n !== idx) goTo(n);
+  });
+
+  window.addEventListener("beforeprint", function () {
+    if (currentTl) currentTl.progress(1);
+  });
+
+  /* ---------- boot ---------- */
+  idx = fromHash();
+  render(idx);
+})();
+</script>
+</body>
+</html>

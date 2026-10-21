@@ -24,6 +24,11 @@ The final v1 plan and its 47-slide deck are in
 [`docs/dataderby-v1-plan.html`](docs/dataderby-v1-plan.html). The executable build
 order and test matrix are in [`plans/v1-build-plan.md`](plans/v1-build-plan.md).
 
+The P0–P7 production-readiness review is a beginner-oriented animated deck in
+[`docs/production-readiness-slides.html`](docs/production-readiness-slides.html):
+one concept per slide, each with a plain-language explanation, a source, and a
+recommendation. Open it in a browser; it works offline.
+
 They are independent inputs. The calendar is used to decide *when* to scrape team
 stats, not to join against them: the fixture site publishes display names
 (`Spurs`, `Man Utd`), while WhoScored keys teams on numeric `teamId`. Nothing in v1
