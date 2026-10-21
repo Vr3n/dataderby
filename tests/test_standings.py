@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
-from dataderby.contract import View
+from dataderby.config import load_settings
+from dataderby.contract import STANDINGS_MEASURES, View
 from dataderby.page import PageCapture
+from dataderby.parse import Candidate, IncompleteCohort, TeamRow
+from dataderby.parse_standings import check_team_sets, parse_views
 from dataderby.standings import (
     RawStandingsRow,
     StandingsParseError,
@@ -16,6 +20,8 @@ from dataderby.standings import (
     parse_standings,
     parse_view,
 )
+
+_SPEC = load_settings(Path("config/stages.toml")).stages["epl-2026-2027"]
 
 
 def _row(
@@ -110,3 +116,90 @@ def test_encode_decode_round_trip() -> None:
     rows = (_row(211, "Brighton", 1, played=7, form="wwwwww"),)
 
     assert decode_view(encode_view("overall", rows)) == rows
+
+
+def test_parse_views_builds_one_thirty_measure_row_per_team() -> None:
+    rows = (
+        _row(211, "Brighton", 1, played=7, form="wwwwww"),
+        _row(167, "Man City", 2, played=7, form="wdlwdl"),
+    )
+    candidate = parse_views(_page({"overall": rows, "home": rows, "away": rows}))
+
+    assert [row.whoscored_team_id for row in candidate.rows] == [167, 211]
+    brighton = candidate.rows[1]
+    assert set(brighton.measures) == set(STANDINGS_MEASURES)
+    assert brighton.measures["rank_overall"] == 1
+    assert brighton.measures["form_home"] == "wwwwww"
+    assert brighton.measures["points_away"] == 21
+
+
+def test_parse_views_returns_empty_for_a_stage_without_a_table() -> None:
+    rows = (_row(211, "Brighton", 1, played=7, form="wwwwww"),)
+    spec = _SPEC.model_copy(update={"has_league_table": False})
+
+    candidate = parse_views(_page({"overall": rows, "home": rows, "away": rows}), spec)
+
+    assert candidate.rows == ()
+
+
+def test_parse_views_rejects_a_declared_table_that_was_not_captured() -> None:
+    with pytest.raises(IncompleteCohort, match="declares a league table"):
+        parse_views(_page({}), _SPEC)
+
+
+def test_parse_views_rejects_a_team_missing_from_one_split() -> None:
+    overall = (_row(211, "Brighton", 1, played=7, form="wwwwww"),)
+    home = (_row(211, "Brighton", 1, played=7, form="wwwwww"),)
+    away = (_row(167, "Man City", 1, played=7, form="wwwwww"),)
+
+    with pytest.raises(StandingsParseError, match="all three splits"):
+        parse_views(_page({"overall": overall, "home": home, "away": away}))
+
+
+def test_parse_views_rejects_changed_team_names() -> None:
+    rows = (_row(211, "Brighton", 1, played=7, form="wwwwww"),)
+    away = (_row(211, "Brighton & Hove", 1, played=7, form="wwwwww"),)
+
+    with pytest.raises(StandingsParseError, match="name differs"):
+        parse_views(_page({"overall": rows, "home": rows, "away": away}))
+
+
+def _candidate(*team_ids: int) -> Candidate:
+    return Candidate(
+        whoscored_tournament_id=2,
+        is_opta=True,
+        rows=tuple(
+            TeamRow(
+                whoscored_team_id=team_id,
+                whoscored_team_name=f"Team {team_id}",
+                measures={},
+            )
+            for team_id in team_ids
+        ),
+    )
+
+
+def test_check_team_sets_accepts_equal_sets() -> None:
+    rows = (
+        _row(211, "Brighton", 1, played=7, form="wwwwww"),
+        _row(167, "Man City", 2, played=7, form="wdlwdl"),
+    )
+    standings = parse_views(_page({"overall": rows, "home": rows, "away": rows}))
+
+    check_team_sets(_candidate(211, 167), standings)
+
+
+def test_check_team_sets_reports_both_differences() -> None:
+    rows = (
+        _row(211, "Brighton", 1, played=7, form="wwwwww"),
+        _row(167, "Man City", 2, played=7, form="wdlwdl"),
+    )
+    standings = parse_views(_page({"overall": rows, "home": rows, "away": rows}))
+
+    with pytest.raises(IncompleteCohort, match="feed_only=\\[999\\]"):
+        check_team_sets(_candidate(211, 999), standings)
+
+
+def test_check_team_sets_rejects_an_empty_standings_side() -> None:
+    with pytest.raises(IncompleteCohort, match="no standings rows"):
+        check_team_sets(_candidate(211), parse_views(_page({})))
