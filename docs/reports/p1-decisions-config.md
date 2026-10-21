@@ -58,9 +58,9 @@ are observed.
 - `load_settings(path)`: reads `[settings]` and delegates stage parsing to the
   same function.
 
-The numeric identifiers are named `whoscored_stage_id` and
-`whoscored_season_id`. Measurements such as `expected_teams` remain unprefixed
-because they do not claim a source.
+The numeric identifiers are named `whoscored_stage_id`,
+`whoscored_season_id`, and `whoscored_tournament_id`. Measurements such as
+`expected_teams` remain unprefixed because they do not claim a source.
 
 ## Verification
 

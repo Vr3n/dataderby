@@ -11,7 +11,7 @@ from dataderby.config import load_settings, load_stages
 
 _STAGE = """[[stage]]
 key = "epl-2026-2027"
-tournament_id = 2
+whoscored_tournament_id = 2
 whoscored_season_id = 11141
 whoscored_stage_id = 25544
 season_key = "2026-2027"

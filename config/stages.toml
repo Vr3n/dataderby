@@ -14,7 +14,7 @@ log_dir = "data/logs"
 
 [[stage]]
 key = "epl-2026-2027"
-tournament_id = 2
+whoscored_tournament_id = 2
 whoscored_season_id = 11141
 whoscored_stage_id = 25544
 season_key = "2026-2027"
@@ -27,7 +27,7 @@ has_league_table = true
 
 [[stage]]
 key = "championship-2026-2027"
-tournament_id = 7
+whoscored_tournament_id = 7
 whoscored_season_id = 11184
 whoscored_stage_id = 25588
 season_key = "2026-2027"
@@ -40,7 +40,7 @@ has_league_table = true
 
 [[stage]]
 key = "efl-league-one-2026-2027"
-tournament_id = 8
+whoscored_tournament_id = 8
 whoscored_season_id = 11185
 whoscored_stage_id = 25589
 season_key = "2026-2027"
@@ -53,7 +53,7 @@ has_league_table = true
 
 [[stage]]
 key = "efl-league-two-2026-2027"
-tournament_id = 9
+whoscored_tournament_id = 9
 whoscored_season_id = 11186
 whoscored_stage_id = 25590
 season_key = "2026-2027"
@@ -66,7 +66,7 @@ has_league_table = true
 
 [[stage]]
 key = "la-liga-2026-2027"
-tournament_id = 4
+whoscored_tournament_id = 4
 whoscored_season_id = 11213
 whoscored_stage_id = 25662
 season_key = "2026-2027"
@@ -79,7 +79,7 @@ has_league_table = true
 
 [[stage]]
 key = "serie-a-2026-2027"
-tournament_id = 5
+whoscored_tournament_id = 5
 whoscored_season_id = 11126
 whoscored_stage_id = 25518
 season_key = "2026-2027"
@@ -92,7 +92,7 @@ has_league_table = true
 
 [[stage]]
 key = "bundesliga-2026-2027"
-tournament_id = 3
+whoscored_tournament_id = 3
 whoscored_season_id = 11217
 whoscored_stage_id = 25666
 season_key = "2026-2027"
@@ -105,7 +105,7 @@ has_league_table = true
 
 [[stage]]
 key = "ligue-1-2026-2027"
-tournament_id = 22
+whoscored_tournament_id = 22
 whoscored_season_id = 11150
 whoscored_stage_id = 25554
 season_key = "2026-2027"
@@ -118,7 +118,7 @@ has_league_table = true
 
 [[stage]]
 key = "eredivisie-2026-2027"
-tournament_id = 13
+whoscored_tournament_id = 13
 whoscored_season_id = 11135
 whoscored_stage_id = 25537
 season_key = "2026-2027"
@@ -131,7 +131,7 @@ has_league_table = true
 
 [[stage]]
 key = "champions-league-2026-2027"
-tournament_id = 12
+whoscored_tournament_id = 12
 whoscored_season_id = 11295
 whoscored_stage_id = 25800
 season_key = "2026-2027"
@@ -144,7 +144,7 @@ has_league_table = true
 
 [[stage]]
 key = "europa-league-2026-2027"
-tournament_id = 30
+whoscored_tournament_id = 30
 whoscored_season_id = 11294
 whoscored_stage_id = 25801
 season_key = "2026-2027"
@@ -160,7 +160,7 @@ has_league_table = true
 # against the fixtures page before the first live scrape.
 [[stage]]
 key = "conference-league-2026-2027"
-tournament_id = 715
+whoscored_tournament_id = 715
 whoscored_season_id = 11296
 whoscored_stage_id = 25802
 season_key = "2026-2027"

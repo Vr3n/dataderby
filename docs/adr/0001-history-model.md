@@ -25,13 +25,13 @@ The snapshot has:
 - `parent_snapshot_id`, the previous accepted snapshot for the same address, or
   `'genesis'`;
 - `UNIQUE (parent_snapshot_id, content_fingerprint)` as the idempotency guard;
-- `UNIQUE (tournament_id, whoscored_season_id, whoscored_stage_id, observed_at)`
+- `UNIQUE (whoscored_tournament_id, whoscored_season_id, whoscored_stage_id, observed_at)`
   as the address guard;
 - `observed_at` as the ordering key and `accepted_at` as the commit record.
 
 Facts address the header by `snapshot_id`. They never carry `observed_at`.
-Reports address `(tournament_id, whoscored_season_id, whoscored_stage_id,
-observed_at)` and never persist `snapshot_id`.
+Reports address `(whoscored_tournament_id, whoscored_season_id,
+whoscored_stage_id, observed_at)` and never persist `snapshot_id`.
 
 ## Consequences
 

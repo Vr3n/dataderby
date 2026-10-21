@@ -18,7 +18,7 @@ class StageSpec(BaseModel):
 
     Attributes:
         key: Stable local key used by the CLI and logs.
-        tournament_id: WhoScored tournament id.
+        whoscored_tournament_id: WhoScored tournament id.
         whoscored_season_id: WhoScored season id.
         whoscored_stage_id: WhoScored stage id; the feed's identity.
         season_key: Human-readable season label.
@@ -34,7 +34,7 @@ class StageSpec(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     key: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-    tournament_id: int = Field(gt=0)
+    whoscored_tournament_id: int = Field(gt=0)
     whoscored_season_id: int = Field(gt=0)
     whoscored_stage_id: int = Field(gt=0)
     season_key: str = Field(pattern=r"^\d{4}-\d{4}$")
@@ -91,11 +91,15 @@ def _parse_stages(data: dict[str, Any]) -> dict[str, StageSpec]:
         if spec.whoscored_stage_id in seen_ids:
             raise ValueError(f"duplicate whoscored_stage_id: {spec.whoscored_stage_id}")
 
-        address = (spec.tournament_id, spec.whoscored_season_id, spec.whoscored_stage_id)
+        address = (
+            spec.whoscored_tournament_id,
+            spec.whoscored_season_id,
+            spec.whoscored_stage_id,
+        )
         if address in addresses:
             raise ValueError(f"duplicate stage address: {address}")
 
-        season = (spec.tournament_id, spec.whoscored_season_id)
+        season = (spec.whoscored_tournament_id, spec.whoscored_season_id)
         expected = expected_by_season.setdefault(season, spec.expected_stages)
         if expected != spec.expected_stages:
             raise ValueError(f"expected_stages disagree for season {season}")
