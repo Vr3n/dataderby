@@ -370,14 +370,14 @@ Ingestion is where all the irreducibly-bespoke work lives (the anti-bot gate) *a
 import dlt
 from dataderby.client import fetch_team_stats
 
-@dlt.resource(name="team_stats", write_disposition="merge",
-              primary_key=["snapshot_id", "team_id"])
-def team_stats(fingerprint_state=dlt.sources.incremental("observed_at")):
-    payload = fetch_team_stats(...)          # our code: gate, cookies, retry
-    yield from normalise(payload)            # our code: field mapping, null policy
 
-pipeline = dlt.pipeline("dataderby", destination="duckdb",
-                        dataset_name="staging")
+@dlt.resource(name="team_stats", write_disposition="merge", primary_key=["snapshot_id", "team_id"])
+def team_stats(fingerprint_state=dlt.sources.incremental("observed_at")):
+    payload = fetch_team_stats(...)  # our code: gate, cookies, retry
+    yield from normalise(payload)  # our code: field mapping, null policy
+
+
+pipeline = dlt.pipeline("dataderby", destination="duckdb", dataset_name="staging")
 pipeline.run(team_stats)
 ```
 
@@ -471,10 +471,10 @@ data/raw/tournament=4/season=2026-2027/
   "snapshot_id": "snap_2026-10-09_4_25662",
   "tournament_id": 4,
   "season_key": "2026-2027",
-  "stage_id": 25662,
+  "whoscored_stage_id": 25662,
   "section": "team_statistics",
   "view": "overall",
-  "source_url": "https://www.whoscored.com/statisticsfeed/1/getteamstatistics?...",
+  "whoscored_url": "https://www.whoscored.com/statisticsfeed/1/getteamstatistics?...",
   "captured_at": "2026-10-09T22:03:02Z",
   "http_status": 200,
   "payload_sha256": "…",
@@ -563,15 +563,15 @@ The specific pressure here is the guide's §4.3: fixture-derived check windows. 
 ```python
 def run_once(now: datetime) -> RunOutcome:
     for window in due_windows(now):
-        probe = fetch_league_table(window)          # cheap
+        probe = fetch_league_table(window)  # cheap
         fp = fingerprint(probe)
         if fp == checkpoint.last_committed(window.scope):
             return RunOutcome.skipped_no_change(window)
-        captures = [capture(s) for s in SECTIONS]   # expensive
+        captures = [capture(s) for s in SECTIONS]  # expensive
         candidate = parse(captures)
-        validate_or_reject(candidate)               # atomic
-        publish(candidate)                          # header + rows, one txn
-        checkpoint.commit(window.scope, fp)         # only now
+        validate_or_reject(candidate)  # atomic
+        publish(candidate)  # header + rows, one txn
+        checkpoint.commit(window.scope, fp)  # only now
     return RunOutcome.accepted(...)
 ```
 
@@ -712,7 +712,7 @@ Bi-temporal, expressed as columns rather than as a database feature:
 
 | Column | Question | Our value |
 |---|---|---|
-| `fixture_end_expected_at` | when did we expect readiness? | from the fixture list |
+| `fixture_end_expected_at` | when did we expect readiness? | from the fixturedownload.com calendar |
 | `source_published_at` | when does the provider say? | **unavailable** — leave null, don't invent |
 | `observed_at` | when did we see this payload? | our probe time, UTC |
 | `captured_at` | when was this exact byte-payload written? | per capture |

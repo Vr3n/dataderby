@@ -67,6 +67,11 @@ A task is done only when all of these pass:
 - Keep existing tests intact, and fix the code to make them pass.
 - Declare a task done only after the gates pass and docstrings are
   updated.
+- Name the source in every source-derived identifier, name, URL or raw
+  payload: `whoscored_stage_id`, `whoscored_url`, `fixturedownload_slug`.
+  Never add a bare `source_*` field or variable. Derived values such as
+  `row_hash` and `teams_in_feed` are exempt because they do not claim a
+  source.
 
 # Ignore
 

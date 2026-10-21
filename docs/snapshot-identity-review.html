@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snapshot identity — review for decision · dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EDE3; --paper2:#E8E1D2; --paper3:#DFD7C6;
+    --ink:#14161A; --navy:#0E1A31; --navy2:#16243F;
+    --red:#D4382A; --green:#2E6B4F; --amber:#C98A2E;
+    --muted:#6E695E; --line:#D3CBBA;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0A0C10}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#0A0C10}
+  #stage{
+    position:relative;width:1600px;height:900px;background:var(--paper);
+    transform-origin:center center;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);
+  }
+  #grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  /* ---------------- chrome ---------------- */
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none;transition:opacity .3s}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+  #mast{
+    position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);
+  }
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:var(--line);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink)}
+  body.dark #mast,body.dark #foot{border-color:rgba(242,237,227,.16)}
+  body.dark .brand b,body.dark #pageNum{color:var(--paper)}
+  body.dark .brand span,body.dark #secLabel,body.dark .mast-right,body.dark #foot .l{color:#9D9789}
+  body.dark #clockTrack{background:rgba(242,237,227,.2)}
+
+  /* ---------------- slides ---------------- */
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:112px 84px 86px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;
+    opacity:0;visibility:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.dark{background:var(--navy);color:var(--paper)}
+  .slide.dark::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(242,237,227,.10) 1px,transparent 1px);
+    background-size:12px 12px;opacity:.5;
+  }
+  .slide.dark > *{position:relative;z-index:1}
+
+  /* typography */
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  .dark .kicker{color:#9D9789}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.94;font-size:104px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1;font-size:50px;max-width:34ch}
+  h3{font-family:var(--serif);font-weight:500;font-size:25px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:23px;line-height:1.45;color:#3B3B39;max-width:46ch}
+  .dark .standfirst{color:#CFC8B8}
+  .body{font-size:16px;line-height:1.6;color:#3C3B37;max-width:62ch}
+  /* prose keeps a readable measure; the layout container must fill the slide */
+  div.body{max-width:none}
+  .dark .body{color:#CFC8B8}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .dark .small{color:#9D9789}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .red{color:var(--red)} .green{color:var(--green)} .navy{color:var(--navy)}
+  .dark .red{color:#F06A5A} .dark .green{color:#6FC69A}
+
+  /* layout */
+  .body{min-height:0}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .stack{display:grid;gap:16px;align-content:start}
+  .between{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+
+  /* components */
+  .card{border-top:3px solid var(--navy);background:rgba(255,255,255,.42);padding:20px 22px 22px}
+  .dark .card{border-top-color:var(--paper);background:rgba(242,237,227,.05)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .dark .card .tag{color:#9D9789}
+  .card h3{margin:8px 0 10px}
+  .card p{font-size:14px;line-height:1.55;color:#4A4842}
+  .dark .card p{color:#C6BFAF}
+
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--ink);
+  }
+  .dark .tbl th{color:#9D9789;border-bottom-color:rgba(242,237,227,.35)}
+  .tbl td{padding:10px;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:middle}
+  .dark .tbl td{border-bottom-color:rgba(242,237,227,.14);color:#DCD5C5}
+  .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .tbl th.n{text-align:right}
+  .tbl tr.hi td{background:rgba(212,56,42,.06)}
+  .dark .tbl tr.hi td{background:rgba(240,106,90,.10)}
+  .tbl td.ok{color:var(--green);font-family:var(--mono);font-size:13px}
+  .tbl td.no{color:var(--red);font-family:var(--mono);font-size:13px}
+  .dark .tbl td.ok{color:#6FC69A} .dark .tbl td.no{color:#F06A5A}
+
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:44px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .stat .k{color:#9D9789}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+
+  .rule{height:1px;background:var(--line);width:100%}
+  .dark .rule{background:rgba(242,237,227,.18)}
+
+  .pull{font-family:var(--serif);font-size:38px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+
+  .room{
+    background:var(--paper2);border-left:3px solid var(--red);
+    padding:12px 16px;display:flex;gap:14px;align-items:baseline;
+  }
+  .dark .room{background:rgba(242,237,227,.06)}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .dark .room .lbl{color:#F06A5A}
+  .room p{font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .room p{color:#CFC8B8}
+
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 7px;border:1px solid currentColor;letter-spacing:.04em}
+
+  /* cover */
+  .cover{padding:0 96px}
+  .cover .inner{align-self:center;display:grid;gap:26px;max-width:900px}
+  .cover h1{font-size:118px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:56px;border-top:1px solid var(--line);padding-top:18px}
+  .pitch{position:absolute;right:-120px;top:120px;width:760px;height:760px;opacity:.10;z-index:0}
+  .pitch path,.pitch circle,.pitch rect{fill:none;stroke:var(--ink);stroke-width:1.6}
+  .ticker{display:flex;gap:26px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .ticker b{color:var(--red);font-weight:500}
+
+  /* chain diagram */
+  .chain{display:flex;align-items:center;gap:0}
+  .node{
+    width:150px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--paper);
+    font-family:var(--mono);font-size:11px;line-height:1.5;
+  }
+  .node b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .node span{color:var(--muted)}
+  .node.hot{border-color:var(--red);background:rgba(212,56,42,.07)}
+  .link{width:54px;height:2px;background:var(--ink);position:relative;flex:none}
+  .link::after{
+    content:"";position:absolute;right:-1px;top:-5px;width:0;height:0;
+    border-left:10px solid var(--ink);border-top:6px solid transparent;border-bottom:6px solid transparent;
+  }
+  .dark .link{background:var(--paper)} .dark .link::after{border-left-color:var(--paper)}
+
+  /* form dots */
+  .form{display:flex;gap:6px}
+  .dot{width:13px;height:13px;border-radius:50%;display:inline-block}
+  .dot.w{background:var(--green)} .dot.l{background:var(--red)} .dot.d{background:var(--muted)}
+  .dark .dot.w{background:#6FC69A} .dark .dot.l{background:#F06A5A}
+
+  /* strip plot */
+  .plot{position:relative;height:52px;border-bottom:1px solid var(--line)}
+  .dark .plot{border-bottom-color:rgba(242,237,227,.2)}
+  .plot .pt{position:absolute;bottom:6px;width:11px;height:11px;border-radius:50%;transform:translateX(-50%)}
+  .plot .pt.a{background:var(--navy)} .plot .pt.b{background:var(--red)}
+  .axis{position:relative;height:18px;margin-top:4px}
+  .axis span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .dark .axis span{color:#9D9789}
+
+  /* bars */
+  .bar{height:18px;background:var(--paper3);position:relative;overflow:hidden}
+  .dark .bar{background:rgba(242,237,227,.12)}
+  .bar>i{position:absolute;inset:0 auto 0 0;background:var(--navy)}
+  .dark .bar>i{background:var(--paper)}
+  .bar.red>i{background:var(--red)}
+
+  /* verdict block */
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--ink)}
+  .dark .verdict{border-color:rgba(242,237,227,.35)}
+  .verdict>div{padding:22px 24px}
+  .verdict>div+div{border-left:1.5px solid var(--ink)}
+  .dark .verdict>div+div{border-left-color:rgba(242,237,227,.35)}
+  .verdict .big{font-family:var(--mono);font-size:56px;line-height:1;letter-spacing:-.05em}
+  .verdict .cap{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .verdict .cap{color:#9D9789}
+
+  /* nav */
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s;
+  }
+  #nav button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  body.dark #nav button{border-color:rgba(242,237,227,.25);color:#CFC8B8}
+  body.dark #nav button:hover{background:var(--paper);color:var(--navy)}
+
+  /* chrome adapts between light and dark slides without a hard cut */
+  #mast,#foot{transition:border-color .32s ease}
+  .brand b,#pageNum,#secLabel,.mast-right,#foot .l{transition:color .32s ease}
+  #clockTrack{transition:background-color .32s ease}
+
+  /* notes */
+  #notes{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0A0C10;color:var(--paper);
+    border-top:2px solid var(--red);padding:18px 28px 20px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex;gap:24px;align-items:baseline;
+  }
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="grain"></div>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>Data desk · evidence review</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; Kick-off</div>
+        <div class="mast-right">For decision · 19 Oct 2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">Snapshot identity · id-scheme experiment</div>
+        <div id="clock">
+          <span class="l">Match clock</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 23</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="Kick-off" data-chrome="off"
+        data-note="Open with the one-line version: we were about to adopt a derived id because it 'reproduces', and the backfill test shows it does not reproduce in the case that matters. Today is about agreeing what a report is allowed to point at.">
+        <svg class="pitch" viewBox="0 0 760 760" aria-hidden="true">
+          <rect x="40" y="40" width="680" height="680"/>
+          <line x1="380" y1="40" x2="380" y2="720"/>
+          <circle cx="380" cy="380" r="92"/>
+          <circle cx="380" cy="380" r="4"/>
+          <rect x="40" y="230" width="112" height="300"/>
+          <rect x="608" y="230" width="112" height="300"/>
+          <rect x="40" y="310" width="48" height="140"/>
+          <rect x="672" y="310" width="48" height="140"/>
+        </svg>
+        <div class="inner">
+          <p class="kicker"><i></i>Evidence review 001 &nbsp;·&nbsp; for decision</p>
+          <h1 class="display">
+            <span class="l"><span>The id is not</span></span>
+            <span class="l"><span>the address.</span></span>
+          </h1>
+          <p class="standfirst">Two snapshot identities, twenty-four failure cases, and one measurement
+            that overturns the recommendation we were about to ship.</p>
+          <p class="byline">Data engineering · 19 October 2026 · 14 min read · DuckDB 1.5.6</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="24">0</div><div class="k">failure cases</div></div>
+          <div class="stat"><div class="v" data-count="500">0</div><div class="k">publishes per run</div></div>
+          <div class="stat"><div class="v" data-count="5">0</div><div class="k">ids moved by one backfill</div></div>
+          <div class="stat"><div class="v" data-count="6.2" data-dec="1">0</div><div class="k">% storage cost</div></div>
+        </div>
+      </section>
+
+      <!-- 02 decisions -->
+      <section class="slide" data-sec="Kick-off"
+        data-note="Three decisions, and only the first is about code. Push the room on decision 2: what does a saved report store? If nobody can answer, that is the actual blocker, not the id.">
+        <div>
+          <p class="kicker"><i></i>The agenda</p>
+          <h2 class="display" style="margin-top:14px">Three decisions,<br>not one.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up">
+            <div class="tag">Decision 01</div>
+            <h3>Which identifier?</h3>
+            <p>A — derived hash of lineage.<br>B — ULID plus a unique edge.<br>Or defer until E3 lands.</p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Decision 02</div>
+            <h3>What does a report pin?</h3>
+            <p><span class="mono">snapshot_id</span> — convenient, and unverifiable after a rebuild.<br>
+               <span class="mono">(stage, observed_at)</span> — reproducible from the archive.</p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Decision 03</div>
+            <h3>Who proves it stays true?</h3>
+            <p>A CI test that replays the archive, or a runbook step someone skips at 3 a.m.</p>
+          </div>
+          <div class="room a-up" style="grid-column:1/-1">
+            <span class="lbl">For the room</span>
+            <p>We can settle 01 in ten minutes. 02 is the one that keeps the team aligned for the next two years —
+              and it is the one nobody wrote down.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 03 three jobs -->
+      <section class="slide" data-sec="Kick-off"
+        data-note="Use the football analogy deliberately: a player registration number is stable, a shirt number is cosmetic, and a match is dated. The id is the registration; the observation time is the match.">
+        <div>
+          <p class="kicker"><i></i>Framing</p>
+          <h2 class="display" style="margin-top:14px">An identifier has three jobs.<br>We only argue about the first.</h2>
+        </div>
+        <div class="body c3">
+          <div class="a-up">
+            <div class="stat"><div class="v">01</div><div class="k">Identity</div></div>
+            <p class="body" style="margin-top:12px">Point at exactly one state of one stage. Required by the
+              fact-table foreign key and by lineage.</p>
+          </div>
+          <div class="a-up">
+            <div class="stat"><div class="v">02</div><div class="k">Dedupe</div></div>
+            <p class="body" style="margin-top:12px">One row per change. A retry, a stale checkpoint or a re-run
+              must not create a second version of the same observation.</p>
+          </div>
+          <div class="a-up">
+            <div class="stat"><div class="v red">03</div><div class="k">Address</div></div>
+            <p class="body" style="margin-top:12px">A report written last month still resolves today — after a
+              rebuild, a correction, or a late-arriving capture.</p>
+          </div>
+          <div class="rule a-fade" style="grid-column:1/-1"></div>
+          <p class="pull a-up" style="grid-column:1/-1">Jobs 01 and 02 are <b>database</b> problems.
+            Job 03 is a <b>history</b> problem — and it is the only place the two designs differ.</p>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 04 method -->
+      <section class="slide" data-sec="Method"
+        data-note="Stress that this is a controlled comparison, not a bake-off. The only code that differs is new_id() and the DDL constraint. Same loop, same data, same 24 tests.">
+        <div>
+          <p class="kicker"><i></i>Method</p>
+          <h2 class="display" style="margin-top:14px">A controlled trial.<br>Everything is fixed except the id.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl a-up">
+              <thead><tr><th>Held constant</th><th>How</th></tr></thead>
+              <tbody>
+                <tr><td>Input</td><td>9 real captures → 20 teams × 60 measures</td></tr>
+                <tr><td>Canonical form</td><td>sorted rows, sorted keys, <span class="mono">repr</span> floats</td></tr>
+                <tr><td>Publish loop</td><td>compare → header → fact → checkpoint</td></tr>
+                <tr><td>Transaction</td><td>one <span class="mono">BEGIN</span> / <span class="mono">COMMIT</span></td></tr>
+                <tr><td>Suite</td><td>24 cases, identical for each scheme</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>If you doubt a number, the harness is one command. Nothing here is a vendor benchmark.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">Varied</div>
+              <h3 style="font-family:var(--mono);font-size:17px;line-height:1.9">
+                <span class="red">A</span> new_id = sha256(parent|stage|content)<br>
+                <span class="red">B</span> new_id = ULID + UNIQUE(parent, content)<br>
+                <span class="red">C</span> B with a NULL root — the trap
+              </h3>
+            </div>
+            <div class="c2" style="gap:18px">
+              <div class="stat a-up"><div class="v" data-count="3">0</div><div class="k">implementations</div></div>
+              <div class="stat a-up"><div class="v" data-count="500">0</div><div class="k">publishes / run</div></div>
+              <div class="stat a-up"><div class="v" data-count="10000">0</div><div class="k">fact rows / run</div></div>
+              <div class="stat a-up"><div class="v" data-count="6">0</div><div class="k">timing runs</div></div>
+            </div>
+            <p class="small a-fade">Reproduce: <span class="mono">uv run --no-project --with duckdb python suite.py --approach b</span></p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 05 data -->
+      <section class="slide" data-sec="Method"
+        data-note="Be explicit about the threat: base state is real, succession is synthesised. The compression ratio and the drift profile are therefore best-case. E3 (retroactive corrections) is the missing real-world test.">
+        <div>
+          <p class="kicker"><i></i>The sample</p>
+          <h2 class="display" style="margin-top:14px">Real squads. Synthetic fixtures.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body a-up">The base state is the nine captures from tag <span class="mono">recon-evidence</span>:
+              three sections × three views, parsed into <strong>20 teams × 60 measures</strong>. Successive
+              observations are generated by monotone mutation — appearances, goals and cards accrue; rates drift 1%.</p>
+            <table class="tbl a-up">
+              <thead><tr><th>Ownership</th><th>Columns</th><th class="n">Count</th></tr></thead>
+              <tbody>
+                <tr><td>Shared, de-duplicated</td><td>apps · rating · shotsPerGame</td><td class="n">9</td></tr>
+                <tr><td>Per section &amp; view</td><td>ranking</td><td class="n">9</td></tr>
+                <tr><td>Summary-owned</td><td>goal · cards · possession · passSuccess · aerial</td><td class="n">18</td></tr>
+                <tr><td>Defensive-owned</td><td>conceded · tackles · interceptions · fouls · offside</td><td class="n">15</td></tr>
+                <tr><td>Offensive-owned</td><td>shots on target · dribbles · fouls won</td><td class="n">9</td></tr>
+                <tr class="hi"><td>Total</td><td></td><td class="n">60</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">What this buys</div>
+              <h3>Real cardinality, real nulls, real invariants</h3>
+              <p>The additive checks (<span class="mono">home + away = overall</span>) hold on every generated
+                snapshot, so a broken delta test fails for the right reason.</p>
+            </div>
+            <div class="card a-up" style="border-top-color:var(--red)">
+              <div class="tag">What it does not buy</div>
+              <h3>Synthetic drift is polite</h3>
+              <p>Real restatements rewrite history. That is exactly why we ran the backfill test separately —
+                and it is why E3 must run before the schema is frozen.</p>
+            </div>
+            <div class="stat a-up"><div class="v">5</div><div class="k">threats to validity, listed on slide 21</div></div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 06 systems -->
+      <section class="slide" data-sec="Method"
+        data-note="Spell out the two lines of DDL. The only difference a reviewer needs to hold in their head is: A dedupes on the primary key, B dedupes on the edge constraint. Everything else is identical.">
+        <div>
+          <p class="kicker"><i></i>The candidates</p>
+          <h2 class="display" style="margin-top:14px">Two designs, and a trap<br>we built on purpose.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up">
+            <div class="tag" style="color:var(--red)">A · derived</div>
+            <h3>Hash the lineage</h3>
+            <p class="mono" style="font-size:12px;color:var(--ink);margin:8px 0 10px">snap_56822dad813380f4<br>27bbeae854b068d2</p>
+            <p><span class="mono">sha256(parent|stage|content)[:32]</span><br>
+              Dedupe is the primary key. The id <em>is</em> the edge.</p>
+          </div>
+          <div class="card a-up">
+            <div class="tag" style="color:var(--red)">B · ULID</div>
+            <h3>Name the row, constrain the edge</h3>
+            <p class="mono" style="font-size:12px;color:var(--ink);margin:8px 0 10px">01M5A8AA42SDDVAQZX2Y48XJWG</p>
+            <p><span class="mono">UNIQUE(parent_snapshot_id, content_fingerprint)</span><br>
+              Dedupe is a constraint. The id is just a name.</p>
+          </div>
+          <div class="card a-up" style="border-top-color:var(--red)">
+            <div class="tag" style="color:var(--red)">C · B-null · trap</div>
+            <h3>Same, with a NULL root</h3>
+            <p class="mono" style="font-size:12px;color:var(--ink);margin:8px 0 10px">parent_snapshot_id = NULL</p>
+            <p>SQL treats NULLs as distinct in a UNIQUE constraint. The first observation can be inserted twice.</p>
+          </div>
+          <div style="grid-column:1/-1;display:flex;align-items:center;gap:18px" class="a-up">
+            <div class="chain">
+              <div class="node"><b>genesis</b><span>root</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S1</b><span>state A</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S2</b><span>state B</span></div>
+            </div>
+            <p class="small" style="max-width:38ch">A chains identity to position. B chains the <em>edge</em> to content,
+              and lets the id float free. That single difference drives every result that follows.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 07 half time scorecard (dark) -->
+      <section class="slide dark" data-sec="Half time"
+        data-note="Do not read the table aloud. Say the one thing: correctness is a tie, reproducibility is not. Then ask whether anyone expected B to lose three tests — that is the discussion.">
+        <div>
+          <p class="kicker"><i></i>Half time · the scoreboard</p>
+          <h2 class="display" style="margin-top:14px">Correctness is a tie.<br>Reproducibility is not.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up" style="font-size:16px">
+            <thead>
+              <tr><th style="width:52px">Pos</th><th>Scheme</th><th class="n">P</th><th class="n">W</th><th class="n">L</th><th class="n">Pts</th><th>Form</th><th>Misses</th></tr>
+            </thead>
+            <tbody>
+              <tr class="hi">
+                <td class="n">1</td><td><strong>A — derived</strong></td>
+                <td class="n">24</td><td class="n">24</td><td class="n">0</td><td class="n"><strong>24</strong></td>
+                <td><span class="form"><i class="dot w"></i><i class="dot w"></i><i class="dot w"></i><i class="dot w"></i><i class="dot w"></i></span></td>
+                <td class="ok">none</td>
+              </tr>
+              <tr>
+                <td class="n">2</td><td><strong>B — ULID</strong></td>
+                <td class="n">24</td><td class="n">21</td><td class="n">3</td><td class="n"><strong>21</strong></td>
+                <td><span class="form"><i class="dot w"></i><i class="dot w"></i><i class="dot l"></i><i class="dot w"></i><i class="dot w"></i></span></td>
+                <td class="no">rebuild ×2, seed ×1</td>
+              </tr>
+              <tr>
+                <td class="n">3</td><td><strong>C — B-null</strong></td>
+                <td class="n">24</td><td class="n">20</td><td class="n">4</td><td class="n"><strong>20</strong></td>
+                <td><span class="form"><i class="dot w"></i><i class="dot l"></i><i class="dot l"></i><i class="dot w"></i><i class="dot w"></i></span></td>
+                <td class="no">+ root edge ×2</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="c4" style="margin-top:26px">
+            <div class="stat a-up"><div class="v">8 / 8</div><div class="k">idempotency · all three</div></div>
+            <div class="stat a-up"><div class="v">7 / 7</div><div class="k">integrity · all three</div></div>
+            <div class="stat a-up"><div class="v">4 / 4</div><div class="k">scale &amp; id safety</div></div>
+            <div class="stat a-up"><div class="v red">1 / 4</div><div class="k">reproducibility · B</div></div>
+          </div>
+          <p class="small a-fade" style="margin-top:18px">No draws: every case is pass or fail. Form guide: idempotency · root dedupe · reproducibility · integrity · scale.</p>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 08 idempotency -->
+      <section class="slide" data-sec="First half"
+        data-note="The key sentence: the id does not make this safe, the transaction does. Ask whether anyone in the room had assumed the derived id was what prevented duplicates. This is usually where the debate resets.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · idempotency</p>
+          <h2 class="display" style="margin-top:14px">Both schemes are idempotent.<br>The id is not why.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl a-up">
+              <thead><tr><th>Failure path</th><th class="n">A</th><th class="n">B</th></tr></thead>
+              <tbody>
+                <tr><td>First observation</td><td class="n">1 row</td><td class="n">1 row</td></tr>
+                <tr><td>Identical publish, immediate retry</td><td class="n">1 row</td><td class="n">1 row</td></tr>
+                <tr><td>Rollback after header + fact</td><td class="n">0 rows</td><td class="n">0 rows</td></tr>
+                <tr><td>Process killed inside the transaction</td><td class="n">0 rows</td><td class="n">0 rows</td></tr>
+                <tr><td>Stale checkpoint, same edge</td><td class="n">2 rows</td><td class="n">2 rows</td></tr>
+                <tr><td>Same content, different parent</td><td class="n">2 rows</td><td class="n">2 rows</td></tr>
+                <tr><td>Second writer process</td><td class="n">refused</td><td class="n">refused</td></tr>
+              </tbody>
+            </table>
+            <p class="small a-fade">“2 rows” in the two edge cases is the correct answer: those are two distinct
+              observations, not a duplicate.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">The mechanism</div>
+              <h3>One commit, three writes</h3>
+              <p>Header, fact rows and checkpoint move together. A retry sees all three or none — regardless of
+                how the id was minted.</p>
+            </div>
+            <p class="pull a-up">Idempotency lives in the <b>transaction</b>, not in the identifier.</p>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>Was anyone relying on the id for duplicate protection? If so, that belief is now measured,
+                not assumed.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 09 anatomy -->
+      <section class="slide" data-sec="First half"
+        data-note="Walk the five boxes. The point is not the happy path; it is that killing the process after step 2 leaves nothing, and killing it after 4 leaves a consistent snapshot. There is no in-between state to clean up.">
+        <div>
+          <p class="kicker"><i></i>Finding 02 · the publish</p>
+          <h2 class="display" style="margin-top:14px">Five moves. One whistle.</h2>
+        </div>
+        <div class="body">
+          <div class="chain a-up" style="justify-content:space-between;margin:12px 0 28px">
+            <div class="node"><b>01 · BEGIN</b><span>open transaction</span></div>
+            <div class="link"></div>
+            <div class="node"><b>02 · header</b><span>ON CONFLICT DO NOTHING</span></div>
+            <div class="link"></div>
+            <div class="node"><b>03 · fact</b><span>20 rows, only if new</span></div>
+            <div class="link"></div>
+            <div class="node"><b>04 · checkpoint</b><span>fingerprint + id</span></div>
+            <div class="link"></div>
+            <div class="node hot"><b>05 · COMMIT</b><span>all or nothing</span></div>
+          </div>
+          <div class="c3">
+            <div class="card a-up">
+              <div class="tag">Kill after 01–02</div>
+              <h3>Nothing committed</h3>
+              <p>The header write is invisible. Retry inserts once. Measured: <span class="mono">0 rows</span>.</p>
+            </div>
+            <div class="card a-up">
+              <div class="tag">Kill after 03–04</div>
+              <h3>Still nothing</h3>
+              <p>Fact and checkpoint die with the transaction. Retry sees the old checkpoint and proceeds.</p>
+            </div>
+            <div class="card a-up" style="border-top-color:var(--red)">
+              <div class="tag">Kill after 05</div>
+              <h3>A complete snapshot</h3>
+              <p>The checkpoint already points at it. Retry returns <span class="mono">no_change</span> in ~5 ms.</p>
+            </div>
+          </div>
+          <p class="pull a-up" style="margin-top:26px">There is no partial state to clean up — which is why the
+            recovery runbook is three lines, not three pages.</p>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 10 revert -->
+      <section class="slide" data-sec="First half"
+        data-note="This is the slide that kills 'just hash the content'. A Friday press conference changes a manager, then reverses; the data returns to a previous state. Content-only dedupe calls that one row and silently rewrites history.">
+        <div>
+          <p class="kicker"><i></i>Finding 03 · the revert</p>
+          <h2 class="display" style="margin-top:14px">A → B → A is three observations,<br>not one.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="chain a-up">
+              <div class="node"><b>S1</b><span>state A</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S2</b><span>state B</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S3</b><span>state A again</span></div>
+            </div>
+            <p class="body a-up" style="margin-top:18px">Measured on both schemes: <strong>3 snapshots</strong>.
+              The edge differs even though the content repeats.</p>
+            <p class="body a-up">A dedupe key on <em>content alone</em> returns 2 and loses the revert. That is a
+              silent history rewrite — the exact failure the snapshot model exists to prevent.</p>
+          </div>
+          <div class="stack">
+            <div class="verdict a-up">
+              <div>
+                <div class="big">3</div>
+                <div class="cap">edge-keyed · A and B</div>
+              </div>
+              <div>
+                <div class="big red">2</div>
+                <div class="cap">content-only key · wrong</div>
+              </div>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>Do we have a real example of a restatement reversing to a previous state? If yes, this stops
+                being hypothetical.</p>
+            </div>
+            <p class="small a-fade">The chain is not decoration. It is the only thing that distinguishes
+              “the same numbers” from “the same moment”.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 11 null trap -->
+      <section class="slide" data-sec="First half"
+        data-note="The trap is seductive because it looks cleaner: no magic 'genesis' string. It fails silently. If anyone proposes it, this slide is the answer.">
+        <div>
+          <p class="kicker"><i></i>Finding 04 · the silent failure</p>
+          <h2 class="display" style="margin-top:14px">A unique constraint does not<br>protect a NULL root.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <pre class="mono a-up" style="font-size:13px;line-height:1.85;background:rgba(255,255,255,.45);border:1px solid var(--line);padding:18px 20px;overflow:hidden">CREATE TABLE competition_snapshot (
+  snapshot_id         VARCHAR PRIMARY KEY,
+  parent_snapshot_id  VARCHAR,          <span style="color:var(--muted)">-- NULL at the root</span>
+  content_fingerprint VARCHAR NOT NULL,
+  UNIQUE (parent_snapshot_id, content_fingerprint)
+);</pre>
+            <pre class="mono a-up" style="font-size:13px;line-height:1.85;background:rgba(212,56,42,.06);border:1px solid rgba(212,56,42,.35);padding:18px 20px;overflow:hidden">INSERT ... (parent = NULL, fp = 'a91f…');
+INSERT ... (parent = NULL, fp = 'a91f…');
+
+<span style="color:var(--red)">→ 2 rows for one observation</span></pre>
+          </div>
+          <div class="stack">
+            <div class="stat a-up"><div class="v red" data-count="2">0</div><div class="k">rows · B-null · T08</div>
+              <div class="s">A and B both return 1.</div></div>
+            <p class="body a-up">SQL compares NULLs as <strong>unknown</strong>, so the pair
+              <span class="mono">(NULL, fp)</span> never collides with itself. The database is correct; the schema is wrong.</p>
+            <div class="card a-up">
+              <div class="tag">The rule</div>
+              <h3>Sentinel, never NULL</h3>
+              <p><span class="mono">parent_snapshot_id VARCHAR NOT NULL DEFAULT 'genesis'</span>. The root is deduped
+                by the same constraint as every other edge.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>This is the only failure in the set with no error and no warning. Shall we add it to the
+                schema review checklist?</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 12 integrity -->
+      <section class="slide" data-sec="First half"
+        data-note="These checks are the ones that catch a pipeline that 'works' but lies. The delta check in particular is the one the earlier model got wrong by partitioning over the latest two rows.">
+        <div>
+          <p class="kicker"><i></i>Finding 05 · integrity</p>
+          <h2 class="display" style="margin-top:14px">Seven checks that have nothing<br>to do with the id.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up">
+            <thead><tr><th style="width:30%">Check</th><th>Expected</th><th class="n">A</th><th class="n">B</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td>Orphan fact row</td><td>rejected by FK</td><td class="n ok">pass</td><td class="n ok">pass</td><td>Catches a half-written snapshot</td></tr>
+              <tr><td>Latest state</td><td>20 rows, exact values</td><td class="n ok">pass</td><td class="n ok">pass</td><td>The <span class="mono">max(ts) join</span> bug</td></tr>
+              <tr><td>Delta, 9 980 pairs</td><td>every diff = 1</td><td class="n ok">pass</td><td class="n ok">pass</td><td>Full-history partition</td></tr>
+              <tr><td>Missing measure</td><td>NULL, never 0</td><td class="n ok">pass</td><td class="n ok">pass</td><td>Zero is a number; NULL is not</td></tr>
+              <tr><td>Row order changed</td><td>same fingerprint</td><td class="n ok">pass</td><td class="n ok">pass</td><td>No spurious versions</td></tr>
+              <tr><td>Key order / JSON round-trip</td><td>same fingerprint</td><td class="n ok">pass</td><td class="n ok">pass</td><td>Cross-machine stability</td></tr>
+              <tr><td>One value changed by 1.0</td><td>new fingerprint</td><td class="n ok">pass</td><td class="n ok">pass</td><td>Detection actually detects</td></tr>
+            </tbody>
+          </table>
+          <div class="c4" style="margin-top:24px">
+            <div class="stat a-up"><div class="v">0</div><div class="k">delta anomalies</div></div>
+            <div class="stat a-up"><div class="v">20</div><div class="k">rows in latest state</div></div>
+            <div class="stat a-up"><div class="v">1</div><div class="k">NULL cell, 0 zeros</div></div>
+            <div class="stat a-up"><div class="v">4 / 4</div><div class="k">canonical checks stable</div></div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 13 performance -->
+      <section class="slide" data-sec="Second half"
+        data-note="Be honest: the spread across runs is wider than the gap. Do not let anyone leave thinking ULIDs are 10% slower. The actionable finding is the insert path, which is 90x.">
+        <div>
+          <p class="kicker"><i></i>Finding 06 · performance</p>
+          <h2 class="display" style="margin-top:14px">Real, noisy, and not<br>the deciding factor.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="between"><span class="small">Insert p50 across six independent runs · ms</span><span class="small mono">lower is better</span></div>
+            <div class="plot a-up" style="margin-top:8px">
+              <span class="pt a" style="left:50.9%"></span><span class="pt a" style="left:45.5%"></span>
+              <span class="pt a" style="left:32.6%"></span><span class="pt a" style="left:31.7%"></span>
+              <span class="pt a" style="left:26.6%"></span><span class="pt a" style="left:16.0%"></span>
+              <span class="pt b" style="left:30.7%"></span><span class="pt b" style="left:68.5%"></span>
+              <span class="pt b" style="left:71.7%"></span><span class="pt b" style="left:52.4%"></span>
+              <span class="pt b" style="left:30.4%"></span><span class="pt b" style="left:85.5%"></span>
+            </div>
+            <div class="axis a-fade">
+              <span style="left:0%">65</span><span style="left:28.6%">75</span>
+              <span style="left:57.1%">85</span><span style="left:85.7%">95</span>
+            </div>
+            <div class="between" style="margin-top:6px">
+              <span class="small"><i class="dot" style="background:var(--navy);display:inline-block;margin-right:6px"></i>A · range 70.6–82.8</span>
+              <span class="small"><i class="dot" style="background:var(--red);display:inline-block;margin-right:6px"></i>B · range 75.6–94.9</span>
+            </div>
+            <p class="body a-up" style="margin-top:16px">The two ranges overlap. B was slower at the median in five of
+              six runs (2–35%) and faster in one (8%). <strong>The spread between runs is larger than the gap between schemes.</strong></p>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>Are we comfortable treating a ±10% insert difference as noise on a workload of 9 requests a day? If yes, drop this criterion.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <table class="tbl a-up">
+              <thead><tr><th>Single coherent run · 300 publishes</th><th class="n">A</th><th class="n">B</th></tr></thead>
+              <tbody>
+                <tr><td>Insert p50</td><td class="n">76.1 ms</td><td class="n">83.3 ms</td></tr>
+                <tr><td>Insert p95</td><td class="n">104.6 ms</td><td class="n">101.4 ms</td></tr>
+                <tr><td>Latest query p50</td><td class="n">6.4 ms</td><td class="n">5.9 ms</td></tr>
+                <tr><td>Delta query p50</td><td class="n">13.3 ms</td><td class="n">12.6 ms</td></tr>
+                <tr><td>No-change publish</td><td class="n">5.3 ms</td><td class="n">5.4 ms</td></tr>
+              </tbody>
+            </table>
+            <div class="card a-up" style="border-top-color:var(--red)">
+              <div class="tag">The finding worth acting on</div>
+              <h3>The load path beats the id, 90×</h3>
+              <p>DuckDB 1.5.6 binds parameters at ~4 ms each. A 20 × 62 insert: <span class="mono red">2 485 ms</span>
+                parameterised, <span class="mono green">27 ms</span> as literals, <span class="mono">73 ms</span> via COPY.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 14 storage -->
+      <section class="slide" data-sec="Second half"
+        data-note="The counter-intuitive line: the shorter id is the larger table. The 11 bytes saved per id are repaid by the composite index. It is 6%, not 60% — do not let it derail the decision.">
+        <div>
+          <p class="kicker"><i></i>Finding 07 · storage</p>
+          <h2 class="display" style="margin-top:14px">The shorter id is<br>the larger table.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="a-up">
+              <div class="between" style="margin-bottom:8px"><span class="mono" style="font-size:13px">A — derived</span><span class="mono" style="font-size:13px">14 022 B / snapshot</span></div>
+              <div class="bar"><i style="width:94.1%"></i></div>
+            </div>
+            <div class="a-up" style="margin-top:8px">
+              <div class="between" style="margin-bottom:8px"><span class="mono" style="font-size:13px">B — ULID</span><span class="mono" style="font-size:13px">14 896 B / snapshot</span></div>
+              <div class="bar red"><i style="width:100%"></i></div>
+            </div>
+            <div class="c2" style="margin-top:26px">
+              <div class="stat a-up"><div class="v">−11</div><div class="k">bytes per id · 37 → 26</div></div>
+              <div class="stat a-up"><div class="v red">+6.2%</div><div class="k">bytes per snapshot</div></div>
+            </div>
+            <p class="body a-up" style="margin-top:20px">The saved bytes are repaid by the composite index on
+              <span class="mono">(parent, content)</span>: 701 → 745 bytes per fact row, plus a second B-tree.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">Across scales</div>
+              <h3>Consistently larger, not catastrophically</h3>
+              <p>+7.7% at 200 snapshots · +6.2% at 300 · +4.5% at 500. Absolute bytes per snapshot fall with scale
+                as compression improves — compare like with like.</p>
+            </div>
+            <div class="card a-up">
+              <div class="tag">Translate it</div>
+              <h3>Under 10 MB per season</h3>
+              <p>At 9 000 snapshots the difference is roughly 8 MB. This is a rounding error next to the raw
+                archive; it should not decide the architecture.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>Does anyone object to a 6% storage tax in exchange for shorter, sortable keys? If yes, say the
+                threshold now.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 15 decisive address -->
+      <section class="slide" data-sec="Second half"
+        data-note="This is the slide to slow down on. Exact replay: A reproduces, B does not. But pinning by observation works for both. Then the next slide shows why exact replay is not the realistic scenario.">
+        <div>
+          <p class="kicker"><i></i>Finding 08 · the decisive test</p>
+          <h2 class="display" style="margin-top:14px">A reproduces its ids —<br>only on an <em>identical</em> replay.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">Scenario 01 · exact replay</div>
+              <h3>Rebuild the same raw, in the same order</h3>
+              <table class="tbl" style="margin-top:10px">
+                <tbody>
+                  <tr><td>Ids equal</td><td class="n ok">yes</td><td class="n no">no</td></tr>
+                  <tr><td>Report pins <span class="mono">snapshot_id</span></td><td class="n ok">20 rows</td><td class="n no">0 rows</td></tr>
+                  <tr><td>Report pins <span class="mono">(stage, observed_at)</span></td><td class="n ok">20 rows</td><td class="n ok">20 rows</td></tr>
+                </tbody>
+              </table>
+              <p class="small" style="margin-top:8px">A on the left, B on the right.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>If this were the only scenario, A would win. Keep that in mind for the next slide.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:var(--red)">
+              <div class="tag">Scenario 02 · one backfilled observation</div>
+              <h3>Insert a missed capture between S1 and S2</h3>
+              <table class="tbl" style="margin-top:10px">
+                <tbody>
+                  <tr><td>Downstream ids changed</td><td class="n no">5 / 5</td><td class="n no">5 / 5</td></tr>
+                  <tr><td>Report pins <span class="mono">snapshot_id</span></td><td class="n no">0 rows</td><td class="n no">0 rows</td></tr>
+                  <tr><td>Report pins <span class="mono">(stage, observed_at)</span></td><td class="n ok">20 rows</td><td class="n ok">20 rows</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="pull a-up">The case A was built to protect is the case where it fails.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 16 backfill -->
+      <section class="slide" data-sec="Second half"
+        data-note="Draw the mechanism on the board if needed: each id hashes its parent, so a new node in the middle changes every child's input. B changes for the boring reason that ids are random. Either way, the id is not an address.">
+        <div>
+          <p class="kicker"><i></i>Finding 08 · mechanism</p>
+          <h2 class="display" style="margin-top:14px">One insertion re-addresses<br>the whole suffix.</h2>
+        </div>
+        <div class="body">
+          <div class="a-up">
+            <p class="small" style="margin-bottom:10px">Before · six accepted observations</p>
+            <div class="chain">
+              <div class="node"><b>S1</b><span>id …3f2a</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S2</b><span>id …9c14</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S3</b><span>id …77b0</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S4</b><span>id …ae51</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S5</b><span>id …0d33</span></div>
+              <div class="link"></div>
+              <div class="node"><b>S6</b><span>id …6e88</span></div>
+            </div>
+          </div>
+          <div class="a-up" style="margin-top:26px">
+            <p class="small" style="margin-bottom:10px">After · one capture was missing between S1 and S2</p>
+            <div class="chain">
+              <div class="node"><b>S1</b><span>unchanged</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S1.5</b><span>late capture</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S2′</b><span>new parent → new id</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S3′</b><span>new parent → new id</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S4′</b><span>new parent → new id</span></div>
+              <div class="link"></div>
+              <div class="node hot"><b>S5′</b><span>new parent → new id</span></div>
+            </div>
+          </div>
+          <div class="c2" style="margin-top:30px">
+            <p class="body a-up"><strong>Why A moves:</strong> the id is a hash of the parent. A new node in the middle
+              changes the parent of every child after it. <span class="red">Measured: 5 of 5.</span></p>
+            <p class="body a-up"><strong>Why B moves:</strong> the ids are random by construction. Replaying produces
+              new names. <span class="red">Measured: 5 of 5.</span></p>
+          </div>
+          <p class="small a-fade" style="margin-top:16px">In both schemes, a report pinned to <span class="mono">snapshot_id</span>
+            returns 0 rows. Pinned to <span class="mono">(stage, observed_at)</span>, both return 20.</p>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 17 shortcuts -->
+      <section class="slide" data-sec="Second half"
+        data-note="These are the three proposals that always come up in review. Each is tempting and each fails for a measured reason. Land the conclusion: the observation is the only address history cannot rewrite.">
+        <div>
+          <p class="kicker"><i></i>Discussion · dead ends</p>
+          <h2 class="display" style="margin-top:14px">Three tempting shortcuts<br>that don't survive history.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up">
+            <thead><tr><th style="width:30%">Proposal</th><th style="width:34%">Why it feels right</th><th>Measured failure</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Hash the content only</strong></td>
+                <td>“Same data, same row.”</td>
+                <td class="no">A → B → A collapses to 2 rows; the revert is erased.</td>
+              </tr>
+              <tr>
+                <td><strong>Hash content + parent</strong></td>
+                <td>“The chain gives us reproducibility.”</td>
+                <td class="no">One backfill changes 5 / 5 downstream ids. It reproduces only an identical replay.</td>
+              </tr>
+              <tr>
+                <td><strong>Store the snapshot id in the report</strong></td>
+                <td>“Pinning makes the report immutable.”</td>
+                <td class="no">0 rows after a rebuild in B; 0 rows after a backfill in <em>both</em>.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="rule a-fade" style="margin:26px 0"></div>
+          <div class="c2">
+            <p class="pull a-up">The id is <b>lineage</b>. The observation is <b>address</b>.</p>
+            <div class="stack">
+              <p class="body a-up">Every shortcut above tries to make one value do both jobs. That works only while
+                history is append-only and never corrected.</p>
+              <p class="body a-up">We already know corrections happen — the reason we keep raw is that the source changes.</p>
+              <div class="room a-up">
+                <span class="lbl">For the room</span>
+                <p>Is there a fourth proposal we have not tested? Name it now; the harness takes an hour to extend.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 18 ledger -->
+      <section class="slide" data-sec="Second half"
+        data-note="The ledger is the honest summary. Note that A wins two rows and B wins five, but only one row is decisive. Let the room argue about whether 'address by id' matters — that is the whole decision.">
+        <div>
+          <p class="kicker"><i></i>The ledger</p>
+          <h2 class="display" style="margin-top:14px">Where each design<br>actually wins.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up">
+            <thead><tr><th style="width:36%">Property</th><th>A · derived</th><th>B · ULID</th><th style="width:14%">Weight</th></tr></thead>
+            <tbody>
+              <tr><td>Dedupe on the edge</td><td class="ok">primary key</td><td class="ok">unique constraint</td><td>equal</td></tr>
+              <tr><td>Idempotent retries</td><td class="ok">transaction</td><td class="ok">transaction</td><td>equal</td></tr>
+              <tr><td>Survives a stale checkpoint</td><td class="ok">yes</td><td class="ok">yes</td><td>equal</td></tr>
+              <tr><td>Exact replay reproduces ids</td><td class="ok">yes</td><td class="no">no</td><td>low</td></tr>
+              <tr><td>Backfill keeps downstream ids</td><td class="no">no</td><td class="no">no</td><td>decisive</td></tr>
+              <tr><td>Address by <span class="mono">snapshot_id</span></td><td class="ok">exact replay only</td><td class="no">never</td><td>high</td></tr>
+              <tr><td>Address by <span class="mono">(stage, observed_at)</span></td><td class="ok">yes</td><td class="ok">yes</td><td>decisive</td></tr>
+              <tr><td>Time-sortable</td><td class="no">no</td><td class="ok">yes</td><td>low</td></tr>
+              <tr><td>Key length</td><td class="no">37 chars</td><td class="ok">26 chars</td><td>low</td></tr>
+              <tr><td>Storage at 300 snapshots</td><td class="ok">14 022 B</td><td class="no">14 896 B</td><td>low</td></tr>
+              <tr><td>Depends on replay order</td><td class="no">yes</td><td class="ok">no</td><td>medium</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 19 recommendation (dark) -->
+      <section class="slide dark" data-sec="Full time"
+        data-note="State the recommendation plainly, then the four conditions. Emphasise that condition 3 is the one that actually changes behaviour: no stored snapshot ids downstream. If the room cannot commit to it, choose A instead.">
+        <div>
+          <p class="kicker"><i></i>Full time · recommendation</p>
+          <h2 class="display" style="margin-top:14px">Take the ULID.<br>Stop treating it as an address.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body a-up">All eight idempotency cases and all seven integrity checks pass for both schemes.
+              The only difference that survives scrutiny is exact-replay id equality — a property that a single
+              backfilled observation destroys.</p>
+            <p class="body a-up">The tie therefore breaks on what remains: shorter key, time-sortable, no dependence
+              on chain position, and no hash of the parent to reason about.</p>
+            <div class="stat a-up" style="margin-top:8px">
+              <div class="v">+6.2%</div><div class="k">storage · ≈ +10% median insert · −11 bytes per id</div>
+            </div>
+            <p class="small a-fade">Cost accepted. None of it changes a query result.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:#F06A5A">
+              <div class="tag" style="color:#F06A5A">Four conditions, non-negotiable</div>
+              <div class="body" style="margin-top:10px;line-height:2;font-size:15px">
+                <span class="mono red">01</span>&nbsp; <span class="mono">parent_snapshot_id NOT NULL DEFAULT 'genesis'</span><br>
+                <span class="mono red">02</span>&nbsp; <span class="mono">UNIQUE (parent_snapshot_id, content_fingerprint)</span><br>
+                <span class="mono red">03</span>&nbsp; Reports pin <span class="mono">(stage, observed_at)</span>; no stored <span class="mono">snapshot_id</span> outside the warehouse<br>
+                <span class="mono red">04</span>&nbsp; CI replays the archive and asserts the <span class="mono">(stage, observed_at) → content</span> map
+              </div>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">For the room</span>
+              <p>Condition 03 is the real decision. If we cannot commit to it, the honest answer is A — and then we
+                accept that a backfill breaks pinned reports anyway.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 20 what ships -->
+      <section class="slide" data-sec="Full time"
+        data-note="Keep this short. The point is that the DDL is small and the publish contract is three writes. If someone wants to reopen the design, this is the artefact to attack.">
+        <div>
+          <p class="kicker"><i></i>What ships</p>
+          <h2 class="display" style="margin-top:14px">The schema, and the one rule<br>that makes it safe.</h2>
+        </div>
+        <div class="body c2">
+          <pre class="mono a-up" style="font-size:12.5px;line-height:1.8;background:rgba(255,255,255,.45);border:1px solid var(--line);padding:20px 22px;overflow:hidden">CREATE TABLE competition_snapshot (
+  snapshot_id          VARCHAR PRIMARY KEY,
+  parent_snapshot_id   VARCHAR NOT NULL
+                       DEFAULT <span style="color:var(--red)">'genesis'</span>,
+  stage_id             VARCHAR NOT NULL,
+  content_fingerprint  VARCHAR NOT NULL,
+  observed_at          TIMESTAMP NOT NULL,
+  accepted_at          TIMESTAMP NOT NULL,
+
+  UNIQUE (parent_snapshot_id, content_fingerprint),
+  UNIQUE (stage_id, observed_at)
+);
+
+<span style="color:var(--muted)">-- the only address a report may store
+-- (stage_id, observed_at), reproducible from raw</span></pre>
+          <div class="stack">
+            <pre class="mono a-up" style="font-size:12.5px;line-height:1.8;background:rgba(255,255,255,.45);border:1px solid var(--line);padding:20px 22px;overflow:hidden">BEGIN;
+  INSERT header ON CONFLICT (parent, content) DO NOTHING;
+  <span style="color:var(--muted)">-- fact rows only if the header is new</span>
+  INSERT INTO fact_team_snapshot ...;
+  INSERT INTO checkpoint ... ON CONFLICT ...;
+COMMIT;</pre>
+            <div class="card a-up">
+              <div class="tag">Guardrail</div>
+              <h3>Replay test asserts content, not ids</h3>
+              <p>The old test compared <span class="mono">snapshot_id</span> sets. Under B that test must compare
+                <span class="mono">(stage, observed_at, content_fingerprint)</span> — otherwise it fails for the wrong reason.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 21 validity -->
+      <section class="slide" data-sec="Full time"
+        data-note="Say this before anyone else does. The four threats are real. The one that matters most is synthetic succession: real restatements are more violent than our 1% drift.">
+        <div>
+          <p class="kicker"><i></i>Before you decide</p>
+          <h2 class="display" style="margin-top:14px">What this experiment<br>does not prove.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl a-up">
+              <thead><tr><th>Threat</th><th>Consequence</th></tr></thead>
+              <tbody>
+                <tr><td>Succession is synthesised</td><td>Real drift and compression may differ</td></tr>
+                <tr><td>One stage, 20 teams</td><td>No cross-stage contention measured</td></tr>
+                <tr><td>Single-writer DuckDB</td><td>Concurrency = lock refusal, not MVCC</td></tr>
+                <tr><td>No retention or compaction</td><td>Storage is steady-state only</td></tr>
+                <tr><td>One Windows machine</td><td>The 4 ms/param binding result is platform-specific</td></tr>
+              </tbody>
+            </table>
+            <p class="small a-fade">Base state, columns and invariants are real. Only the change between snapshots is generated.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up">
+              <div class="tag">Run before M2</div>
+              <h3>Three experiments still open</h3>
+              <p style="line-height:1.9">
+                <span class="mono red">E2</span> — does an unchanged table imply unchanged details?<br>
+                <span class="mono red">E3</span> — are values corrected retroactively?<br>
+                <span class="mono red">E4</span> — is <span class="mono">teamId</span> stable across seasons?
+              </p>
+            </div>
+            <div class="card a-up">
+              <div class="tag">What would flip the call</div>
+              <h3>One condition</h3>
+              <p>If a downstream system must store <span class="mono">snapshot_id</span> <em>and</em> backfills are
+                forbidden, A is the better fit. We have not found such a system.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 22 questions -->
+      <section class="slide" data-sec="Full time"
+        data-note="This is the working session. Take them in order; each has a consequence. Do not leave without an owner for question 4.">
+        <div>
+          <p class="kicker"><i></i>The working session</p>
+          <h2 class="display" style="margin-top:14px">Five questions<br>for the room.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up">
+            <thead><tr><th style="width:4%">#</th><th style="width:48%">Question</th><th>If the answer is yes</th></tr></thead>
+            <tbody>
+              <tr><td class="n">1</td><td>Does any artefact outside the warehouse store a <span class="mono">snapshot_id</span> today?</td><td>We need a migration before this decision, not after.</td></tr>
+              <tr><td class="n">2</td><td>Can two captures of the same stage share an <span class="mono">observed_at</span>?</td><td>The address collides; enforce <span class="mono">UNIQUE(stage, observed_at)</span> now.</td></tr>
+              <tr><td class="n">3</td><td>Do we accept +6% storage for ergonomics?</td><td>B stands. If no, A is still defensible.</td></tr>
+              <tr><td class="n">4</td><td>Who owns the replay test — CI or the runbook?</td><td>Assign an owner today; it is the only guard that survives a rebuild.</td></tr>
+              <tr><td class="n">5</td><td>Is single-writer acceptable at 1 stage / 9 requests / 12 s?</td><td>If we add stages, the file lock becomes the next bottleneck.</td></tr>
+            </tbody>
+          </table>
+          <div class="room a-up" style="margin-top:26px">
+            <span class="lbl">Close the review</span>
+            <p>Decisions 01 and 03 can be settled in this meeting. Decision 02 — what a report pins — is the one to
+              write into the ADR before anyone writes more SQL.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 23 decision log -->
+      <section class="slide dark" data-sec="Full time"
+        data-note="Fill this live. The deck is designed to end with commitments, not applause. Owner and date for each row, or it is not a decision.">
+        <div>
+          <p class="kicker"><i></i>Decision log</p>
+          <h2 class="display" style="margin-top:14px">What we leave<br>the room with.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl a-up" style="font-size:16px">
+            <thead><tr><th style="width:34%">Decision</th><th>Choice</th><th style="width:18%">Owner</th><th style="width:14%">By</th></tr></thead>
+            <tbody>
+              <tr><td>Identifier</td><td>ULID + unique edge <span class="pill" style="margin-left:8px">proposed</span></td><td>—</td><td>today</td></tr>
+              <tr><td>Report address</td><td><span class="mono">(stage_id, observed_at)</span></td><td>—</td><td>today</td></tr>
+              <tr><td>Replay test</td><td>content map, ids excluded</td><td>—</td><td>before M4</td></tr>
+              <tr><td>Open experiment</td><td>E3 · retroactive corrections</td><td>—</td><td>before schema freeze</td></tr>
+            </tbody>
+          </table>
+          <div class="c2" style="margin-top:44px">
+            <p class="pull a-up">Agreement is not a vote.<br>It is one <b>written</b> address contract.</p>
+            <div class="stack">
+              <p class="body a-up">The harness and all raw results are committed under
+                <span class="mono">experiments/id-scheme/</span>. Re-run any number in this deck with one command.</p>
+              <div class="ticker a-fade" style="border-top:1px solid rgba(242,237,227,.2);padding-top:16px">
+                <span><b>24</b> tests</span><span><b>3</b> schemes</span><span><b>500</b> publishes</span>
+                <span><b>9</b> captures</span><span><b>6</b> timing runs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+    </div><!-- /slides -->
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">←</button>
+      <button id="next" aria-label="Next">→</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) {
+    return dec ? v.toFixed(+dec) : String(Math.round(v));
+  }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+
+    const paths = slide.querySelectorAll('.pitch path,.pitch circle,.pitch rect');
+    if (paths.length) {
+      paths.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(paths, { strokeDashoffset: 0, duration: 1.6, stagger: .03, ease: 'power2.out' }, .1);
+    }
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    document.body.classList.toggle('dark', slide.classList.contains('dark'));
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) {
+      show(i, true);
+      busy = false;
+      return;
+    }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    // both slides stay in flow for the duration of the dissolve
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>

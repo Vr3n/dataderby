@@ -1,0 +1,24 @@
+[
+  {
+    "approach": "A-derived",
+    "n": 150,
+    "reps": 3,
+    "publishes": 440,
+    "p50_ms": 80.931,
+    "mean_ms": 91.832,
+    "p95_ms": 120.919,
+    "noop_p50_ms": 5.729,
+    "noop_p95_ms": 7.442
+  },
+  {
+    "approach": "B-ulid",
+    "n": 150,
+    "reps": 3,
+    "publishes": 440,
+    "p50_ms": 88.959,
+    "mean_ms": 107.27,
+    "p95_ms": 162.239,
+    "noop_p50_ms": 10.747,
+    "noop_p95_ms": 21.809
+  }
+]

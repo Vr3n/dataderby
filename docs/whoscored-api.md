@@ -49,6 +49,7 @@ Fix: use `curl_cffi` with a browser impersonation:
 
 ```python
 from curl_cffi import requests
+
 s = requests.Session(impersonate="chrome")
 ```
 
@@ -96,7 +97,7 @@ for both. Correct detection:
 
 ```python
 def is_gate(content: bytes) -> bool:
-    c = content.lstrip(b"\xef\xbb\xbf").lstrip()   # strip BOM + whitespace
+    c = content.lstrip(b"\xef\xbb\xbf").lstrip()  # strip BOM + whitespace
     return c[:1] not in (b"{", b"[")
 ```
 
@@ -354,31 +355,42 @@ from curl_cffi import requests
 
 API = "https://www.whoscored.com/statisticsfeed/1/getteamstatistics"
 
+
 def is_gate(b: bytes) -> bool:
     c = b.lstrip(b"\xef\xbb\xbf").lstrip()
     return c[:1] not in (b"{", b"[")
 
-s = requests.Session(impersonate="chrome")
-s.headers.update({
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": "https://www.whoscored.com/",
-})
 
-params = {"category": "summaryteam", "subcategory": "all",
-          "statsAccumulationType": "0", "field": "Overall",
-          "stageId": 25662, "sortBy": "Rating", "isCurrent": "true", "against": ""}
+s = requests.Session(impersonate="chrome")
+s.headers.update(
+    {
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": "https://www.whoscored.com/",
+    }
+)
+
+params = {
+    "category": "summaryteam",
+    "subcategory": "all",
+    "statsAccumulationType": "0",
+    "field": "Overall",
+    "stageId": 25662,
+    "sortBy": "Rating",
+    "isCurrent": "true",
+    "against": "",
+}
 
 for attempt in range(5):
     r = s.get(API, params=params, timeout=20)
     if r.status_code == 200 and not is_gate(r.content):
         data = json.loads(r.text.lstrip("\ufeff"))
         break
-    time.sleep(min(20, 2 * 2 ** attempt))       # gate / rate limit
+    time.sleep(min(20, 2 * 2**attempt))  # gate / rate limit
 else:
     raise SystemExit("gated out")
 
-teams = data["teamTableStats"]                   # list[dict], 20 rows for La Liga
+teams = data["teamTableStats"]  # list[dict], 20 rows for La Liga
 ```
 
 A runnable example lived at `examples/team_season_stats.py` (removed in the

@@ -1,0 +1,232 @@
+{
+  "approach": "b",
+  "module": "approaches.b_ulid.publish",
+  "tests": [
+    {
+      "id": "T01",
+      "name": "first observation",
+      "expected": 1,
+      "observed": 1,
+      "pass": true,
+      "note": "accepted=True"
+    },
+    {
+      "id": "T02a",
+      "name": "identical publish is a no-op",
+      "expected": "no_change",
+      "observed": "no_change",
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T02b",
+      "name": "no rows written on no-change",
+      "expected": [
+        1,
+        20,
+        1,
+        "da9105976402deba3e09e6d5eb06d9ee29eec4d5f78886ffb15284ceeef3cb61"
+      ],
+      "observed": [
+        1,
+        20,
+        1,
+        "da9105976402deba3e09e6d5eb06d9ee29eec4d5f78886ffb15284ceeef3cb61"
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T03",
+      "name": "revert A->B->A is recorded",
+      "expected": 3,
+      "observed": 3,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T04a",
+      "name": "rollback leaves no partial rows",
+      "expected": [
+        1,
+        20
+      ],
+      "observed": [
+        1,
+        20
+      ],
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T04b",
+      "name": "killed process leaves no committed rows",
+      "expected": 0,
+      "observed": 0,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T05",
+      "name": "stale checkpoint cannot duplicate an existing edge",
+      "expected": 2,
+      "observed": 2,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T06a",
+      "name": "rebuild reproduces the same ids",
+      "expected": true,
+      "observed": false,
+      "pass": false,
+      "note": ""
+    },
+    {
+      "id": "T06b",
+      "name": "a report pinned to the original id resolves after rebuild",
+      "expected": 20,
+      "observed": 0,
+      "pass": false,
+      "note": ""
+    },
+    {
+      "id": "T06c",
+      "name": "a report pinned to (stage, observed_at) resolves after rebuild",
+      "expected": 20,
+      "observed": 20,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T07",
+      "name": "same content under a different parent is a new row",
+      "expected": 2,
+      "observed": 2,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T08",
+      "name": "root edge deduped by the database",
+      "expected": 1,
+      "observed": 1,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T09",
+      "name": "second writer is refused",
+      "expected": true,
+      "observed": true,
+      "pass": true,
+      "note": "child='locked' error='C:\\\\Users\\\\Viren\\\\AppData\\\\Roaming\\\\uv\\\\python\\\\cpython-3.12.13-windows-x86_64-none\\\\python.exe (PID 16220)'"
+    },
+    {
+      "id": "T10",
+      "name": "500 observations -> 500 distinct ids",
+      "expected": 500,
+      "observed": 500,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T10b",
+      "name": "no id collisions",
+      "expected": 500,
+      "observed": 500,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T11",
+      "name": "ids independent of process/hash seed",
+      "expected": true,
+      "observed": false,
+      "pass": false,
+      "note": ""
+    },
+    {
+      "id": "T12a",
+      "name": "latest state returns 20 rows",
+      "expected": 20,
+      "observed": 20,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T12b",
+      "name": "latest state values are correct",
+      "expected": 10138,
+      "observed": 10138,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T13a",
+      "name": "delta equals 1 for every consecutive pair",
+      "expected": 0,
+      "observed": 0,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T13b",
+      "name": "first observation has no delta",
+      "expected": 20,
+      "observed": 20,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T14",
+      "name": "orphan fact row is rejected",
+      "expected": true,
+      "observed": true,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T16a",
+      "name": "a missing value is stored as NULL",
+      "expected": null,
+      "observed": null,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T16b",
+      "name": "exactly one NULL cell, never a zero",
+      "expected": 1,
+      "observed": 1,
+      "pass": true,
+      "note": ""
+    },
+    {
+      "id": "T15",
+      "name": "id collision-free over 1000",
+      "expected": 1000,
+      "observed": 1000,
+      "pass": true,
+      "note": ""
+    }
+  ],
+  "metrics": {
+    "approach": "B-ulid",
+    "scheme": "ULID + UNIQUE(parent_snapshot_id, content_fingerprint)",
+    "duckdb": "1.5.6",
+    "python": "3.12.13",
+    "scale": 500,
+    "insert_ms_total": 55056.8,
+    "insert_ms_p50": 94.936,
+    "insert_ms_p95": 182.784,
+    "noop_ms_p50": 6.132,
+    "latest_query_ms_p50": 6.827,
+    "delta_query_ms_p50": 10.869,
+    "db_bytes": 6041600,
+    "id_length": 26,
+    "id_ascending_ratio": 0.513,
+    "snapshots": 500,
+    "fact_rows": 10000
+  }
+}

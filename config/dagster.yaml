@@ -1,0 +1,12 @@
+# Dagster instance configuration, copied into DAGSTER_HOME by scripts/dagster.ps1.
+#
+# storage.sqlite.base_dir is read from the environment because a relative path is
+# resolved against the process working directory, not DAGSTER_HOME. Setting it to an
+# absolute path keeps run history inside data/dagster.
+storage:
+  sqlite:
+    base_dir:
+      env: DAGSTER_SQLITE_BASE_DIR
+
+telemetry:
+  enabled: false

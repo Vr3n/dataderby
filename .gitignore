@@ -8,3 +8,20 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Generated data and local state
+data/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.duckdb
+*.duckdb.wal
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Raw research captures: keep the scripts and derived results, not the payloads
+experiments/**/caps/
+experiments/whoscored/*.json

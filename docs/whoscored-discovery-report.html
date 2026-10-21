@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhoScored discovery - for decision - dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EDE3; --paper2:#E8E1D2; --paper3:#DFD7C6;
+    --ink:#14161A; --navy:#0E1A31; --navy2:#16243F;
+    --red:#D4382A; --green:#2E6B4F; --amber:#C98A2E;
+    --muted:#6E695E; --line:#D3CBBA;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0A0C10}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#0A0C10}
+  #stage{
+    position:relative;width:1600px;height:900px;background:var(--paper);
+    transform-origin:center center;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);
+  }
+  #grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  /* ---------------- chrome ---------------- */
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none;transition:opacity .3s}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+  #mast{
+    position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);
+  }
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:var(--line);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink)}
+  body.dark #mast,body.dark #foot{border-color:rgba(242,237,227,.16)}
+  body.dark .brand b,body.dark #pageNum{color:var(--paper)}
+  body.dark .brand span,body.dark #secLabel,body.dark .mast-right,body.dark #foot .l{color:#9D9789}
+  body.dark #clockTrack{background:rgba(242,237,227,.2)}
+
+  /* ---------------- slides ---------------- */
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:112px 84px 86px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;
+    opacity:0;visibility:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.dark{background:var(--navy);color:var(--paper)}
+  .slide.dark::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(242,237,227,.10) 1px,transparent 1px);
+    background-size:12px 12px;opacity:.5;
+  }
+  .slide.dark > *{position:relative;z-index:1}
+
+  /* typography */
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  .dark .kicker{color:#9D9789}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.94;font-size:104px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1;font-size:50px;max-width:34ch}
+  h3{font-family:var(--serif);font-weight:500;font-size:25px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:23px;line-height:1.45;color:#3B3B39;max-width:46ch}
+  .dark .standfirst{color:#CFC8B8}
+  .body{font-size:16px;line-height:1.6;color:#3C3B37;max-width:62ch}
+  /* prose keeps a readable measure; the layout container must fill the slide */
+  div.body{max-width:none}
+  .dark .body{color:#CFC8B8}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .dark .small{color:#9D9789}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .red{color:var(--red)} .green{color:var(--green)} .navy{color:var(--navy)}
+  .dark .red{color:#F06A5A} .dark .green{color:#6FC69A}
+
+  /* layout */
+  .body{min-height:0}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .stack{display:grid;gap:16px;align-content:start}
+  .between{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+
+  /* components */
+  .card{border-top:3px solid var(--navy);background:rgba(255,255,255,.42);padding:20px 22px 22px}
+  .dark .card{border-top-color:var(--paper);background:rgba(242,237,227,.05)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .dark .card .tag{color:#9D9789}
+  .card h3{margin:8px 0 10px}
+  .card p{font-size:14px;line-height:1.55;color:#4A4842}
+  .dark .card p{color:#C6BFAF}
+
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--ink);
+  }
+  .dark .tbl th{color:#9D9789;border-bottom-color:rgba(242,237,227,.35)}
+  .tbl td{padding:10px;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:middle}
+  .dark .tbl td{border-bottom-color:rgba(242,237,227,.14);color:#DCD5C5}
+  .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .tbl th.n{text-align:right}
+  .tbl tr.hi td{background:rgba(212,56,42,.06)}
+  .dark .tbl tr.hi td{background:rgba(240,106,90,.10)}
+  .tbl td.ok{color:var(--green);font-family:var(--mono);font-size:13px}
+  .tbl td.no{color:var(--red);font-family:var(--mono);font-size:13px}
+  .dark .tbl td.ok{color:#6FC69A} .dark .tbl td.no{color:#F06A5A}
+
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:44px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .stat .k{color:#9D9789}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+
+  .rule{height:1px;background:var(--line);width:100%}
+  .dark .rule{background:rgba(242,237,227,.18)}
+
+  .pull{font-family:var(--serif);font-size:38px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+
+  .room{
+    background:var(--paper2);border-left:3px solid var(--red);
+    padding:12px 16px;display:flex;gap:14px;align-items:baseline;
+  }
+  .dark .room{background:rgba(242,237,227,.06)}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .dark .room .lbl{color:#F06A5A}
+  .room p{font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .room p{color:#CFC8B8}
+
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 7px;border:1px solid currentColor;letter-spacing:.04em}
+
+  /* cover */
+  .cover{padding:0 96px}
+  .cover .inner{align-self:center;display:grid;gap:26px;max-width:900px}
+  .cover h1{font-size:118px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:56px;border-top:1px solid var(--line);padding-top:18px}
+  .pitch{position:absolute;right:-120px;top:120px;width:760px;height:760px;opacity:.10;z-index:0}
+  .pitch path,.pitch circle,.pitch rect{fill:none;stroke:var(--ink);stroke-width:1.6}
+  .ticker{display:flex;gap:26px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .ticker b{color:var(--red);font-weight:500}
+
+  /* chain diagram */
+  .chain{display:flex;align-items:center;gap:0}
+  .node{
+    width:150px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--paper);
+    font-family:var(--mono);font-size:11px;line-height:1.5;
+  }
+  .node b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .node span{color:var(--muted)}
+  .node.hot{border-color:var(--red);background:rgba(212,56,42,.07)}
+  .link{width:54px;height:2px;background:var(--ink);position:relative;flex:none}
+  .link::after{
+    content:"";position:absolute;right:-1px;top:-5px;width:0;height:0;
+    border-left:10px solid var(--ink);border-top:6px solid transparent;border-bottom:6px solid transparent;
+  }
+  .dark .link{background:var(--paper)} .dark .link::after{border-left-color:var(--paper)}
+
+  /* form dots */
+  .form{display:flex;gap:6px}
+  .dot{width:13px;height:13px;border-radius:50%;display:inline-block}
+  .dot.w{background:var(--green)} .dot.l{background:var(--red)} .dot.d{background:var(--muted)}
+  .dark .dot.w{background:#6FC69A} .dark .dot.l{background:#F06A5A}
+
+  /* strip plot */
+  .plot{position:relative;height:52px;border-bottom:1px solid var(--line)}
+  .dark .plot{border-bottom-color:rgba(242,237,227,.2)}
+  .plot .pt{position:absolute;bottom:6px;width:11px;height:11px;border-radius:50%;transform:translateX(-50%)}
+  .plot .pt.a{background:var(--navy)} .plot .pt.b{background:var(--red)}
+  .axis{position:relative;height:18px;margin-top:4px}
+  .axis span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .dark .axis span{color:#9D9789}
+
+  /* bars */
+  .bar{height:18px;background:var(--paper3);position:relative;overflow:hidden}
+  .dark .bar{background:rgba(242,237,227,.12)}
+  .bar>i{position:absolute;inset:0 auto 0 0;background:var(--navy)}
+  .dark .bar>i{background:var(--paper)}
+  .bar.red>i{background:var(--red)}
+
+  /* verdict block */
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--ink)}
+  .dark .verdict{border-color:rgba(242,237,227,.35)}
+  .verdict>div{padding:22px 24px}
+  .verdict>div+div{border-left:1.5px solid var(--ink)}
+  .dark .verdict>div+div{border-left-color:rgba(242,237,227,.35)}
+  .verdict .big{font-family:var(--mono);font-size:56px;line-height:1;letter-spacing:-.05em}
+  .verdict .cap{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .verdict .cap{color:#9D9789}
+
+  /* nav */
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s;
+  }
+  #nav button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  body.dark #nav button{border-color:rgba(242,237,227,.25);color:#CFC8B8}
+  body.dark #nav button:hover{background:var(--paper);color:var(--navy)}
+
+  /* chrome adapts between light and dark slides without a hard cut */
+  #mast,#foot{transition:border-color .32s ease}
+  .brand b,#pageNum,#secLabel,.mast-right,#foot .l{transition:color .32s ease}
+  #clockTrack{transition:background-color .32s ease}
+
+  /* notes */
+  #notes{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0A0C10;color:var(--paper);
+    border-top:2px solid var(--red);padding:18px 28px 20px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex;gap:24px;align-items:baseline;
+  }
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  .tbl.compact td{padding:6px 8px;font-size:12.5px}
+  .tbl.compact th{padding:7px 8px;font-size:10px}
+  .code{
+    font-family:var(--mono);font-size:11.5px;line-height:1.6;
+    background:rgba(20,22,26,.05);border-left:2px solid var(--red);
+    padding:12px 14px;white-space:pre-wrap;color:#2E2E2B;
+  }
+  .dark .code{background:rgba(242,237,227,.06);color:#CFC8B8;border-left-color:#F06A5A}
+  .stat .v{font-size:40px}
+  #foot{padding-right:150px}
+  .body > .room{align-self:start}
+  .c2,.c3,.c4{align-content:start}
+  .cover{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 96px}
+  .cover .inner{flex:none;align-self:flex-start}
+  .cover-stats{width:100%;margin-top:36px}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="grain"></div>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>Data desk · source review</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; Kick-off</div>
+        <div class="mast-right">Decided · 20 Oct 2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">WhoScored · discovery report</div>
+        <div id="clock">
+          <span class="l">Match clock</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 23</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="Kick-off" data-chrome="off"
+        data-note="Open with the conclusion: the data is there, the contract is uniform, and the licence gate was accepted on 20 October. Do not let the room drift into scraping mechanics before they have agreed the scope.">
+        <svg class="pitch" viewBox="0 0 760 760" aria-hidden="true">
+          <rect x="40" y="40" width="680" height="680"/>
+          <line x1="380" y1="40" x2="380" y2="720"/>
+          <circle cx="380" cy="380" r="92"/>
+          <circle cx="380" cy="380" r="4"/>
+          <rect x="40" y="230" width="112" height="300"/>
+          <rect x="608" y="230" width="112" height="300"/>
+          <rect x="40" y="310" width="48" height="140"/>
+          <rect x="672" y="310" width="48" height="140"/>
+        </svg>
+        <div class="inner">
+          <p class="kicker"><i></i>Source review 002 &nbsp;·&nbsp; decided 20 Oct 2026</p>
+          <h1 class="display">
+            <span class="l"><span>What WhoScored</span></span>
+            <span class="l"><span>actually gives us.</span></span>
+          </h1>
+          <p class="standfirst">Twelve competitions, one feed contract, sixty measures per team —
+            plus the league table at the same grain. The licence gate is clear.</p>
+          <p class="byline">Data engineering · 20 October 2026 · measured live, not estimated</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="12">0</div><div class="k">competitions</div></div>
+          <div class="stat"><div class="v" data-count="60">0</div><div class="k">measures per team</div></div>
+          <div class="stat"><div class="v" data-count="108">0</div><div class="k">feed calls</div></div>
+          <div class="stat"><div class="v" data-count="1">0</div><div class="k">licence accepted</div></div>
+        </div>
+      </section>
+
+      <!-- 02 agenda -->
+      <section class="slide" data-sec="Kick-off"
+        data-note="Two scope decisions are now made: home/away is in, standings are in at the same grain. The open question is cadence, and it is measured rather than guessed. The licence is no longer an agenda item.">
+        <div>
+          <p class="kicker"><i></i>The agenda</p>
+          <h2 class="display" style="margin-top:14px">Three questions,<br>one scope.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up">
+            <div class="tag">Decision 01</div>
+            <h3>What is in scope?</h3>
+            <p>The 60-column team fact, three splits, plus the league table at the same grain.</p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Decision 02</div>
+            <h3>Is the stage an axis?</h3>
+            <p>League, group, playoff, knockout. A season can have one stage or nine, and the set grows mid-season.</p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Decision 03</div>
+            <h3>Can we use it?</h3>
+            <p><span class="mono">isOpta</span> is provenance, not a verdict. The owner accepted it on 20 October; the posture stays private.</p>
+          </div>
+          <div class="room a-up" style="grid-column:1/-1">
+            <span class="lbl">For the room</span>
+            <p>The scraping is solved. Scope is decided. Cadence is measured in E5, and the licence is no longer an open gate.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 03 the haul -->
+      <section class="slide" data-sec="The haul"
+        data-note="Twelve competitions, all on the same template. The stage column is the current 2026/27 stage, not a permanent id. Point at the Conference row: 27 teams is the one number that does not match our fixture calendar.">
+        <div>
+          <p class="kicker"><i></i>Coverage</p>
+          <h2 class="display" style="margin-top:14px">Twelve competitions.<br>One contract.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th>Competition</th><th class="n">Teams</th><th class="n">Stage</th><th>State</th></tr></thead>
+            <tbody>
+              <tr><td>Premier League</td><td class="n">20</td><td class="n">25544</td><td>league</td></tr>
+              <tr><td>Championship</td><td class="n">24</td><td class="n">25588</td><td>league + playoff</td></tr>
+              <tr><td>League One</td><td class="n">24</td><td class="n">25589</td><td>league + playoff</td></tr>
+              <tr><td>League Two</td><td class="n">24</td><td class="n">25590</td><td>league + playoff</td></tr>
+              <tr><td>LaLiga</td><td class="n">20</td><td class="n">25662</td><td>league</td></tr>
+              <tr><td>Serie A</td><td class="n">20</td><td class="n">25518</td><td>league</td></tr>
+              <tr><td>Bundesliga</td><td class="n">18</td><td class="n">25666</td><td>league</td></tr>
+              <tr><td>Ligue 1</td><td class="n">18</td><td class="n">25554</td><td>league</td></tr>
+              <tr><td>Eredivisie</td><td class="n">18</td><td class="n">25537</td><td>league</td></tr>
+              <tr><td>Champions League</td><td class="n">36</td><td class="n">25800</td><td>league phase</td></tr>
+              <tr><td>Europa League</td><td class="n">36</td><td class="n">25801</td><td>league phase</td></tr>
+              <tr class="hi"><td>Conference League</td><td class="n">27</td><td class="n">25802</td><td class="no">verify</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">Stage ids are 2026/27 only. They change every season; discovery must resolve them, not hardcode them.</div>
+      </section>
+
+      <!-- 04 five tabs -->
+      <section class="slide" data-sec="The pages"
+        data-note="The URL grammar is the same for every competition. The slug is cosmetic; the numeric ids resolve. Only two tabs matter for this decision: the summary table and team statistics.">
+        <div>
+          <p class="kicker"><i></i>The pages</p>
+          <h2 class="display" style="margin-top:14px">One stage, five tabs.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">/regions/{region}/tournaments/{tournament}
+  /seasons/{season}/stages/{stage}
+    /show/{slug}
+    /fixtures/{slug}
+    /teamstatistics/{slug}
+    /playerstatistics/{slug}
+    /refereestatistics/{slug}</div>
+            <p class="small">The slug is decorative. The numeric ids are the address.</p>
+          </div>
+          <div class="stack">
+            <div class="between"><h3>Summary</h3><span class="pill green">in scope</span></div>
+            <p class="small">League table, six Top Teams boards, Top Players, Best XI.</p>
+            <div class="rule"></div>
+            <div class="between"><h3>Team statistics</h3><span class="pill green">in scope</span></div>
+            <p class="small">Three sections × three splits. The 60-column fact.</p>
+            <div class="rule"></div>
+            <div class="between"><h3>Player / referee</h3><span class="pill">defer</span></div>
+            <p class="small">Different grain, different feed, unmeasured.</p>
+            <div class="rule"></div>
+            <div class="between"><h3>Fixtures</h3><span class="pill">not needed</span></div>
+            <p class="small">We already own the fixture calendar from another source.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 05 league table -->
+      <section class="slide" data-sec="The pages"
+        data-note="The table is server-rendered, not a feed. It is nearly free because the page is already loaded. But its grain is different from team stats, so keep it as a separate fact if it is in scope.">
+        <div>
+          <p class="kicker"><i></i>Summary page</p>
+          <h2 class="display" style="margin-top:14px">The table is free.<br>It is also a different fact.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Team</th><th class="n">P</th><th class="n">W</th><th class="n">D</th><th class="n">L</th><th class="n">GF</th><th class="n">GA</th><th class="n">Pts</th></tr></thead>
+              <tbody>
+                <tr><td>Man City</td><td class="n">7</td><td class="n">7</td><td class="n">0</td><td class="n">0</td><td class="n">19</td><td class="n">7</td><td class="n">21</td></tr>
+                <tr><td>Arsenal</td><td class="n">7</td><td class="n">6</td><td class="n">0</td><td class="n">1</td><td class="n">11</td><td class="n">5</td><td class="n">18</td></tr>
+                <tr><td>Brighton</td><td class="n">7</td><td class="n">5</td><td class="n">1</td><td class="n">1</td><td class="n">23</td><td class="n">5</td><td class="n">16</td></tr>
+                <tr><td>Chelsea</td><td class="n">7</td><td class="n">4</td><td class="n">1</td><td class="n">2</td><td class="n">17</td><td class="n">13</td><td class="n">13</td></tr>
+                <tr><td>Liverpool</td><td class="n">7</td><td class="n">3</td><td class="n">3</td><td class="n">1</td><td class="n">9</td><td class="n">8</td><td class="n">12</td></tr>
+              </tbody>
+            </table>
+            <p class="small" style="margin-top:10px">EPL, 20 Oct 2026. Overall split shown; Home and Away are client-side re-renders of the same table.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Shape.</b> 3 header rows + one per team. A 20-team league is 23 <span class="mono">&lt;tr&gt;</span>.</p>
+            <p class="body"><b>Columns.</b> Team, P, W, D, L, GF, GA, GD, Pts, Form.</p>
+            <p class="body"><b>Splits.</b> Overall, Home, Away — toggles re-render ten columns each; no network call.</p>
+            <p class="body"><b>Key.</b> <span class="mono">tr[data-team-id]</span> joins the table to the feed.</p>
+            <p class="body"><b>Trap.</b> The rank is inside the team cell: <span class="mono">1Manchester City</span>.</p>
+            <p class="body"><b>Knockout.</b> No table exists. <span class="mono">standings-24797-grid</span> is absent.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 06 nine payloads -->
+      <section class="slide" data-sec="Data shape"
+        data-note="This is the whole product in one picture: three sections crossed with three splits. Nine calls. The feed returns the same envelope every time; only statColumns and the numbers change.">
+        <div>
+          <p class="kicker"><i></i>Team statistics</p>
+          <h2 class="display" style="margin-top:14px">Nine payloads.<br>One envelope.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl">
+              <thead><tr><th></th><th class="n">Overall</th><th class="n">Home</th><th class="n">Away</th></tr></thead>
+              <tbody>
+                <tr><td>Summary</td><td class="ok">JSON</td><td class="ok">JSON</td><td class="ok">JSON</td></tr>
+                <tr><td>Defensive</td><td class="ok">JSON</td><td class="ok">JSON</td><td class="ok">JSON</td></tr>
+                <tr><td>Offensive</td><td class="ok">JSON</td><td class="ok">JSON</td><td class="ok">JSON</td></tr>
+              </tbody>
+            </table>
+            <p class="small" style="margin-top:12px">Same shape each time: <span class="mono">teamTableStats</span>, <span class="mono">paging</span>, <span class="mono">statColumns</span>.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>23 fields per row.</b> Identity, tournament, rating, ranking, and the measures.</p>
+            <p class="body"><b>Rating and ranking</b> are on every row but are not in <span class="mono">statColumns</span>.</p>
+            <p class="body"><b>seasonId is 0</b>, <span class="mono">seasonName</span> is null. The stage is the season key.</p>
+            <p class="body"><b>isOpta</b> is on every row. Provenance; accepted for internal use on 20 Oct.</p>
+            <p class="body"><b>Fractions.</b> Possession and pass success are 0–1, not percentages.</p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 07 sixty -->
+      <section class="slide" data-sec="Data shape"
+        data-note="Do the arithmetic out loud. The duplicates are the only subtle part: apps appears three times and shots per game twice. Remove nine, then add back the three views of apps, shots, rating and the nine rankings. Sixty, exactly.">
+        <div>
+          <p class="kicker"><i></i>The fact</p>
+          <h2 class="display" style="margin-top:14px">Sixty columns,<br>exactly.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">raw columns (19 × 3)            57
+− duplicate apps (2 × 3)        −6
+− duplicate shots (1 × 3)       −3
+unique columns                  48
+  42 section-owned + 6 shared   48
++ rating                         3
++ ranking                        9
+total                           60</div>
+            <div class="room">
+              <span class="lbl">Verified</span>
+              <p>Brighton, EPL 25544, nine payloads assembled into 60 keys — not a projection.</p>
+            </div>
+            <div class="room">
+              <span class="lbl">Rule</span>
+              <p>A missing section means an incomplete row. Fail closed; do not zero-fill.</p>
+            </div>
+          </div>
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Group</th><th class="n">Cols</th></tr></thead>
+              <tbody>
+                <tr><td><span class="mono">apps_*</span></td><td class="n">3</td></tr>
+                <tr><td><span class="mono">rating_*</span></td><td class="n">3</td></tr>
+                <tr><td><span class="mono">shots_per_game_*</span></td><td class="n">3</td></tr>
+                <tr><td><span class="mono">summary_*</span> — goals, cards, possession, passing, aerials</td><td class="n">18</td></tr>
+                <tr><td><span class="mono">defensive_*</span> — shots conceded, tackles, interceptions, fouls, offsides</td><td class="n">15</td></tr>
+                <tr><td><span class="mono">offensive_*</span> — shots on target, dribbles, fouls won</td><td class="n">9</td></tr>
+                <tr><td><span class="mono">ranking_*</span></td><td class="n">9</td></tr>
+                <tr class="hi"><td><b>Total</b></td><td class="n"><b>60</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="small">Naming: the defensive field is <span class="mono">shotsConcededPerGame</span> — shots conceded, not goals conceded.</div>
+      </section>
+
+      <!-- 08 brighton -->
+      <section class="slide dark" data-sec="Data shape"
+        data-note="This slide exists to make the dataset concrete. Read the three columns as one team's season so far: seven games, 23 goals, 59.9 percent possession overall, but only 8 shots conceded at home versus 14.3 away. The split is the insight.">
+        <div>
+          <p class="kicker"><i></i>One row, three splits</p>
+          <h2 class="display" style="margin-top:14px">Brighton, 60 numbers.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up">
+            <div class="tag">Overall</div>
+            <h3>7 apps · 6.97</h3>
+            <p><span class="mono">23 goals</span><br><span class="mono">59.9% possession</span><br><span class="mono">17.9 shots</span><br><span class="mono">10.7 conceded</span></p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Home</div>
+            <h3>4 apps · 7.04</h3>
+            <p><span class="mono">13 goals</span><br><span class="mono">59.3% possession</span><br><span class="mono">18.8 shots</span><br><span class="mono">8.0 conceded</span></p>
+          </div>
+          <div class="card a-up">
+            <div class="tag">Away</div>
+            <h3>3 apps · 6.87</h3>
+            <p><span class="mono">10 goals</span><br><span class="mono">60.8% possession</span><br><span class="mono">16.7 shots</span><br><span class="mono">14.3 conceded</span></p>
+          </div>
+          <div class="room a-up" style="grid-column:1/-1">
+            <span class="lbl">Why it matters</span>
+            <p>The same team, the same season, two different defensive stories. Season totals alone would hide this.</p>
+          </div>
+          <div class="c3 a-up" style="grid-column:1/-1">
+            <div class="room"><span class="lbl">Complete</span><p>60 of 60 keys, assembled from nine payloads.</p></div>
+            <div class="room"><span class="lbl">Units</span><p>Possession and pass success are fractions, 0–1.</p></div>
+            <div class="room"><span class="lbl">Identity</span><p><span class="mono">teamId 211</span> · <span class="mono">stage 25544</span></p></div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 09 stages -->
+      <section class="slide" data-sec="Stages"
+        data-note="The trap is Final Stage. Strip the word Stage and you get Final, which is wrong. In 2022/23 it was the whole knockout phase. The group stage was eight separate stage ids, not one. And the select only exists when there is more than one stage.">
+        <div>
+          <p class="kicker"><i></i>The second axis</p>
+          <h2 class="display" style="margin-top:14px">A stage is not<br>a season.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Label</th><th>Code</th></tr></thead>
+              <tbody>
+                <tr><td><span class="mono">Champions League</span></td><td class="ok">league</td></tr>
+                <tr><td><span class="mono">Champions League Final Stage</span></td><td class="ok">knockout</td></tr>
+                <tr><td><span class="mono">Champions League Grp. A … H</span></td><td class="ok">group A–H</td></tr>
+                <tr><td><span class="mono">Championship</span></td><td class="ok">league</td></tr>
+                <tr><td><span class="mono">Championship Playoff</span></td><td class="ok">playoff</td></tr>
+                <tr><td><span class="mono">no select (EPL)</span></td><td class="ok">league</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Where.</b> The <span class="mono">#stages</span> select, on the show and team-statistics pages.</p>
+            <p class="body"><b>Only when needed.</b> A single-stage season renders no select.</p>
+            <p class="body"><b>Not in the feed.</b> No stage name in the JSON, and no name in the page config.</p>
+            <p class="body"><b>Order lies.</b> CL lists Final Stage first; the Championship lists the league first.</p>
+            <p class="body red"><b>Final Stage ≠ final.</b> It is the knockout phase, all rounds.</p>
+          </div>
+        </div>
+        <div class="small">2022/23 CL had nine stage ids: eight groups plus the knockout. Identity is the id, never the label.</div>
+      </section>
+
+      <!-- 10 transport -->
+      <section class="slide" data-sec="Transport"
+        data-note="Do not let anyone plan a plain requests scraper without the token. The feed returns HTML without it. The browser is needed once per competition to get the token and stage list; after that the calls are ordinary JSON.">
+        <div>
+          <p class="kicker"><i></i>Transport</p>
+          <h2 class="display" style="margin-top:14px">The token is<br>the gate.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">const site = require.config.params.site;
+site.gSiteHeaderName;   // Model-last-Mode
+site.gSiteHeaderValue;  // per-page token
+
+fetch("/statisticsfeed/1/getteamstatistics?…", {
+  headers: {
+    Accept: "application/json, text/javascript, */*; q=0.01",
+    "X-Requested-With": "XMLHttpRequest",
+    [site.gSiteHeaderName]: site.gSiteHeaderValue,
+  },
+});</div>
+            <p class="small">Without the header the feed returns HTML, not JSON.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Headless is blocked.</b> Cloudflare serves the challenge page.</p>
+            <p class="body"><b>Headed works.</b> Normal desktop UA, then abort <span class="mono">*fingerprint*</span> and <span class="mono">*podname.com*</span> before navigating.</p>
+            <p class="body"><b>One page per competition.</b> The token works for every <span class="mono">stageId</span> tested.</p>
+            <p class="body"><b>108 feed calls.</b> Nine per stage, twelve stages.</p>
+            <p class="body"><b>No login.</b></p>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 11 availability -->
+      <section class="slide" data-sec="Coverage"
+        data-note="All twelve returned identical columns. The only disagreement is Conference League: 27 teams with one game each, against 108 fixtures in our calendar. Do not assume it is the league phase.">
+        <div>
+          <p class="kicker"><i></i>Availability</p>
+          <h2 class="display" style="margin-top:14px">All twelve agree.<br>Except one.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="stat a-up"><div class="v">12/12</div><div class="k">same columns</div><div class="s">Summary, defensive, offensive</div></div>
+            <div class="rule"></div>
+            <div class="stat a-up"><div class="v">36</div><div class="k">CL / EL teams</div><div class="s">2 appearances each</div></div>
+            <div class="rule"></div>
+            <div class="stat a-up"><div class="v">27</div><div class="k">Conference teams</div><div class="s">1 appearance each</div></div>
+            <div class="rule"></div>
+            <div class="stat a-up"><div class="v">108</div><div class="k">calendar matches</div><div class="s">implies 36 teams</div></div>
+          </div>
+          <div class="stack">
+            <div class="room a-up">
+              <span class="lbl">The anomaly</span>
+              <p>Conference League stage 25802 does not look like the league phase. It may be a qualifier, or the feed may be mid-publication. Verify before the first scrape.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">Knockout</span>
+              <p>Team statistics exist, but there is no league table. <span class="mono">has_league_table</span> is a per-stage attribute, not a season default.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">Format check</span>
+              <p>Domestic leagues have 18–24 teams. The UEFA league phase has 36. The stage, not the competition name, decides the shape.</p>
+            </div>
+            <div class="room a-up">
+              <span class="lbl">So what</span>
+              <p>The feed is uniform. The season format is not. Stage discovery belongs in the pipeline, not in a hardcoded map.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">All twelve return the same three sections; only the row count and the stage shape differ.</div>
+      </section>
+
+      <!-- 12 extras -->
+      <section class="slide" data-sec="Coverage"
+        data-note="Be explicit about what is not in the 60. The league table is in scope as a companion fact at the same grain. Player and referee stats are separate products. The situational and positional grids were partly empty, so they cannot be estimated from this session.">
+        <div>
+          <p class="kicker"><i></i>Beyond the fact</p>
+          <h2 class="display" style="margin-top:14px">There is more on the page.<br>Most of it is another product.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">In scope</div><h3>League table</h3><p>10 columns × 3 splits, client-rendered. Companion fact at the same team × stage grain.</p></div>
+          <div class="card a-up"><div class="tag">Available</div><h3>Top Teams</h3><p>Six leaderboards, six rows each: possession, aggression, aerials, shots, passing, rating.</p></div>
+          <div class="card a-up"><div class="tag">Partial</div><h3>Situational &amp; positional</h3><p>Goals by situation, passes, cards, touch and attempt zones. Some grids loaded empty.</p></div>
+          <div class="card a-up"><div class="tag">Unmeasured</div><h3>Player &amp; referee</h3><p>Separate tabs and feeds. Much larger grain. Treat as a separate project.</p></div>
+          <div class="card a-up"><div class="tag">Documented</div><h3>xG</h3><p>The <span class="mono">xg-teamstats</span> category exists; not exercised this session.</p></div>
+          <div class="card a-up"><div class="tag">Out</div><h3>Best XI</h3><p>Presentation widget. No stable contract.</p></div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 13 options -->
+      <section class="slide" data-sec="Decision"
+        data-note="Walk the cost column. A is the plan we already measured. B saves calls but throws away the split. C is almost free but is a second fact. D and E are not estimated, so they cannot be committed to today.">
+        <div>
+          <p class="kicker"><i></i>The options</p>
+          <h2 class="display" style="margin-top:14px">Four scopes.<br>One recommendation.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl">
+            <thead><tr><th>Option</th><th>What you get</th><th class="n">Cost</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr class="hi"><td><b>A · 60 columns</b></td><td>Three sections × three splits, stage axis, rankings</td><td class="n">108 calls</td><td class="ok">ship</td></tr>
+              <tr><td>B · Overall only</td><td>20 columns; loses home/away</td><td class="n">36 calls</td><td class="no">skip</td></tr>
+              <tr><td>C · Add standings</td><td>Companion fact at the same team × stage grain, 10 columns × 3 splits</td><td class="n">parse</td><td class="ok">in scope</td></tr>
+              <tr><td>D · Extra grids</td><td>Situational and positional team stats</td><td class="n">unknown</td><td>later</td></tr>
+              <tr><td>E · Players / referees</td><td>Separate grain and feeds</td><td class="n">unknown</td><td>separate</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">108 calls is 12 page loads plus 9 JSON calls per stage. The payloads are small.</div>
+      </section>
+
+      <!-- 14 recommendation -->
+      <section class="slide dark" data-sec="Decision"
+        data-note="The licence was accepted on 20 October, so this is now a build decision. A and C share one snapshot and one team key. Standings are not a second product; they are the journey context for the same grain.">
+        <div>
+          <p class="kicker"><i></i>Recommendation</p>
+          <h2 class="display" style="margin-top:14px">Ship A + C.<br>Defer the rest.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body"><b>1.</b> Build the 60-column fact over the stage axis.</p>
+            <p class="body"><b>2.</b> Add the standings fact at the same <span class="mono">(snapshot, team)</span> grain.</p>
+            <p class="body"><b>3.</b> Persist the page, the three standings views and the nine feeds.</p>
+            <p class="body"><b>4.</b> Licence accepted 20 Oct; keep it local, private, non-redistributed.</p>
+          </div>
+          <div class="stack">
+            <div class="room">
+              <span class="lbl">Not in v1</span>
+              <p>Overall-only. Situational grids. xG panel. Player and referee stats.</p>
+            </div>
+            <div class="room">
+              <span class="lbl">Fail closed</span>
+              <p>Unknown stage label, missing token, a team count that does not match the format, or standings ids that do not match the feed: stop the run, keep the evidence.</p>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 15 risks -->
+      <section class="slide" data-sec="Decision"
+        data-note="The licence is no longer red. Publication latency is the only open schedule input, and E5 measures it on 24 October. Stage label drift and Conference are the two that need an owner before the first live sweep.">
+        <div>
+          <p class="kicker"><i></i>Before you decide</p>
+          <h2 class="display" style="margin-top:14px">What can still bite.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="between"><p class="body"><b>isOpta licensing</b></p><span class="pill" style="color:var(--green)">accepted</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>Cloudflare / fingerprint</b></p><span class="pill">mitigated</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>Publication latency</b></p><span class="pill">measuring E5</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>Retroactive corrections</b></p><span class="pill">snapshot model</span></div>
+            <div class="rule"></div>
+          </div>
+          <div class="stack">
+            <div class="between"><p class="body"><b>Conference League stage</b></p><span class="pill">verify</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>teamId stability</b></p><span class="pill">unknown</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>Stage label drift</b></p><span class="pill">fail closed</span></div>
+            <div class="rule"></div>
+            <div class="between"><p class="body"><b>Standings DOM changes</b></p><span class="pill">fail closed</span></div>
+            <div class="rule"></div>
+          </div>
+        </div>
+        <div></div>
+      </section>
+
+      <!-- 16 decision log -->
+      <section class="slide dark" data-sec="Decision"
+        data-note="These are the answers, recorded 20 October 2026. Cadence is the one row without a fixed number: E5 measures it on the next matchday, and the provisional schedule is a daily heartbeat plus post-matchday sweeps.">
+        <div>
+          <p class="kicker"><i></i>Decision log</p>
+          <h2 class="display" style="margin-top:14px">Decisions,<br>not applause.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl">
+            <thead><tr><th>Question</th><th>Owner</th><th>Date</th><th>Answer</th></tr></thead>
+            <tbody>
+              <tr><td>Is the isOpta licence acceptable?</td><td>Owner</td><td>20 Oct 2026</td><td class="ok">Accepted</td></tr>
+              <tr><td>Is home/away in scope?</td><td>Owner</td><td>20 Oct 2026</td><td class="ok">Yes</td></tr>
+              <tr><td>Are standings a separate product?</td><td>Owner</td><td>20 Oct 2026</td><td class="ok">No — same grain</td></tr>
+              <tr><td>What is the refresh cadence?</td><td>Owner</td><td>20 Oct 2026</td><td>Measure E5; daily + post-match</td></tr>
+              <tr><td>Do we persist raw payloads?</td><td>Owner</td><td>20 Oct 2026</td><td class="ok">Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">Source review 002 · WhoScored · measured 20 October 2026 · answers in docs/whoscored-decisions.md</div>
+      </section>
+
+</div><!-- /slides -->
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">←</button>
+      <button id="next" aria-label="Next">→</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) {
+    return dec ? v.toFixed(+dec) : String(Math.round(v));
+  }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+
+    const paths = slide.querySelectorAll('.pitch path,.pitch circle,.pitch rect');
+    if (paths.length) {
+      paths.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(paths, { strokeDashoffset: 0, duration: 1.6, stagger: .03, ease: 'power2.out' }, .1);
+    }
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    document.body.classList.toggle('dark', slide.classList.contains('dark'));
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) {
+      show(i, true);
+      busy = false;
+      return;
+    }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    // both slides stay in flow for the duration of the dissolve
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>

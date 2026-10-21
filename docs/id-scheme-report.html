@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snapshot identity — measured comparison · dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080a; --panel:#0c0e12; --panel2:#101319;
+    --line:#1e2229; --line2:#2a2f38;
+    --ink:#e9ecef; --dim:#8b939e; --dim2:#5f6772;
+    --amber:#e0a83c; --amber-soft:rgba(224,168,60,.10);
+    --cyan:#5bc0cb; --red:#d1523f; --green:#4fa87e;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    font-weight:400; overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.022) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.022) 1px, transparent 1px);
+    background-size:6.25vw 6.25vw;
+    mask-image:radial-gradient(ellipse at 30% 20%, #000 20%, transparent 78%);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(ellipse at 78% 78%, rgba(224,168,60,.05), transparent 55%);
+  }
+
+  #deck{position:fixed; inset:0; z-index:1}
+  .slide{
+    position:absolute; inset:0;
+    padding:5vh 5.2vw 6.2vh;
+    display:grid; grid-template-rows:auto minmax(0,1fr) auto;
+    gap:2.1vh;
+    opacity:0; visibility:hidden;
+  }
+  .slide.is-active{opacity:1; visibility:visible}
+
+  /* ---------- chrome ---------- */
+  .rail{position:fixed; top:0; left:0; width:3px; height:100%; background:var(--line); z-index:5}
+  .rail > i{display:block; width:100%; height:0%; background:var(--amber); transition:height .45s cubic-bezier(.2,.7,.2,1)}
+  .brand{
+    position:fixed; top:2.4vh; left:5.2vw; z-index:6;
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--dim2);
+  }
+  .brand b{color:var(--dim); font-weight:500}
+  .counter{
+    position:fixed; top:2.3vh; right:5.2vw; z-index:6;
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; color:var(--dim2);
+  }
+  .counter b{color:var(--amber); font-weight:500}
+  .nav{
+    position:fixed; right:5.2vw; bottom:2.4vh; z-index:6;
+    display:flex; gap:.5rem; align-items:center;
+  }
+  .nav button{
+    width:2.1rem; height:2.1rem; display:grid; place-items:center;
+    background:transparent; color:var(--dim); border:1px solid var(--line2);
+    font-family:var(--mono); font-size:.8rem; cursor:pointer;
+    transition:color .15s, border-color .15s, background .15s;
+  }
+  .nav button:hover{color:var(--ink); border-color:var(--dim2); background:var(--panel)}
+  .nav .hint{font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; color:var(--dim2); margin-right:.6rem}
+
+  /* ---------- type ---------- */
+  .kicker{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--amber); margin:0 0 1.1rem;
+  }
+  .kicker span{color:var(--dim2)}
+  h1{
+    font-size:clamp(2.5rem,4.9vw,5rem); line-height:.98; letter-spacing:-.035em;
+    font-weight:600; margin:0; max-width:20ch;
+  }
+  h1 em{font-style:normal; color:var(--amber)}
+  h2{
+    font-size:clamp(1.45rem,2.15vw,2.15rem); line-height:1.12;
+    letter-spacing:-.02em; font-weight:500; margin:0; max-width:30ch;
+  }
+  h2 em{font-style:normal; color:var(--amber)}
+  .lead{
+    font-size:clamp(.95rem,1.12vw,1.22rem); line-height:1.55;
+    color:#b6bdc6; max-width:64ch; margin:0; font-weight:300;
+  }
+  .lead strong{color:var(--ink); font-weight:500}
+  .note{font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; color:var(--dim2); line-height:1.6}
+  .mono{font-family:var(--mono)}
+  .amber{color:var(--amber)} .cyan{color:var(--cyan)}
+  .ok{color:var(--green)} .no{color:var(--red)}
+
+  /* ---------- layout ---------- */
+  .body{align-self:start; min-height:0}
+  .cols2{display:grid; grid-template-columns:1fr 1fr; gap:3.4vw}
+  .cols3{display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem}
+  .cols4{display:grid; grid-template-columns:repeat(4,1fr); gap:1rem}
+  .stack{display:grid; gap:1.1rem; align-content:start}
+  .foot{border-top:1px solid var(--line); padding-top:1.1vh; display:flex; justify-content:space-between; gap:2rem; align-items:baseline}
+
+  .card{
+    border:1px solid var(--line); background:linear-gradient(180deg,var(--panel2),var(--panel));
+    padding:1.15rem 1.25rem; position:relative; min-height:0;
+  }
+  .card::before{content:""; position:absolute; left:0; top:0; width:100%; height:1px; background:var(--line2); opacity:.5}
+  .card .tag{font-family:var(--mono); font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; color:var(--dim2)}
+  .card h3{font-size:1.02rem; font-weight:500; margin:.45rem 0 .55rem; letter-spacing:-.01em}
+  .card p{font-size:.83rem; line-height:1.55; color:var(--dim); margin:0}
+  .card p code{color:var(--ink); font-family:var(--mono); font-size:.78rem}
+
+  .stat .n{font-family:var(--mono); font-size:clamp(1.9rem,3.2vw,3.2rem); line-height:1; font-weight:500; letter-spacing:-.03em; font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim2); margin-top:.5rem; line-height:1.5}
+  .stat .sub{font-size:.72rem; color:var(--dim); margin-top:.35rem}
+
+  table{width:100%; border-collapse:collapse; font-size:clamp(.7rem,.82vw,.92rem)}
+  th{
+    text-align:left; font-family:var(--mono); font-size:.6rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--dim2); font-weight:500;
+    border-bottom:1px solid var(--line2); padding:.55em .6em; white-space:nowrap;
+  }
+  th.r,td.r{text-align:right}
+  td{border-bottom:1px solid var(--line); padding:.55em .6em; color:#c9cfd7; vertical-align:middle}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; color:var(--ink)}
+  tr.total td{border-top:1px solid var(--line2); border-bottom:none; color:var(--ink); font-weight:500}
+  td.dim{color:var(--dim)}
+  .pill{display:inline-block; font-family:var(--mono); font-size:.66rem; padding:.14em .5em; border:1px solid currentColor; letter-spacing:.04em}
+
+  code,pre{font-family:var(--mono)}
+  pre{
+    margin:0; background:#080a0d; border:1px solid var(--line); padding:1rem 1.1rem;
+    font-size:clamp(.64rem,.72vw,.8rem); line-height:1.7; color:#c3cad3; overflow:auto;
+  }
+  pre .k{color:var(--cyan)} pre .s{color:var(--amber)} pre .c{color:var(--dim2)}
+
+  .rule{height:1px; background:var(--line); width:100%}
+  .quote{
+    font-size:clamp(1.15rem,1.9vw,1.9rem); line-height:1.3; letter-spacing:-.02em;
+    font-weight:400; max-width:26ch;
+  }
+  .quote b{color:var(--amber); font-weight:500}
+
+  .bigline{
+    font-size:clamp(1.25rem,2.05vw,2.05rem); line-height:1.25; letter-spacing:-.025em;
+    font-weight:500; max-width:34ch;
+  }
+  .bigline b{color:var(--amber); font-weight:500}
+
+  /* slide 01 */
+  .cover{align-content:center; display:grid; gap:2.2rem}
+  .cover .meta{display:flex; gap:2.6rem; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:1.3rem}
+
+  /* diagram */
+  .chain{display:flex; align-items:center; gap:.55rem; flex-wrap:wrap}
+  .node{
+    border:1px solid var(--line2); background:var(--panel); padding:.55rem .75rem;
+    font-family:var(--mono); font-size:.68rem; line-height:1.5; min-width:8.2rem;
+  }
+  .node b{display:block; color:var(--ink); font-weight:500; font-size:.78rem}
+  .node span{color:var(--dim2); font-size:.6rem}
+  .node.accent{border-color:rgba(224,168,60,.45); background:var(--amber-soft)}
+  .arrow{color:var(--dim2); font-family:var(--mono); font-size:.9rem}
+
+  .bar{height:.5rem; background:var(--line); position:relative; overflow:hidden}
+  .bar > i{position:absolute; inset:0 auto 0 0; background:var(--cyan)}
+  .bar.amber > i{background:var(--amber)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+  @media (max-width:900px){
+    .cols2,.cols3,.cols4{grid-template-columns:1fr}
+    .slide{padding:8vh 6vw 9vh}
+    body::before{background-size:12vw 12vw}
+  }
+</style>
+</head>
+<body>
+
+<div class="rail"><i id="railFill"></i></div>
+<div class="brand"><b>dataderby</b> &nbsp;/&nbsp; evidence note 001</div>
+<div class="counter"><b id="cur">01</b> / <span id="tot">15</span></div>
+
+<div id="deck">
+
+  <!-- 01 cover -->
+  <section class="slide is-active">
+    <div></div>
+    <div class="cover">
+      <p class="kicker" data-a>Snapshot identity <span>·</span> measured, not argued</p>
+      <h1 data-a>The id cannot<br>be the address.</h1>
+      <p class="lead" data-a>Two candidate identity schemes for the competition snapshot table, run through
+        <strong>24 failure cases</strong>, <strong>500 publishes</strong>, and a rebuild with a backfilled observation.
+        One of them is not reproducible. Both lose address stability the moment history is edited.</p>
+      <div class="meta" data-a>
+        <div class="stat"><div class="n">24</div><div class="l">tests · 3 implementations</div></div>
+        <div class="stat"><div class="n">500</div><div class="l">observations per run</div></div>
+        <div class="stat"><div class="n">9</div><div class="l">real captures · 60 measures</div></div>
+        <div class="stat"><div class="n amber">+6.2%</div><div class="l">storage cost of the winner</div></div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="note">DuckDB 1.5.6 · Python 3.12.13 · 19 Oct 2026</span>
+      <span class="note">experiments/id-scheme/</span>
+    </div>
+  </section>
+
+  <!-- 02 question -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>01 <span>/</span> the question</p>
+      <h2 data-a>An id has three jobs. We only ever argue about the first one.</h2>
+    </div>
+    <div class="body cols3">
+      <div class="card" data-a>
+        <div class="tag">job 01</div>
+        <h3>Identity</h3>
+        <p>Point at exactly one state of one stage. Required for the fact-table foreign key and for lineage.</p>
+      </div>
+      <div class="card" data-a>
+        <div class="tag">job 02</div>
+        <h3>Dedupe</h3>
+        <p>One row per change. A retry, a stale checkpoint, or a re-run must not create a second version
+          of the same observation.</p>
+      </div>
+      <div class="card" data-a>
+        <div class="tag">job 03</div>
+        <h3>Address</h3>
+        <p>A report written last month still resolves today — after a rebuild, a backfill, or a
+          correction to history.</p>
+      </div>
+      <div class="quote" style="grid-column:1/-1" data-a>
+        Jobs 01 and 02 are <b>database</b> problems. Job 03 is a <b>history</b> problem — and it is the
+        only one where the two schemes measurably differ.
+      </div>
+    </div>
+    <div class="foot"><span class="note">definitions used throughout the experiment</span><span class="note">02</span></div>
+  </section>
+
+  <!-- 03 method -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>02 <span>/</span> method</p>
+      <h2 data-a>Everything is fixed except the id.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <table data-a>
+          <thead><tr><th>Held constant</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><td>Input data</td><td class="dim">9 captures → 20 teams × 60 measures</td></tr>
+            <tr><td>Canonical form</td><td class="dim">sorted rows, sorted keys, <code>repr</code> floats</td></tr>
+            <tr><td>Publish loop</td><td class="dim">compare → insert header → fact → checkpoint</td></tr>
+            <tr><td>Transaction</td><td class="dim">one <code>BEGIN</code> / <code>COMMIT</code></td></tr>
+            <tr><td>Test count</td><td class="dim">24 cases, identical for each scheme</td></tr>
+            <tr><td>Scale</td><td class="dim">500 publishes · 10 000 fact rows</td></tr>
+          </tbody>
+        </table>
+        <p class="note" data-a>Only <span class="amber">new_id()</span> and the uniqueness constraint vary between runs.
+          Everything else is shared code, so the numbers are comparable.</p>
+      </div>
+      <div class="stack">
+        <div class="card" data-a>
+          <div class="tag">varied</div>
+          <h3>Three implementations</h3>
+          <p style="line-height:2">
+            <span class="mono amber">A-derived</span> — hash of parent, stage, content<br>
+            <span class="mono cyan">B-ulid</span> — ULID + unique edge<br>
+            <span class="mono no">B-null</span> — same, NULL root (trap)
+          </p>
+        </div>
+        <div class="card" data-a>
+          <div class="tag">harness</div>
+          <h3>What was actually executed</h3>
+          <p>Real DuckDB files, real transactions, a child process killed mid-transaction, a second writer
+            process contending for the file lock, and a rebuild from the same raw sequence.</p>
+        </div>
+        <p class="note" data-a>Reproduce: <span class="mono">uv run --with duckdb python suite.py --approach a</span></p>
+      </div>
+    </div>
+    <div class="foot"><span class="note">experiments/id-scheme/SPEC.md · suite.py · final_metrics.py</span><span class="note">03</span></div>
+  </section>
+
+  <!-- 04 candidates -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>03 <span>/</span> the candidates</p>
+      <h2 data-a>Two designs, and a trap variant we built on purpose.</h2>
+    </div>
+    <div class="body cols3">
+      <div class="card" data-a>
+        <div class="tag amber">A · derived</div>
+        <h3>Hash the lineage</h3>
+        <p class="mono" style="font-size:.72rem; margin:.3rem 0 .8rem; color:var(--ink)">snap_56822dad813380f4<br>27bbeae854b068d2</p>
+        <p><code>sha256(parent | stage | content)[:32]</code><br>
+          Dedupe is the primary key. The id <em>is</em> the edge.</p>
+      </div>
+      <div class="card" data-a>
+        <div class="tag cyan">B · ULID</div>
+        <h3>Name the row, constrain the edge</h3>
+        <p class="mono" style="font-size:.72rem; margin:.3rem 0 .8rem; color:var(--ink)">01M5A8AA42SDDVAQZX2Y48XJWG</p>
+        <p><code>UNIQUE(parent_snapshot_id, content_fingerprint)</code><br>
+          Dedupe is a constraint. The id is just a name.</p>
+      </div>
+      <div class="card" data-a>
+        <div class="tag no">B-null · trap</div>
+        <h3>Same, with a NULL root</h3>
+        <p class="mono" style="font-size:.72rem; margin:.3rem 0 .8rem; color:var(--ink)">parent = NULL</p>
+        <p>SQL treats NULLs as distinct in a UNIQUE constraint. The first observation can be inserted
+          twice — <span class="amber">measured: 2 rows</span>.</p>
+      </div>
+      <div style="grid-column:1/-1" class="rule" data-a></div>
+      <p class="note" style="grid-column:1/-1" data-a>All three share the same pipeline. B-null is not a candidate;
+        it exists to price the most common way this design is implemented wrongly.</p>
+    </div>
+    <div class="foot"><span class="note">approaches/a_derived · b_ulid · b_null</span><span class="note">04</span></div>
+  </section>
+
+  <!-- 05 scorecard -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>04 <span>/</span> scorecard</p>
+      <h2 data-a>Correctness is a tie. Reproducibility is not.</h2>
+    </div>
+    <div class="body">
+      <table data-a>
+        <thead>
+          <tr><th>Test group</th><th class="r">Checks</th><th class="r">A-derived</th><th class="r">B-ulid</th><th class="r">B-null</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Idempotency &amp; atomicity</td><td class="num">8</td><td class="num ok">8</td><td class="num ok">8</td><td class="num ok">8</td></tr>
+          <tr><td>Root-edge dedupe</td><td class="num">1</td><td class="num ok">1</td><td class="num ok">1</td><td class="num no">0</td></tr>
+          <tr><td>Reproducibility &amp; address</td><td class="num">4</td><td class="num ok">4</td><td class="num no">1</td><td class="num no">1</td></tr>
+          <tr><td>Query correctness &amp; integrity</td><td class="num">7</td><td class="num ok">7</td><td class="num ok">7</td><td class="num ok">7</td></tr>
+          <tr><td>Scale &amp; id safety</td><td class="num">4</td><td class="num ok">4</td><td class="num ok">4</td><td class="num ok">4</td></tr>
+          <tr class="total"><td>Total</td><td class="num">24</td><td class="num ok">24</td><td class="num no">21</td><td class="num no">20</td></tr>
+        </tbody>
+      </table>
+      <p class="lead" style="margin-top:1.6rem" data-a>B's three misses are <strong>one root cause</strong>, not three bugs:
+        a generated id cannot be reproduced by a rebuild. Everything a pipeline actually needs — dedupe,
+        retries, crash safety, deltas, foreign keys — passes for both.</p>
+    </div>
+    <div class="foot"><span class="note">results/summary.md · 24/24 · 21/24 · 20/24</span><span class="note">05</span></div>
+  </section>
+
+  <!-- 06 idempotency -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>05 <span>/</span> idempotency</p>
+      <h2 data-a>Both schemes are idempotent. The id is not why.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <table data-a>
+          <thead><tr><th>Failure path</th><th class="r">A</th><th class="r">B</th></tr></thead>
+          <tbody>
+            <tr><td>Identical publish, immediate retry</td><td class="num ok">1 row</td><td class="num ok">1 row</td></tr>
+            <tr><td>Rollback after header + fact</td><td class="num ok">0 rows</td><td class="num ok">0 rows</td></tr>
+            <tr><td>Process killed inside the transaction</td><td class="num ok">0 rows</td><td class="num ok">0 rows</td></tr>
+            <tr><td>Stale checkpoint, same edge</td><td class="num ok">2 rows</td><td class="num ok">2 rows</td></tr>
+            <tr><td>Same content, different parent</td><td class="num ok">2 rows</td><td class="num ok">2 rows</td></tr>
+            <tr><td>Second writer process</td><td class="num ok">refused</td><td class="num ok">refused</td></tr>
+          </tbody>
+        </table>
+        <p class="note" data-a>“2 rows” in the two edge cases is the <span class="amber">correct</span> answer: those are two
+          distinct observations, not a duplicate.</p>
+      </div>
+      <div class="stack">
+        <div class="card" data-a>
+          <div class="tag">the mechanism</div>
+          <h3>One commit, three writes</h3>
+          <p>Header, fact rows and checkpoint move in a single transaction. A retry either sees all three
+            or none of them — regardless of how the id was minted.</p>
+        </div>
+        <div class="card" data-a>
+          <div class="tag">why the test matters</div>
+          <h3>Revert is not a duplicate</h3>
+          <div class="chain" style="margin-top:.7rem">
+            <div class="node"><b>S1</b><span>state A</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>S2</b><span>state B</span></div>
+            <div class="arrow">→</div>
+            <div class="node accent"><b>S3</b><span>state A again</span></div>
+          </div>
+          <p style="margin-top:.7rem">Measured: <span class="mono ok">3</span> snapshots. A dedupe key on
+            <em>content alone</em> would return 2 and silently lose the revert.</p>
+        </div>
+        <p class="quote" data-a>Idempotency lives in the <b>transaction</b>, not in the identifier.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="note">T01–T07 · T09 · one transaction per accepted observation</span><span class="note">06</span></div>
+  </section>
+
+  <!-- 07 null trap -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>06 <span>/</span> the trap</p>
+      <h2 data-a>A unique constraint does not protect the first row if its parent is NULL.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <pre data-a><span class="c">-- the obvious implementation</span>
+CREATE TABLE competition_snapshot (
+  snapshot_id         VARCHAR PRIMARY KEY,
+  parent_snapshot_id  VARCHAR,          <span class="c">-- NULL for the first</span>
+  content_fingerprint VARCHAR NOT NULL,
+  <span class="k">UNIQUE</span> (parent_snapshot_id, content_fingerprint)
+);</pre>
+        <pre data-a><span class="c">-- two inserts of the same first observation</span>
+INSERT ... (parent = NULL, fp = 'a91f…');
+INSERT ... (parent = NULL, fp = 'a91f…');
+
+<span class="c">-- result</span>
+<span class="no">2 rows</span></pre>
+      </div>
+      <div class="stack">
+        <div class="stat" data-a><div class="n no">2</div><div class="l">snapshots for one observation</div>
+          <div class="sub">B-null, T08. A and B both return 1.</div></div>
+        <p class="lead" data-a>SQL compares NULLs as <strong>unknown</strong>, so the pair
+          <code>(NULL, fp)</code> never collides with itself. The database is working correctly; the
+          schema is wrong.</p>
+        <div class="card" data-a>
+          <div class="tag">rule</div>
+          <h3>Sentinel, never NULL</h3>
+          <p><code>parent_snapshot_id VARCHAR NOT NULL DEFAULT 'genesis'</code>. One row per stage is the
+            root, and it is deduped by the same constraint as every other edge.</p>
+        </div>
+        <p class="note" data-a>This is the only failure in the experiment that is <em>silent</em> — no error,
+          no warning, just a duplicated root that every downstream join will double.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="note">T08 · root-edge dedupe · only the B-null variant fails</span><span class="note">07</span></div>
+  </section>
+
+  <!-- 08 integrity -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>07 <span>/</span> integrity</p>
+      <h2 data-a>Seven checks that have nothing to do with the id — and still matter.</h2>
+    </div>
+    <div class="body">
+      <table data-a>
+        <thead><tr><th>Check</th><th>Expected</th><th class="r">A</th><th class="r">B</th></tr></thead>
+        <tbody>
+          <tr><td>Orphan fact row</td><td class="dim">rejected by the foreign key</td><td class="num ok">rejected</td><td class="num ok">rejected</td></tr>
+          <tr><td>Latest state</td><td class="dim">20 rows, values equal to the last observation</td><td class="num ok">20</td><td class="num ok">20</td></tr>
+          <tr><td>Delta across 9 980 consecutive pairs</td><td class="dim">every diff exactly 1, first row absent</td><td class="num ok">0 anomalies</td><td class="num ok">0 anomalies</td></tr>
+          <tr><td>Missing measure</td><td class="dim">stored as NULL, never coerced to 0</td><td class="num ok">1 NULL</td><td class="num ok">1 NULL</td></tr>
+          <tr><td>Row order changed</td><td class="dim">same fingerprint, no new version</td><td class="num ok">stable</td><td class="num ok">stable</td></tr>
+          <tr><td>JSON key order changed</td><td class="dim">same fingerprint</td><td class="num ok">stable</td><td class="num ok">stable</td></tr>
+          <tr><td>One value changed by 1.0</td><td class="dim">new fingerprint</td><td class="num ok">detected</td><td class="num ok">detected</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:1.3rem" data-a>The canonical form is part of the contract: a payload that differs only in row order or
+        float formatting must not become a new version. Four tests cover it; four pass.</p>
+    </div>
+    <div class="foot"><span class="note">T12 · T13 · T14 · T16 · results/analysis.json</span><span class="note">08</span></div>
+  </section>
+
+  <!-- 09 performance -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>08 <span>/</span> performance</p>
+      <h2 data-a>Real, noisy, and not the deciding factor.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <table data-a>
+          <thead><tr><th>Metric · 300 publishes</th><th class="r">A-derived</th><th class="r">B-ulid</th><th class="r">Δ</th></tr></thead>
+          <tbody>
+            <tr><td>Insert p50</td><td class="num">76.1 ms</td><td class="num">83.3 ms</td><td class="num no">+9.5%</td></tr>
+            <tr><td>Insert p95</td><td class="num">104.6 ms</td><td class="num">101.4 ms</td><td class="num ok">−3.1%</td></tr>
+            <tr><td>Throughput</td><td class="num">13.1 /s</td><td class="num">12.0 /s</td><td class="num no">−8.4%</td></tr>
+            <tr><td>Latest query</td><td class="num">6.4 ms</td><td class="num">5.9 ms</td><td class="num ok">−7.4%</td></tr>
+            <tr><td>Delta query</td><td class="num">13.3 ms</td><td class="num">12.6 ms</td><td class="num ok">−5.7%</td></tr>
+            <tr><td>No-change publish</td><td class="num">5.3 ms</td><td class="num">5.4 ms</td><td class="num">≈</td></tr>
+          </tbody>
+        </table>
+        <p class="note" data-a>Six independent runs. B was slower at the median in five (2–35%) and faster in one
+          (8%). The spread across runs is larger than the gap between schemes.
+          <span class="amber">Timing does not decide this.</span></p>
+      </div>
+      <div class="stack">
+        <div class="card" data-a>
+          <div class="tag">incidental finding</div>
+          <h3>The insert path dominates everything</h3>
+          <p>DuckDB 1.5.6 on Windows binds parameters at roughly <span class="mono">4 ms each</span>. A 20-row ×
+            62-column insert costs <span class="mono no">2 485 ms</span> parameterised, <span class="mono ok">27 ms</span>
+            as literals, and <span class="mono">73 ms</span> via <span class="mono">COPY</span>.</p>
+          </div>
+        <div class="card" data-a>
+          <div class="tag">implication</div>
+          <h3>Choose the load path before the id</h3>
+          <p>The harness uses literals for the fact insert (numeric-only columns, escaped). In production this
+            is a <span class="mono">COPY</span> or appender decision, and it is worth <em>90×</em> more than the id scheme.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="note">results/final.json · results/perf.json · probes/bench5.py</span><span class="note">09</span></div>
+  </section>
+
+  <!-- 10 storage -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>09 <span>/</span> storage</p>
+      <h2 data-a>The shorter id is the larger table.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <div class="card" data-a>
+          <div class="tag">300 snapshots · 6 000 fact rows</div>
+          <div style="margin-top:1rem; display:grid; gap:1.1rem">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:.72rem; margin-bottom:.4rem">
+                <span>A-derived</span><span class="amber">14 022 B / snapshot</span></div>
+              <div class="bar amber"><i style="width:94.1%"></i></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:.72rem; margin-bottom:.4rem">
+                <span>B-ulid</span><span class="cyan">14 896 B / snapshot</span></div>
+              <div class="bar"><i style="width:100%"></i></div>
+            </div>
+          </div>
+          <p style="margin-top:1.1rem">A: 4 206 592 B total · B: 4 468 736 B total ·
+            <span class="amber">+6.2%</span></p>
+        </div>
+        <p class="note" data-a>Measured after <span class="mono">CHECKPOINT</span> and after closing the connection, so the
+          WAL is flushed. B is larger in every run: <span class="mono">+4.5%</span> at 500 snapshots,
+          <span class="mono">+6.2%</span> at 300, <span class="mono">+7.7%</span> at 200. Absolute bytes per snapshot
+          fall with scale as compression improves — compare like with like.</p>
+      </div>
+      <div class="stack">
+        <div class="stat" data-a><div class="n">−11</div><div class="l">bytes per id · 37 → 26</div></div>
+        <div class="stat" data-a><div class="n amber">+6.2%</div><div class="l">bytes per snapshot</div></div>
+        <p class="lead" data-a>The 11 saved bytes are paid back with interest by the composite index on
+          <code>(parent, content)</code>: the difference lands at 701 → 745 bytes per fact row, plus a
+          second B-tree to maintain.</p>
+        <div class="card" data-a>
+          <div class="tag">verdict</div>
+          <h3>Small, predictable, acceptable</h3>
+          <p>At 9 000 snapshots per season this is under 10 MB. It is a real cost, but it does not change
+            the decision.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="note">results/final.json · results/analysis.json</span><span class="note">10</span></div>
+  </section>
+
+  <!-- 11 address -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>10 <span>/</span> the decisive measurement</p>
+      <h2 data-a>A reproduces its ids — but only when the replay is <em>identical</em>.</h2>
+    </div>
+    <div class="body">
+      <div class="cols2" style="gap:2.2vw">
+        <div class="stack">
+          <div class="card" data-a>
+            <div class="tag">scenario 1 · exact replay</div>
+            <h3>Rebuild from the same raw, in the same order</h3>
+            <table style="margin-top:.6rem">
+              <tbody>
+                <tr><td>Ids equal</td><td class="num ok">yes</td><td class="num no">no</td></tr>
+                <tr><td>Report pinned to <code>snapshot_id</code></td><td class="num ok">20 rows</td><td class="num no">0 rows</td></tr>
+                <tr><td>Report pinned to <code>(stage, observed_at)</code></td><td class="num ok">20 rows</td><td class="num ok">20 rows</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note" data-a>T06a–T06c · 5-snapshot rebuild</p>
+        </div>
+        <div class="stack">
+          <div class="card" data-a>
+            <div class="tag">scenario 2 · one backfilled observation</div>
+            <h3>Insert a missed capture between S1 and S2</h3>
+            <table style="margin-top:.6rem">
+              <tbody>
+                <tr><td>Downstream ids changed</td><td class="num no">5 / 5</td><td class="num no">5 / 5</td></tr>
+                <tr><td>Report pinned to <code>snapshot_id</code></td><td class="num no">0 rows</td><td class="num no">0 rows</td></tr>
+                <tr><td>Report pinned to <code>(stage, observed_at)</code></td><td class="num ok">20 rows</td><td class="num ok">20 rows</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note" data-a>results/backfill.json · 6-snapshot chain</p>
+        </div>
+      </div>
+      <div class="rule" data-a></div>
+      <p class="bigline" data-a>A derived id is a function of its <b>parent</b>. Correct a capture in the middle
+        of history and every later id changes — so the one case A was supposed to protect is the case it
+        fails.</p>
+      <p class="lead" data-a>Neither scheme gives address stability under history edits. That is not a defect
+        of the id; it is a category error. <strong>The id records lineage. The observation time records address.</strong></p>
+    </div>
+    <div class="foot"><span class="note">T06 · results/backfill.json · T17-equivalent, run separately</span><span class="note">11</span></div>
+  </section>
+
+  <!-- 12 pros cons -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>11 <span>/</span> pros and cons</p>
+      <h2 data-a>Where each design actually wins.</h2>
+    </div>
+    <div class="body">
+      <table data-a>
+        <thead><tr><th style="width:34%">Property</th><th>A-derived</th><th>B-ulid</th></tr></thead>
+        <tbody>
+          <tr><td>Dedupe on the edge</td><td class="ok">primary key</td><td class="ok">unique constraint</td></tr>
+          <tr><td>Idempotent retries</td><td class="ok">yes — transaction</td><td class="ok">yes — transaction</td></tr>
+          <tr><td>Survives stale checkpoint</td><td class="ok">yes</td><td class="ok">yes</td></tr>
+          <tr><td>Exact replay reproduces ids</td><td class="ok">yes</td><td class="no">no</td></tr>
+          <tr><td>Backfill keeps downstream ids</td><td class="no">no</td><td class="no">no</td></tr>
+          <tr><td>Address by <code>snapshot_id</code></td><td class="ok">exact replay only</td><td class="no">never</td></tr>
+          <tr><td>Address by <code>(stage, observed_at)</code></td><td class="ok">yes</td><td class="ok">yes</td></tr>
+          <tr><td>Time-sortable</td><td class="no">no (0.51 ascending)</td><td class="ok">yes (1.00 at 1/s)</td></tr>
+          <tr><td>Id length</td><td class="no">37 chars</td><td class="ok">26 chars</td></tr>
+          <tr><td>Storage at 300 snapshots</td><td class="ok">14 022 B</td><td class="no">14 896 B</td></tr>
+          <tr><td>Depends on replay order</td><td class="no">yes — chain position</td><td class="ok">no</td></tr>
+          <tr><td>Constraint needed at root</td><td class="ok">none</td><td class="no">sentinel required</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foot"><span class="note">Every row is a measured result or a direct consequence of the schema.</span><span class="note">12</span></div>
+  </section>
+
+  <!-- 13 recommendation -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>12 <span>/</span> recommendation</p>
+      <h2 data-a>Take the ULID. Stop treating it as an address.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <p class="lead" data-a>All 15 idempotency, integrity and scale checks pass for both schemes. The only
+          measured difference that survives scrutiny is that A reproduces ids on an <em>exact</em> replay —
+          a scenario that a backfill immediately invalidates.</p>
+        <p class="lead" data-a>So the tie is broken on the properties that remain: shorter key, time-sortable,
+          no dependence on chain position, and no hash of the parent to reason about.</p>
+        <div class="card" data-a>
+          <div class="tag">cost accepted</div>
+          <p style="font-size:.9rem; line-height:1.9">
+            <span class="mono no">+6.2%</span> storage &nbsp;·&nbsp;
+            <span class="mono no">≈+10%</span> median insert (2–35% across six runs) &nbsp;·&nbsp;
+            <span class="mono">−11</span> bytes per id
+          </p>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card" data-a style="border-color:rgba(224,168,60,.35)">
+          <div class="tag">four conditions, non-negotiable</div>
+          <p style="line-height:1.85; font-size:.86rem; margin-top:.5rem">
+            <span class="amber mono">01</span> &nbsp;<code>parent_snapshot_id NOT NULL DEFAULT 'genesis'</code><br>
+            <span class="amber mono">02</span> &nbsp;<code>UNIQUE (parent_snapshot_id, content_fingerprint)</code><br>
+            <span class="amber mono">03</span> &nbsp;Reports pin <code>(stage_id, observed_at)</code>; no stored
+            <code>snapshot_id</code> outside the warehouse<br>
+            <span class="amber mono">04</span> &nbsp;CI asserts a rebuild reproduces the
+            <code>(stage, observed_at) → content</code> map
+          </p>
+        </div>
+        <p class="quote" data-a>Buy the 6% storage. <b>Delete the assumption</b> that a row id is a permanent address.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="note">decision supported by results/summary.md · final.json · backfill.json</span><span class="note">13</span></div>
+  </section>
+
+  <!-- 14 what ships -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>13 <span>/</span> what ships</p>
+      <h2 data-a>The schema, and the one rule that makes it idempotent.</h2>
+    </div>
+    <div class="body cols2">
+      <pre data-a><span class="k">CREATE TABLE</span> competition_snapshot (
+  snapshot_id          VARCHAR <span class="k">PRIMARY KEY</span>,
+  parent_snapshot_id   VARCHAR <span class="k">NOT NULL</span>
+                       <span class="k">DEFAULT</span> <span class="s">'genesis'</span>,
+  stage_id             VARCHAR <span class="k">NOT NULL</span>,
+  content_fingerprint  VARCHAR <span class="k">NOT NULL</span>,
+  observed_at          TIMESTAMP <span class="k">NOT NULL</span>,
+  accepted_at          TIMESTAMP <span class="k">NOT NULL</span>,
+
+  <span class="k">UNIQUE</span> (parent_snapshot_id, content_fingerprint),
+  <span class="k">UNIQUE</span> (stage_id, observed_at)
+);
+
+<span class="c">-- the address a report is allowed to store</span>
+<span class="c">-- (stage_id, observed_at) — reproducible from raw</span></pre>
+      <div class="stack">
+        <pre data-a><span class="c">-- publish: one transaction, no partial state</span>
+<span class="k">BEGIN</span>;
+  <span class="c">-- 1. header, deduped by the edge</span>
+  <span class="k">INSERT INTO</span> competition_snapshot (...)
+  <span class="k">VALUES</span> (...)
+  <span class="k">ON CONFLICT</span> (parent_snapshot_id,
+               content_fingerprint)
+  <span class="k">DO NOTHING</span>;
+
+  <span class="c">-- 2. fact rows only if the header is new</span>
+  <span class="k">INSERT INTO</span> fact_team_snapshot ...;
+
+  <span class="c">-- 3. checkpoint, in the same commit</span>
+  <span class="k">INSERT INTO</span> checkpoint ... <span class="k">ON CONFLICT</span> ...;
+<span class="k">COMMIT</span>;</pre>
+        <p class="note" data-a>The pipeline compares the fingerprint to the checkpoint <em>before</em> opening the
+          transaction — a 5 ms no-op. The constraint is the last line of defence, not the first.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="note">sql/001_schema.sql (to be created) · §4.4 of the plan is superseded</span><span class="note">14</span></div>
+  </section>
+
+  <!-- 15 limits -->
+  <section class="slide">
+    <div>
+      <p class="kicker" data-a>14 <span>/</span> limits</p>
+      <h2 data-a>What this experiment does not prove.</h2>
+    </div>
+    <div class="body cols2">
+      <div class="stack">
+        <table data-a>
+          <thead><tr><th>Limit</th><th>Consequence</th></tr></thead>
+          <tbody>
+            <tr><td>Successive states are synthesised</td><td class="dim">real capture drift may differ</td></tr>
+            <tr><td>One stage, 20 teams</td><td class="dim">no multi-stage contention measured</td></tr>
+            <tr><td>Single-writer DuckDB</td><td class="dim">concurrency = lock refusal, not MVCC</td></tr>
+            <tr><td>No retention or compaction</td><td class="dim">storage numbers are steady-state only</td></tr>
+            <tr><td>No Parquet export</td><td class="dim">downstream cost not measured</td></tr>
+          </tbody>
+        </table>
+        <p class="note" data-a>The base state, the 60 columns and the additive invariants come from the nine real
+          captures. Only the change between snapshots is generated.</p>
+      </div>
+      <div class="stack">
+        <div class="card" data-a>
+          <div class="tag">next</div>
+          <h3>Three experiments worth running before M2</h3>
+          <p style="line-height:1.9">
+            <span class="mono amber">E2</span> — unchanged table ⇒ unchanged details (the skip rule)<br>
+            <span class="mono amber">E3</span> — retroactive corrections, to price backfill<br>
+            <span class="mono amber">E4</span> — <code>teamId</code> stability across seasons
+          </p>
+        </div>
+        <div class="card" data-a>
+          <div class="tag">artifacts</div>
+          <h3>Reproducible in one command</h3>
+          <p class="mono" style="font-size:.72rem; line-height:1.9">
+            experiments/id-scheme/<br>
+            &nbsp;&nbsp;SPEC.md · common.py · suite.py<br>
+            &nbsp;&nbsp;final_metrics.py · backfill.py<br>
+            &nbsp;&nbsp;results/summary.md · final.json
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="note">evidence, not consensus</span><span class="note">15</span></div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <span class="hint">← →</span>
+  <button id="prev" aria-label="Previous slide">←</button>
+  <button id="next" aria-label="Next slide">→</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  document.getElementById('tot').textContent = String(total).padStart(2, '0');
+  const cur = document.getElementById('cur');
+  const rail = document.getElementById('railFill');
+  let i = 0;
+  let busy = false;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function hud() {
+    cur.textContent = String(i + 1).padStart(2, '0');
+    rail.style.height = ((i + 1) / total * 100) + '%';
+  }
+
+  function enter(slide) {
+    if (reduced || !window.gsap) return;
+    gsap.fromTo(slide.querySelectorAll('[data-a]'),
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: .55, stagger: .045, ease: 'power2.out', overwrite: true });
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= total || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const dest = slides[to];
+    i = to;
+    hud();
+
+    if (reduced || !window.gsap) {
+      from.classList.remove('is-active');
+      dest.classList.add('is-active');
+      busy = false;
+      return;
+    }
+
+    const tl = gsap.timeline({ onComplete: () => { busy = false; } });
+    tl.to(from.querySelectorAll('[data-a]'),
+        { opacity: 0, y: -10, duration: .22, stagger: .012, ease: 'power1.in' }, 0)
+      .to(from, { opacity: 0, duration: .28, ease: 'power1.in' }, .06)
+      .add(() => {
+        from.classList.remove('is-active');
+        dest.classList.add('is-active');
+      })
+      .fromTo(dest, { opacity: 0 }, { opacity: 1, duration: .3 }, .30)
+      .fromTo(dest.querySelectorAll('[data-a]'),
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: .55, stagger: .045, ease: 'power2.out' }, .34);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) {
+      e.preventDefault(); go(i + 1);
+    } else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) {
+      e.preventDefault(); go(i - 1);
+    } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  // touch / swipe
+  let x0 = null;
+  document.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) go(dx < 0 ? i + 1 : i - 1);
+    x0 = null;
+  }, { passive: true });
+
+  hud();
+  enter(slides[0]);
+})();
+</script>
+</body>
+</html>

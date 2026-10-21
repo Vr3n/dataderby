@@ -1,0 +1,18 @@
+{
+  "a": {
+    "approach": "a",
+    "tail_ids_equal": false,
+    "changed_of_tail": 5,
+    "tail_size": 5,
+    "pinned_by_id_rows": 0,
+    "pinned_by_time_rows": 20
+  },
+  "b": {
+    "approach": "b",
+    "tail_ids_equal": false,
+    "changed_of_tail": 5,
+    "tail_size": 5,
+    "pinned_by_id_rows": 0,
+    "pinned_by_time_rows": 20
+  }
+}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dataderby: does the plan fit the goals?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;800&family=Source+Serif+4:ital,wght@0,400;0,600;0,800;1,400&display=swap">
+<style>
+:root{--paper:#fff;--ink:#121212;--mu:#5c5c5c;--rule:#dcdcdc;--bl:#1a5fd1;--am:#a65700;--rd:#c8102e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#121212;--ink:#f2f2f2;--mu:#a3a3a3;--rule:#333;--bl:#6ea8ff;--am:#f0b24a;--rd:#ff6b6b;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#121212;--ink:#f2f2f2;--mu:#a3a3a3;--rule:#333;--bl:#6ea8ff;--am:#f0b24a;--rd:#ff6b6b;color-scheme:dark}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif}
+.s{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;gap:2vmin;box-sizing:border-box;padding:calc(3.5vmin + env(safe-area-inset-top,0px)) 6vw calc(12vmin + env(safe-area-inset-bottom,0px));overflow:auto}
+h1,h2{font-family:'Source Serif 4',Georgia,serif;font-weight:800;margin:0;line-height:1.08;letter-spacing:-.01em}
+h1{font-size:clamp(36px,6.4vw,78px)}h2{font-size:clamp(26px,3.8vw,48px)}
+.k,.hand,.gap,.cap,.chips span,.goal i,.fix span,.mast,.meta,nav,.stp,.mx,.stamp{font-family:'Libre Franklin',Arial,sans-serif}
+.mast{font-size:clamp(16px,2vw,22px);font-weight:800;letter-spacing:.2em}.dbl{border-top:3px solid var(--ink)}
+.meta{font-size:clamp(12px,1.5vw,16px);font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)}
+p{margin:0;font-size:clamp(16px,1.9vw,21px);line-height:1.5}
+.lead{font-size:clamp(20px,2.6vw,32px);line-height:1.3}.hand{font-size:clamp(14px,1.7vw,18px);color:var(--mu)}
+.k{font-size:clamp(12px,1.5vw,15px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rd)}
+.in{font-style:italic;font-size:clamp(19px,2.3vw,27px);line-height:1.3;border-left:4px solid var(--rd);padding-left:14px}
+.gap{font-size:clamp(14px,1.7vw,18px);font-weight:600;color:var(--rd);border-top:1px solid var(--rule);padding-top:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips span{border:1px solid var(--ink);padding:2px 10px;font-weight:700;font-size:clamp(12px,1.5vw,15px);letter-spacing:.06em}
+.cap{display:grid;min-height:3.8em;font-size:clamp(15px,1.8vw,20px);line-height:1.35;border-top:2px solid var(--ink);padding-top:8px}.cap span{grid-area:1/1}.ng .cap span{grid-area:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:3vmin;align-items:center}.tx{display:grid;gap:1.6vmin}
+svg.rf{width:100%;max-height:46vh}svg text{font-family:'Libre Franklin',Arial,sans-serif;font-size:19px;font-weight:600;fill:var(--ink)}
+.dr{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.b{stroke:var(--bl)}.r{stroke:var(--rd)}.a{stroke:var(--am)}.fl{fill:var(--paper);stroke:none}
+.big{font-size:40px!important;font-weight:800!important}.rt{fill:var(--rd)!important}.bt{fill:var(--bl)!important}.ptx{font-weight:800!important;font-size:32px!important;letter-spacing:.08em}
+.stamp{display:inline-block;align-self:flex-start;border:3px solid var(--rd);color:var(--rd);padding:4px 14px;font-weight:800;letter-spacing:.08em;font-size:clamp(15px,2.2vw,26px)}
+.goals{columns:2 300px;column-gap:5vw;column-rule:1px solid var(--rule)}.goal{break-inside:avoid;padding:0 0 1.8vmin}.goal b{font-family:'Libre Franklin',Arial,sans-serif;color:var(--rd);margin-right:6px}.goal i{display:block;font-style:normal;color:var(--mu);font-size:.8em;margin-top:2px}
+.mxw{overflow-x:auto}.mx{display:grid;grid-template-columns:minmax(150px,1.8fr) repeat(8,minmax(40px,1fr));gap:3px 4px;align-items:center;min-width:560px;font-size:clamp(11px,1.4vw,16px)}
+.mx .h{text-align:center;font-weight:600;line-height:1.1;border-bottom:2px solid var(--ink);padding-bottom:3px}.mx .h b{display:block;font-weight:800;color:var(--rd)}
+.cell{height:34px}.cell svg{width:100%;height:100%}.rl{border-bottom:1px solid var(--rule);padding:2px 0}
+.stp{display:block;text-align:center;font-weight:800;border:2px solid;padding:1px 0;font-size:.85em;letter-spacing:.06em}.stp.ok{color:var(--bl)}.stp.pt{color:var(--am)}
+.fixes{display:grid;gap:1.2vmin}.fix{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:center;border-bottom:1px solid var(--rule);padding-bottom:1vmin}.fix svg{width:34px;height:34px}.fix span{color:var(--rd);font-weight:800;font-size:.8em;letter-spacing:.06em;margin-left:6px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 6vw calc(10px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:2px solid var(--ink);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+nav button{font:inherit;font-weight:800;padding:8px 20px;border:2px solid var(--ink);background:none;color:var(--ink);cursor:pointer}nav button:disabled{opacity:.35;cursor:default}
+</style>
+</head>
+<body>
+
+<section class="s" data-id="cover">
+<p class="mast">DATADERBY</p><div class="dbl"></div>
+<p class="meta">Architecture review · 19 October 2026</p>
+<h1>Does the plan fit the goals?</h1>
+<p class="lead">Mostly. Five goals are met in design. Three are only partly met. None is missing.</p>
+<p class="stamp">VERDICT: MOSTLY YES</p>
+<p class="hand">Press Next to see which part of the plan serves which goal.</p>
+</section>
+
+<section class="s" data-id="goals">
+<p class="k">Page 2 · What we want</p><h2>Eight goals, in plain words</h2>
+<div class="goals" id="gl"></div>
+</section>
+
+<section class="s" data-id="map">
+<p class="k">Page 3 · The scorecard</p><h2>Which part serves which goal</h2>
+<div class="mxw"><div class="mx" id="mx"></div></div>
+<div class="cap"><span class="c1">Solid ink circle: this part serves that goal. Dashed circle: only in part.</span><span class="c2">5 goals met, 3 partly. “Met” means met in design. Tests must still prove it.</span></div>
+</section>
+
+<div id="ins"></div>
+
+<section class="s" data-id="fix">
+<p class="k">Final page · Corrections</p><h2>What we still owe</h2>
+<div class="fixes" id="fx"></div>
+<p class="hand" id="nt">Not a goal today: match-by-match facts. Snapshots cannot give them.</p>
+</section>
+
+<nav><button id="pv">Back</button><span id="ct"></span><button id="nx">Next</button></nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const G=window.gsap,R=matchMedia('(prefers-reduced-motion: reduce)').matches,$$=(s,e=document)=>[...e.querySelectorAll(s)];
+if(!G)document.body.classList.add('ng');
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" text-anchor="middle" ${o}>${t}</text>`;
+const BX=(x,y,w,h,c='')=>`<rect class="dr ${c}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/>`;
+const AR=(x1,y1,x2,y2,c='')=>{const a=Math.atan2(y2-y1,x2-x1),h=d=>`${(x2-13*Math.cos(a+d)).toFixed(0)} ${(y2-13*Math.sin(a+d)).toFixed(0)}`;return `<path class="dr ${c}" d="M${x1} ${y1}L${x2} ${y2}M${h(.5)}L${x2} ${y2}L${h(-.5)}"/>`};
+const G_=['Keep every accepted state, so we can see change over time.|History, not only the final table','One team, many competitions. Stats stay apart for each one.|Competition lives on the snapshot','Add other data sources later.|Same club, different ids','Spend little compute. Do not fetch when nothing changed.|Wait, then fetch once','Never show bad data. No half snapshots.|All 20 teams or nothing','Fix a parser bug without scraping again.|Keep the receipt','Survive crashes and retries. No duplicates.|Run twice, same result','Start simple. One machine. Grow when a trigger fires.|Do not buy a crane for a shovel job'];
+$$('#gl')[0].innerHTML=G_.map((g,i)=>{const[a,b]=g.split('|');return `<div class="goal"><b>G${i+1}</b> ${a}<i>${b}</i></div>`}).join('');
+/* matrix */
+const W=['History','Many comps','More sources','Low compute','Clean data','Fix parser','Retry-safe','Simple'];
+const C=[['Snapshot header + append-only fact',{0:1,1:1,6:1}],['Raw files + manifest',{5:0,6:1}],['team_key + source map',{1:1,2:0}],['Fixture windows + grace + retry',{3:1}],['Probe + fingerprint gate',{3:0}],['Validate + atomic publish',{4:1,6:1}],['Checkpoint + run ledger',{6:1,4:1}],['Plain Python + DuckDB + cron',{7:1}],['Logic fingerprint + replay',{5:0}]];
+const ring='M18 4C28 3 33 12 32 20C31 29 22 33 15 31C7 29 3 21 6 13C8 8 13 5 20 4';
+let mx='<div></div>'+W.map((w,i)=>`<div class="h"><b>G${i+1}</b>${w}</div>`).join('');
+C.forEach(c=>{mx+=`<div class="rl">${c[0]}</div>`;for(let i=0;i<8;i++){const v=c[1][i];mx+=`<div class="cell">${v===1?`<svg viewBox="0 0 38 36"><path class="dr b mk" d="${ring}"/></svg>`:v===0?`<svg viewBox="0 0 38 36"><path class="dr a pt" stroke-dasharray="4 4" d="${ring}"/></svg>`:''}</div>`}});
+const V=['ok','ok','pt','pt','ok','pt','ok','ok'];mx+='<div class="rl"><b>Verdict</b></div>'+V.map(v=>`<span class="stp ${v}">${v=='ok'?'MET':'PARTLY'}</span>`).join('');
+$$('#mx')[0].innerHTML=mx;
+/* concept slides */
+const ppl=()=>{let h='';for(let r=0;r<2;r++)for(let i=0;i<10;i++){const x=62+i*44,y=80+r*68,m=r==1&&(i==3||i==7),p=`<circle class="dr" cx="${x}" cy="${y}" r="13"/><path class="dr" d="M${x-16} ${y+36}Q${x} ${y+14} ${x+16} ${y+36}"/>`;h+=m?`<g class="gh" stroke-dasharray="4 4">${p.replace(/class="dr"/g,'class="dr a"')}</g><g class="pf">${p.replace(/class="dr"/g,'class="dr b"')}</g>`:`<g class="pp">${p}</g>`}return h};
+const stamp=(c,t,col)=>`<g transform="rotate(-8 260 128)"><g class="${c}">${BX(120,98,280,62,col)}${T(260,143,t,'class="ptx '+(col=='r'?'rt':'bt')+'"')}</g></g>`;
+const CS=[
+['snap','Concept 1 · Snapshots','Add a page. Never erase.','A whiteboard shows only today. A diary keeps every day. We want the diary.','Each accepted capture is one page. Each team has one row on it. The competition is written on the page header, so one team can sit in many competitions. Rows are only added, so a retry cannot overwrite history.','G1 · G2 · G7','',
+`<g class="g1">${BX(20,30,200,140)}${T(120,75,'Team A')}${T(95,135,'10','class="big"')}</g><path class="dr r mk s1" d="M72 122L120 130"/><g class="n1">${T(168,135,'13','class="big bt"')}${T(120,205,'overwritten: the 10 is gone','class="rt"')}</g>`+[0,1,2].map(i=>`<g class="g2"><rect class="fl" x="${290+i*20}" y="${30+i*45}" width="170" height="100" rx="6"/><rect class="dr b" x="${290+i*20}" y="${30+i*45}" width="170" height="100" rx="6"/>${T(375+i*20,64+i*45,'S'+(i+1)+' · A = '+[10,13,13][i])}</g>`).join('')+`<g class="g2">${T(400,255,'every page stays','class="bt"')}</g>`,
+['A whiteboard: the 10 is erased, the 13 is written. Yesterday is gone.','A diary: every snapshot is a new page. Page S1 still says 10.']],
+['raw','Concept 2 · Raw evidence','Keep the receipt.','Our table is our reading of the source. The raw file is the source’s own words. If we misread, we read again.','Save each response unchanged, with a manifest: time, run, hash. Parse into tables later. Fix a parser bug by running the new parser on old files. No new request.','G6 · G7','Gap: raw files live on one machine. Back them up.',
+`<g class="g1">${BX(20,95,110,70)}${T(75,135,'raw file')}${AR(130,115,200,75)}${BX(200,35,120,60)}${T(260,72,'parser v1')}${AR(320,65,390,65)}${BX(390,35,110,60)}${T(445,72,'table')}${T(445,120,'wrong numbers','class="rt"')}<path class="dr r mk m1" d="M478 28L496 46M496 28L478 46"/></g><g class="g2">${AR(130,145,200,205)}${BX(200,175,120,60,'b')}${T(260,212,'parser v2','class="bt"')}${AR(320,205,390,205,'b')}${BX(390,175,110,60,'b')}${T(445,212,'table')}<path class="dr b mk m2" d="M410 250L428 262L470 240"/></g>`,
+['Parser v1 misreads a field. The table is wrong.','Fix the parser. Read the same raw file again. No new request.']],
+['cohort','Concept 3 · Cohort and atomic publish','All 20 teams, or nothing.','A team photo with two people missing is not a team photo. A dashboard cannot see that. So we check first.','Validate team count, unique ids, all sections and types. Then write the header and all rows in one transaction. A failed check keeps the old snapshot as latest. We keep the evidence.','G5 · G7','',
+`<rect class="dr mk m0" x="20" y="15" width="480" height="215" rx="6"/>`+ppl()+stamp('st1','REJECTED','r')+stamp('st2','PUBLISHED','b'),
+['18 of 20 teams. The photo is incomplete. We reject it. The old snapshot stays latest.','A later capture has all 20. Header and rows publish together.']],
+['win','Concept 4 · Windows and change checks','Wait for the last guest.','Do not open the door for every guest. Wait until the last one arrives, then open once.','Merge match end times that are close. Wait a grace time after the last one. Sweep once. If the source is late, retry a few times, then log “source late”.','G4','Gap: skipping fetches needs “table same ⇒ details same”. Not proven yet.',
+`<g class="g1"><path class="dr" d="M20 130L500 130"/>${T(470,118,'time')}<circle cx="120" cy="130" r="8" fill="var(--ink)"/><circle cx="160" cy="130" r="8" fill="var(--ink)"/>${T(110,165,'match 1 ends')}${T(180,195,'match 2 ends')}</g><rect class="dr b mk m1" x="108" y="112" width="192" height="36" rx="8"/><g class="g2">${T(204,100,'one window + grace','class="bt"')}${AR(300,150,300,188,'b')}${BX(250,192,100,45,'b')}${T(300,222,'one sweep','class="bt"')}</g>`,
+['Two matches end 5 minutes apart.','One window covers both. Wait the grace time. Sweep once.','Table changed ⇒ details ready. Table same ⇒ details same? Not proven. Sweep fully until we measure.']],
+['key','Concept 5 · Team keys','A passport, not a nickname.','Every source has its own number for the same club. Our key is the passport. Source ids are visas that map to it.','team_key is ours. team_source_id maps (source, source id) to team_key. An unmapped id stops the run for a human to decide. Names are for display only.','G3 · G2','Gap: ids are not enough. Sources measure differently.',
+`<g class="g1">${[['Source A','id 65',20,115],['Source B','id 7821',100,130],['Source C','“FCB”',180,145]].map(c=>BX(10,c[2],150,52)+T(85,c[2]+24,c[0])+T(85,c[2]+44,c[1],'class="bt"')+AR(160,c[2]+26,228,c[3])).join('')}${BX(230,95,120,70,'b')}${T(290,125,'team_key')}${T(290,152,'T-0012','class="bt big"')}</g><g class="g2">${AR(350,130,398,130)}${BX(400,95,110,70)}${T(455,125,'fact')}${T(455,152,'rows')}</g><rect class="dr r mk m3" x="394" y="88" width="122" height="84" rx="10"/>`,
+['Each source names the same club differently.','Our own key joins them. Unmapped ids stop the run.','Gap: sources measure differently (xG, for example). Keep one fact table per source.']]];
+$$('#ins')[0].insertAdjacentHTML('beforebegin',CS.map(c=>`<section class="s" data-id="${c[0]}"><div class="two"><div class="tx"><p class="k">${c[1]}</p><h2>${c[2]}</h2><p class="in">Intuition: ${c[3]}</p><p>${c[4]}</p><p class="chips">${c[5].split(' · ').map(x=>`<span>${x}</span>`).join('')}</p>${c[6]?`<p class="gap">${c[6]}</p>`:''}</div><div><svg class="rf" viewBox="0 0 520 270" aria-label="${c[2]}">${c[7]}</svg><div class="cap">${c[8].map((t,i)=>`<span class="c${i+1}">${t}</span>`).join('')}</div></div></div></section>`).join(''));
+$$('#fx')[0].innerHTML=[['Back up the raw files.','G6'],['Measure “table same ⇒ details same”. Full sweep until then.','G4'],['One fact table per source. Share only team_key and the snapshot header.','G3'],['Test: second snapshot, retry, rollback, NULL is not zero.','G5 · G7'],['Add the ledger tables: run, capture, checkpoint.','G7'],['Check the source licence before any client use.','All goals']].map(f=>`<div class="fix"><svg viewBox="0 0 34 34" class="rf"><path class="dr mk" d="M5 6L29 5L30 29L6 30Z"/></svg><div>${f[0]} <span>${f[1]}</span></div></div>`).join('');
+const S=$$('.s'),B={},st=[];let cur=-1;
+const rv=(s,q,pos=0,x=0,y=14,g=.1)=>s.fromTo(q,{autoAlpha:0,x,y},{autoAlpha:1,x:0,y:0,duration:.45,stagger:g},pos);
+const dw=(s,els,pos=0,dur=.6,gap=.08)=>els.forEach((e,i)=>{const L=e.getTotalLength();e.style.strokeDasharray=L;s.fromTo(e,{strokeDashoffset:L},{strokeDashoffset:0,duration:dur,ease:'power1.inOut'},pos+i*gap)});
+const cap=(s,q,k)=>{if(k>1)s.to(q('.c'+(k-1)),{autoAlpha:0,duration:.2},0);s.fromTo(q('.c'+k),{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.4},0)};
+const pop=(s,q,pos)=>s.fromTo(q,{autoAlpha:0,scale:1.8},{autoAlpha:1,scale:1,duration:.4,ease:'back.out(2)'},pos);
+B.cover=(step,q)=>step(s=>s.fromTo(q('.stamp'),{autoAlpha:0,scale:2,rotation:-20},{autoAlpha:1,scale:1,rotation:-6,duration:.5,ease:'back.out(2)'},0));
+B.goals=(step,q)=>step(s=>rv(s,q('.goal'),0,0,12,.12));
+B.map=(step,q)=>{step(s=>{dw(s,q('.cell .mk'),0,.5,.04);rv(s,q('.cell .pt'),.2,0,0,.04);cap(s,q,1)});
+step(s=>{s.fromTo(q('.stp'),{autoAlpha:0,scale:1.8,rotation:-14},{autoAlpha:1,scale:1,rotation:-3,duration:.4,stagger:.08,ease:'back.out(2)'},0);cap(s,q,2)})};
+B.snap=(step,q)=>{step(s=>{rv(s,q('.g1'),0,0,0);dw(s,q('.s1'),.4,.4);rv(s,q('.n1'),.8,0,0);cap(s,q,1)});step(s=>{rv(s,q('.g2'),0,-14,0,.25);cap(s,q,2)})};
+B.raw=(step,q)=>{step(s=>{rv(s,q('.g1'),0,0,0);dw(s,q('.m1'),.4,.4);cap(s,q,1)});step(s=>{rv(s,q('.g2'),0,0,0);dw(s,q('.m2'),.4,.4);cap(s,q,2)})};
+B.cohort=(step,q)=>{step(s=>{rv(s,q('.pp'),0,0,8,.03);rv(s,q('.gh'),.6,0,0);pop(s,q('.st1'),.9);cap(s,q,1)});
+step(s=>{s.to(q('.st1,.gh'),{autoAlpha:0,duration:.25},0);pop(s,q('.pf'),.1);pop(s,q('.st2'),.4);cap(s,q,2)})};
+B.win=(step,q)=>{step(s=>{rv(s,q('.g1'),0,0,0);cap(s,q,1)});step(s=>{dw(s,q('.m1'),0,.5);rv(s,q('.g2'),.3,0,0);cap(s,q,2)});step(s=>{s.to(q('.m1'),{opacity:.4,duration:.2,yoyo:true,repeat:1},0);cap(s,q,3)})};
+B.key=(step,q)=>{step(s=>{rv(s,q('.g1'),0,-14,0,.18);cap(s,q,1)});step(s=>{rv(s,q('.g2'),0,0,0);cap(s,q,2)});step(s=>{dw(s,q('.m3'),0,.6);cap(s,q,3)})};
+B.fix=(step,q)=>step(s=>{rv(s,q('.fix'),0,-14,0,.12);dw(s,q('.fix .mk'),.2,.4,.12)});
+function build(i){const el=S[i],tl=G.timeline({paused:true}),ends=[0];
+const step=fn=>{const s=G.timeline();fn(s);tl.add(s,'>');ends.push(tl.duration())};
+if(B[el.dataset.id])B[el.dataset.id](step,sel=>$$(sel,el));st[i]={tl,ends,k:0}}
+function upd(){const x=st[cur];$$('#ct')[0].textContent='Page '+(cur+1)+' of '+S.length+(x&&x.ends.length>1?' · step '+x.k+'/'+(x.ends.length-1):'');
+$$('#pv')[0].disabled=cur==0&&(!x||x.k==0);$$('#nx')[0].disabled=cur==S.length-1&&(!x||x.k>=x.ends.length-1)}
+function go(i,fin){if(i<0||i>=S.length)return;if(cur>=0)S[cur].style.display='none';cur=i;const s=S[i];s.style.display='flex';
+if(G){if(!st[i])build(i);const x=st[i];G.killTweensOf(s);G.killTweensOf(x.tl);x.k=fin?x.ends.length-1:0;x.tl.pause().time(x.ends[x.k],true);
+if(R)G.set(s,{opacity:1});else G.fromTo(s,{opacity:0},{opacity:1,duration:.3,overwrite:true})}upd()}
+function nxt(){const x=st[cur];if(!G||!x||x.k>=x.ends.length-1){go(cur+1,0);return}
+x.k++;G.killTweensOf(x.tl);R?x.tl.time(x.ends[x.k],true):x.tl.tweenTo(x.ends[x.k],{ease:'none'});upd()}
+function prv(){const x=st[cur];if(!G||!x||x.k<=0){go(cur-1,1);return}
+x.k--;G.killTweensOf(x.tl);R?x.tl.time(x.ends[x.k],true):x.tl.tweenTo(x.ends[x.k],{duration:.3,ease:'power1.out'});upd()}
+$$('#nx')[0].onclick=nxt;$$('#pv')[0].onclick=prv;
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();nxt()}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prv()}});
+go(0,0);
+</script>
+</body>
+</html>

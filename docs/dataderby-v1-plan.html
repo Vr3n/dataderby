@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dataderby v1 plan — build and operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EDE3; --paper2:#E8E1D2; --paper3:#DFD7C6;
+    --ink:#14161A; --navy:#0E1A31; --navy2:#16243F;
+    --red:#D4382A; --green:#2E6B4F; --amber:#C98A2E;
+    --muted:#6E695E; --line:#D3CBBA;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0A0C10}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#0A0C10}
+  #stage{
+    position:relative;width:1600px;height:900px;background:var(--paper);
+    transform-origin:center center;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);
+  }
+  #grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  /* ---------------- chrome ---------------- */
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none;transition:opacity .3s}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+  #mast{
+    position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);
+  }
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:var(--line);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink)}
+  body.dark #mast,body.dark #foot{border-color:rgba(242,237,227,.16)}
+  body.dark .brand b,body.dark #pageNum{color:var(--paper)}
+  body.dark .brand span,body.dark #secLabel,body.dark .mast-right,body.dark #foot .l{color:#9D9789}
+  body.dark #clockTrack{background:rgba(242,237,227,.2)}
+
+  /* ---------------- slides ---------------- */
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:112px 84px 86px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;
+    opacity:0;visibility:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.dark{background:var(--navy);color:var(--paper)}
+  .slide.dark::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(242,237,227,.10) 1px,transparent 1px);
+    background-size:12px 12px;opacity:.5;
+  }
+  .slide.dark > *{position:relative;z-index:1}
+
+  /* typography */
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  .dark .kicker{color:#9D9789}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.94;font-size:104px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1;font-size:50px;max-width:34ch}
+  h3{font-family:var(--serif);font-weight:500;font-size:25px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:23px;line-height:1.45;color:#3B3B39;max-width:46ch}
+  .dark .standfirst{color:#CFC8B8}
+  .body{font-size:16px;line-height:1.6;color:#3C3B37;max-width:62ch}
+  div.body{max-width:none}
+  .dark .body{color:#CFC8B8}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .dark .small{color:#9D9789}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .red{color:var(--red)} .green{color:var(--green)} .navy{color:var(--navy)}
+  .dark .red{color:#F06A5A} .dark .green{color:#6FC69A}
+
+  /* layout */
+  .body{min-height:0;align-self:center;width:100%}
+  .body.c2,.body.c3,.body.c4{display:grid}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .stack{display:grid;gap:16px;align-content:start}
+  .between{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+
+  /* components */
+  .card{border-top:3px solid var(--navy);background:rgba(255,255,255,.42);padding:20px 22px 22px}
+  .dark .card{border-top-color:var(--paper);background:rgba(242,237,227,.05)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .dark .card .tag{color:#9D9789}
+  .card h3{margin:8px 0 10px}
+  .card p{font-size:14px;line-height:1.55;color:#4A4842}
+  .dark .card p{color:#C6BFAF}
+
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--ink);
+  }
+  .dark .tbl th{color:#9D9789;border-bottom-color:rgba(242,237,227,.35)}
+  .tbl td{padding:10px;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:middle}
+  .dark .tbl td{border-bottom-color:rgba(242,237,227,.14);color:#DCD5C5}
+  .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .tbl th.n{text-align:right}
+  .body.c2 > .tbl{align-self:start}
+  .tbl tr.hi td{background:rgba(212,56,42,.06)}
+  .dark .tbl tr.hi td{background:rgba(240,106,90,.10)}
+  .tbl td.ok{color:var(--green);font-family:var(--mono);font-size:13px}
+  .tbl td.no{color:var(--red);font-family:var(--mono);font-size:13px}
+  .dark .tbl td.ok{color:#6FC69A} .dark .tbl td.no{color:#F06A5A}
+
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:44px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .stat .k{color:#9D9789}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+
+  .rule{height:1px;background:var(--line);width:100%}
+  .dark .rule{background:rgba(242,237,227,.18)}
+
+  .pull{font-family:var(--serif);font-size:38px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+
+  .room{
+    background:var(--paper2);border-left:3px solid var(--red);
+    padding:12px 16px;display:flex;gap:14px;align-items:baseline;
+  }
+  .dark .room{background:rgba(242,237,227,.06)}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .dark .room .lbl{color:#F06A5A}
+  .room p{font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .room p{color:#CFC8B8}
+
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 7px;border:1px solid currentColor;letter-spacing:.04em}
+
+  /* cover */
+  .cover{padding:0 96px}
+  .cover .inner{align-self:center;display:grid;gap:26px;max-width:900px}
+  .cover h1{font-size:118px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:56px;border-top:1px solid var(--line);padding-top:18px}
+  .pitch{position:absolute;right:-120px;top:120px;width:760px;height:760px;opacity:.10;z-index:0}
+  .pitch path,.pitch circle,.pitch rect{fill:none;stroke:var(--ink);stroke-width:1.6}
+  .ticker{display:flex;gap:26px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .ticker b{color:var(--red);font-weight:500}
+
+  /* flow, run list, schema, exit */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .flow.five{grid-template-columns:repeat(5,1fr)}
+  .flow.three{grid-template-columns:repeat(3,1fr)}
+  .step{border:1px solid var(--line);background:rgba(255,255,255,.35);padding:12px 14px}
+  .dark .step{border-color:rgba(242,237,227,.2);background:rgba(242,237,227,.05)}
+  .step .n{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.12em}
+  .step b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.06em;text-transform:uppercase;margin:4px 0 5px}
+  .step p{font-size:12.5px;line-height:1.45;color:#4A4842}
+  .dark .step p{color:#C6BFAF}
+
+  .runlist{display:grid;grid-template-columns:1fr 1fr;gap:7px 26px}
+  .runlist .r{display:grid;grid-template-columns:26px 1fr;gap:9px;border-top:1px solid var(--line);padding:6px 0}
+  .dark .runlist .r{border-top-color:rgba(242,237,227,.14)}
+  .runlist .r b{font-family:var(--mono);font-size:11px;color:var(--red);padding-top:1px}
+  .runlist .r p{font-size:12.5px;line-height:1.45;color:#3C3B37}
+  .dark .runlist .r p{color:#CFC8B8}
+
+  .schema{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .schema .box{border:1px solid var(--line);padding:10px 12px;background:rgba(255,255,255,.3)}
+  .schema .box b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.06em;text-transform:uppercase;line-height:1.2}
+  .schema .box span{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .dark .schema .box{border-color:rgba(242,237,227,.2);background:rgba(242,237,227,.05)}
+  .dark .schema .box span{color:#9D9789}
+
+  .exit{border:1.5px solid var(--green);padding:11px 15px;background:rgba(46,107,79,.07)}
+  .exit .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--green)}
+  .exit p{font-size:13px;line-height:1.5;margin-top:4px;color:#3C3B37}
+  .dark .exit{border-color:#6FC69A;background:rgba(111,198,154,.08)}
+  .dark .exit .lbl{color:#6FC69A}
+  .dark .exit p{color:#CFC8B8}
+
+  .note{border-left:3px solid var(--amber);padding:10px 14px;background:rgba(201,138,46,.08);font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .note{background:rgba(201,138,46,.10);color:#CFC8B8}
+
+  .tbl.compact td{padding:6px 8px;font-size:12.5px}
+  .tbl.compact th{padding:7px 8px;font-size:10px}
+  .code{
+    font-family:var(--mono);font-size:11.5px;line-height:1.6;
+    background:rgba(20,22,26,.05);border-left:2px solid var(--red);
+    padding:12px 14px;white-space:pre-wrap;color:#2E2E2B;
+  }
+  .dark .code{background:rgba(242,237,227,.06);color:#CFC8B8;border-left-color:#F06A5A}
+  #foot{padding-right:150px}
+  .cover{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 96px}
+  .cover .inner{flex:none;align-self:flex-start}
+  .cover-stats{width:100%;margin-top:36px}
+
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s;
+  }
+  #nav button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  body.dark #nav button{border-color:rgba(242,237,227,.25);color:#CFC8B8}
+  body.dark #nav button:hover{background:var(--paper);color:var(--navy)}
+
+  #mast,#foot{transition:border-color .32s ease}
+  .brand b,#pageNum,#secLabel,.mast-right,#foot .l{transition:color .32s ease}
+  #clockTrack{transition:background-color .32s ease}
+
+  #notes{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0A0C10;color:var(--paper);
+    border-top:2px solid var(--red);padding:18px 28px 20px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex;gap:24px;align-items:baseline;
+  }
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="grain"></div>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>Data desk · v1 plan</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; Orientation</div>
+        <div class="mast-right">For approval · 20 Oct 2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">dataderby · v1 plan · build and operations</div>
+        <div id="clock">
+          <span class="l">Plan progress</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 47</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="Orientation" data-chrome="off"
+        data-note="This deck is the executable plan, not a pitch. It covers the data model, the publish contract, the failure paths, the tests, the build order, and the decisions still open. The plan is written so a person can start at P0 and finish at the v1 gate without inventing design on the way.">
+        <svg class="pitch" viewBox="0 0 760 760" aria-hidden="true">
+          <rect x="40" y="40" width="680" height="680"/>
+          <line x1="380" y1="40" x2="380" y2="720"/>
+          <circle cx="380" cy="380" r="92"/>
+          <circle cx="380" cy="380" r="4"/>
+          <rect x="40" y="230" width="112" height="300"/>
+          <rect x="608" y="230" width="112" height="300"/>
+          <rect x="40" y="310" width="48" height="140"/>
+          <rect x="672" y="310" width="48" height="140"/>
+        </svg>
+        <div class="inner">
+          <p class="kicker"><i></i>Dataderby · v1 plan · for approval</p>
+          <h1 class="display">
+            <span class="l"><span>The plan,</span></span>
+            <span class="l"><span>end to end.</span></span>
+          </h1>
+          <p class="standfirst">One source. One configured competition season. Every observed state
+            kept. This is what we build, in what order, and how each step is proven before the next
+            one starts.</p>
+          <p class="byline">20 October 2026 · measured facts separated from assumptions</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="6">0</div><div class="k">tables</div></div>
+          <div class="stat"><div class="v" data-count="21">0</div><div class="k">assertions</div></div>
+          <div class="stat"><div class="v" data-count="58">0</div><div class="k">tests</div></div>
+          <div class="stat"><div class="v" data-count="10">0</div><div class="k">build phases</div></div>
+        </div>
+      </section>
+
+      <!-- 02 how to read -->
+      <section class="slide" data-sec="Orientation"
+        data-note="The plan separates three kinds of statement and never mixes them. MEASURED means read out of the nine captures and reproducible. OBSERVED means a person or a document said it, but we have not verified it. INFERRED or UNKNOWN means a guess or a gap; every gap has an experiment, and the pipeline depends on none of the open ones. Where documents disagree, the plan names the losing document so review does not re-litigate it from memory.">
+        <div>
+          <p class="kicker"><i></i>How to read this plan</p>
+          <h2 class="display" style="margin-top:14px">Three kinds of statement.<br>None mixed.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">Measured</div><h3>Read from the captures</h3><p>Nine real payloads at tag <span class="mono">recon-evidence</span>, reproducible with the recorded commands. Example: 20 rows, 60 measures, zero nulls.</p></div>
+          <div class="card a-up"><div class="tag">Observed</div><h3>Said, not verified</h3><p>A person or a document made the claim. It stays a claim until a capture or a test turns it into evidence.</p></div>
+          <div class="card a-up"><div class="tag">Inferred / unknown</div><h3>A gap with an experiment</h3><p>Every unknown has a number, E1 to E6. Nothing in the pipeline depends on an unclosed one.</p></div>
+        </div>
+        <div class="room"><span class="lbl">Rule</span><p>Where the project documents disagree, the plan resolves the conflict and says which document loses. A plan that averages contradictions is not a plan.</p></div>
+      </section>
+
+      <!-- 03 one sentence -->
+      <section class="slide dark" data-sec="Orientation"
+        data-note="Read the one-sentence version slowly. A snapshot is one accepted observation of one stage. It is not a row per match and it is not a live view. The unique edge, not the id, is what makes a retry safe. The raw archive is what makes the snapshot rebuildable.">
+        <div>
+          <p class="kicker"><i></i>The one-sentence version</p>
+          <h2 class="display" style="margin-top:14px">Nine responses.<br>One observation.<br>One immutable row-set.</h2>
+        </div>
+        <div class="body">
+          <p class="pull">A re-run that sees the same bytes writes <b>nothing</b>. A re-run that sees
+            different bytes writes a <b>new row-set beside the old one</b> — never over it.</p>
+          <div class="flow five" style="margin-top:30px">
+            <div class="step"><div class="n">01</div><b>Capture</b><p>Page, three standings views, nine feed payloads.</p></div>
+            <div class="step"><div class="n">02</div><b>Raw</b><p>Every byte written before parsing, never rewritten.</p></div>
+            <div class="step"><div class="n">03</div><b>Parse</b><p>20 team rows × 60 measures, plus 30 standings measures.</p></div>
+            <div class="step"><div class="n">04</div><b>Assert</b><p>21 SQL checks decide whether the cohort is publishable.</p></div>
+            <div class="step"><div class="n">05</div><b>Publish</b><p>One transaction: header, facts, standings, checkpoint.</p></div>
+          </div>
+        </div>
+        <div class="small">A snapshot is the unit of history. Reports address a stage and an observation time, never an internal id.</div>
+      </section>
+
+      <!-- 03 what v1 is -->
+      <section class="slide" data-sec="Scope"
+        data-note="These six deliverables are the definition of v1. If the raw archive, the two facts, the assertions, the views, and the measurement harness are not all present, v1 is not done. The measurement harness is not an extra; it is how we stop guessing about the source.">
+        <div>
+          <p class="kicker"><i></i>What v1 is</p>
+          <h2 class="display" style="margin-top:14px">Six deliverables.<br>No hidden seventh.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">01 · Evidence</div><h3>Raw archive</h3><p>Every byte the source returned, addressable by run: the stage page, three standings views and nine feed payloads.</p></div>
+          <div class="card a-up"><div class="tag">02 · Team fact</div><h3>60 measures</h3><p>One row per team per accepted observation. Three sections, three splits, full precision, never updated.</p></div>
+          <div class="card a-up"><div class="tag">03 · Standings</div><h3>30 measures</h3><p>One row per team per snapshot, with Overall, Home and Away in the same row. Same grain, separate fact.</p></div>
+          <div class="card a-up"><div class="tag">04 · Contract</div><h3>21 assertions</h3><p>Executable SQL checks that can refuse a cohort, with an explicit action for every failure.</p></div>
+          <div class="card a-up"><div class="tag">05 · Serving</div><h3>Six views</h3><p>Latest team state, latest standings, latest with standings, standings history, change over time, and pipeline freshness.</p></div>
+          <div class="card a-up"><div class="tag">06 · Learning</div><h3>Six experiments</h3><p>E1 to E6 turn the remaining source questions into commands and written results.</p></div>
+        </div>
+        <div class="note">A deliverable is present only when its exit test is green on a clean checkout.</div>
+      </section>
+
+      <!-- 04 what v1 is not -->
+      <section class="slide" data-sec="Scope"
+        data-note="Saying no is part of the plan. Each row names the trigger that would justify the work later. The probe skip rule is deliberately excluded: it is the one optimisation that could make the pipeline silently stale, so it waits for E2.">
+        <div>
+          <p class="kicker"><i></i>What v1 is not</p>
+          <h2 class="display" style="margin-top:14px">The list we will<br>not drift into.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:27%">Not in v1</th><th>Why not</th><th style="width:29%">The trigger that would justify it</th></tr></thead>
+            <tbody>
+              <tr><td><b>xG panel</b></td><td>Three more captures and five unresolved reconciliation questions; not needed to prove the loop.</td><td>The loop is green and a consumer asks for xG.</td></tr>
+              <tr><td><b>dim_team / SCD2</b></td><td>No rename, promotion or cross-tournament merge has been observed. Identity stays as plain columns.</td><td>First real rename, promotion, or a second source claiming the same team.</td></tr>
+              <tr><td><b>Match-level facts</b></td><td>The source is cumulative. Match rows cannot be recovered by subtraction when rates are involved.</td><td>A match-level source exists.</td></tr>
+              <tr><td><b>Multi-source crosswalk</b></td><td>One source. A mapping table with one side empty is dead weight.</td><td>A second source is added.</td></tr>
+              <tr><td><b>dlt / Dagster / dbt / API / dashboard</b></td><td>All are schedulers or presentation over a pipeline that does not exist yet.</td><td>Volume or team size demands it; explicit non-goal for v1.</td></tr>
+              <tr><td><b>The probe skip rule</b></td><td>Unknown #2 is unmeasured. It is the difference between cheap and silently stale.</td><td>Experiment E2 passes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="room"><span class="lbl">Rule</span><p>No deferred item enters through a convenience commit. It enters through its trigger.</p></div>
+      </section>
+
+      <!-- 05 evidence -->
+      <section class="slide dark" data-sec="Evidence"
+        data-note="Everything here is measured from the nine captures, not from a vendor document. The important negative fact is that the source publishes no timestamp, so the pipeline has to own its observation clock. The 12-competition map is discovery evidence; v1 loads one configured season at a time.">
+        <div>
+          <p class="kicker"><i></i>The evidence base</p>
+          <h2 class="display" style="margin-top:14px">What we actually<br>measured.</h2>
+        </div>
+        <div class="body">
+          <div class="c4" style="margin-bottom:22px">
+            <div class="stat"><div class="v" data-count="9">0</div><div class="k">captures per stage</div></div>
+            <div class="stat"><div class="v" data-count="20">0</div><div class="k">teams in the measured league</div></div>
+            <div class="stat"><div class="v" data-count="60">0</div><div class="k">team measures</div></div>
+            <div class="stat"><div class="v" data-count="0">0</div><div class="k">nulls in the captures</div></div>
+          </div>
+          <table class="tbl compact">
+            <thead><tr><th>Fact</th><th>What we saw</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td>One coherent cohort</td><td>20 rows, identical team-id set in all nine captures.</td><td>The nine responses can be treated as one observation.</td></tr>
+              <tr><td>Additive vs rate</td><td>Only <span class="mono">apps, goal, yellowCard, redCard</span> add up across home and away.</td><td>Deltas are defined only for those four.</td></tr>
+              <tr><td>Shared metrics agree</td><td><span class="mono">apps</span>, <span class="mono">rating</span>, <span class="mono">shotsPerGame</span> match across sections.</td><td>One owner per column; no first-arrival wins.</td></tr>
+              <tr><td>Standings are consistent</td><td>20/20 teams: W+D+L=P, Pts=3W+D, GD=GF−GA, home+away=overall.</td><td>They can be asserted, not just stored.</td></tr>
+              <tr><td>No source clock</td><td>No timestamp in the feed or page; Last-Modified is response time.</td><td>We own <span class="mono">observed_at</span>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">Evidence: the nine captures at tag <span class="mono">recon-evidence</span> and <span class="mono">experiments/whoscored/standings-25544.json</span>.</div>
+      </section>
+
+      <!-- 06 60 arithmetic -->
+      <section class="slide" data-sec="Evidence"
+        data-note="The number 60 is derived, not declared. The table shows where every column comes from. The arithmetic is reproduced by a test that counts columns, so a future source change is caught rather than trusted.">
+        <div>
+          <p class="kicker"><i></i>The 60-column arithmetic</p>
+          <h2 class="display" style="margin-top:14px">Where every<br>column comes from.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Block</th><th>Pattern</th><th class="n">Count</th></tr></thead>
+              <tbody>
+                <tr><td>Apps</td><td><span class="mono">apps_{view}</span></td><td class="n">3</td></tr>
+                <tr><td>Rating</td><td><span class="mono">rating_{view}</span></td><td class="n">3</td></tr>
+                <tr><td>Shots per game</td><td><span class="mono">shots_per_game_{view}</span></td><td class="n">3</td></tr>
+                <tr><td>Summary-owned</td><td><span class="mono">summary_{view}_{metric}</span></td><td class="n">18</td></tr>
+                <tr><td>Defensive-owned</td><td><span class="mono">defensive_{view}_{metric}</span></td><td class="n">15</td></tr>
+                <tr><td>Offensive-owned</td><td><span class="mono">offensive_{view}_{metric}</span></td><td class="n">9</td></tr>
+                <tr><td>Ranking</td><td><span class="mono">ranking_{section}_{view}</span></td><td class="n">9</td></tr>
+                <tr class="hi"><td><b>Total</b></td><td></td><td class="n"><b>60</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <div class="note"><b>The count.</b><br>19 <span class="mono">statColumns</span> per view × 3 views = 57 instances. Remove 9 duplicate <span class="mono">apps</span> and 6 duplicate <span class="mono">shotsPerGame</span>. Add back 3 <span class="mono">apps</span>, 3 <span class="mono">shotsPerGame</span>, 3 row-level <span class="mono">rating</span> and 9 <span class="mono">ranking</span>.</div>
+            <div class="code">57 − 9 − 6 + 3 + 3 + 3 + 9 = 60</div>
+            <p class="small">The test counts the columns in the golden payloads. It does not trust this slide.</p>
+          </div>
+        </div>
+        <div class="small">Three sections: Summary, Defensive, Offensive. Three splits: Overall, Home, Away.</div>
+      </section>
+
+      <!-- 07 standings fact -->
+      <section class="slide" data-sec="Evidence"
+        data-note="Standings are not a second product. They are the team's journey through the competition at the same grain as the team stats. The join key is the numeric data-team-id, which is the same id the feed uses. The form string is the last six matches, not one character per season match.">
+        <div>
+          <p class="kicker"><i></i>The second fact</p>
+          <h2 class="display" style="margin-top:14px">The league table<br>belongs at this grain.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="c2" style="gap:18px">
+              <div class="stat"><div class="v" data-count="3">0</div><div class="k">splits in one row</div></div>
+              <div class="stat"><div class="v" data-count="10">0</div><div class="k">fields per split</div></div>
+              <div class="stat"><div class="v" data-count="20">0</div><div class="k">teams checked</div></div>
+              <div class="stat"><div class="v" data-count="0">0</div><div class="k">cross-split mismatches</div></div>
+            </div>
+            <div class="note">The page renders Overall, Home and Away as three client-side views. Clicking a toggle makes no network request, so the sweep must read all three.</div>
+          </div>
+          <table class="tbl compact">
+            <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">team_id</span></td><td><span class="mono">tr[data-team-id]</span>; must equal the feed id</td></tr>
+              <tr><td><span class="mono">team_name</span></td><td><span class="mono">a.team-link</span>; label only</td></tr>
+              <tr><td><span class="mono">rank_{split}</span></td><td>Permutation 1..N in every split</td></tr>
+              <tr><td><span class="mono">played, won, drawn, lost</span></td><td><span class="mono">W + D + L = P</span></td></tr>
+              <tr><td><span class="mono">goals_for, goals_against</span></td><td>Integers, never rounded</td></tr>
+              <tr><td><span class="mono">goal_difference</span></td><td><span class="mono">GF − GA</span></td></tr>
+              <tr><td><span class="mono">points</span></td><td><span class="mono">3W + D</span></td></tr>
+              <tr><td><span class="mono">form</span></td><td>Last six results; <span class="mono">len = min(P, 6)</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">A knockout stage has no table: zero rows, not null measures.</div>
+      </section>
+
+      <!-- 08 source contract -->
+      <section class="slide" data-sec="Contract"
+        data-note="The feed returns JavaScript Object Notation with a text/html content type and a byte-order mark. That is why the detector looks at structure, not status or size. The page load is not optional: it supplies the request token, the stage labels, and the standings table.">
+        <div>
+          <p class="kicker"><i></i>The source contract</p>
+          <h2 class="display" style="margin-top:14px">One request shape.<br>Nine combinations.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">GET /statisticsfeed/1/getteamstatistics
+  ?stageId=25662
+  &amp;category=summaryteam
+  &amp;subcategory=all
+
+category    summaryteam | defensive | offensive
+subcategory all | home | away</div>
+            <p class="small">The page load supplies <span class="mono">Model-last-Mode</span>, the token the feed requires. A bare request returns HTML.</p>
+            <div class="room"><span class="lbl">Nine</span><p>Three sections × three splits = nine feed calls per stage. One page load per competition; the token works across stages.</p></div>
+          </div>
+          <div class="stack">
+            <h3>How a gate is detected</h3>
+            <ol class="body" style="padding-left:20px;line-height:1.7">
+              <li>Strip the byte-order mark and decode UTF-8.</li>
+              <li>Parse JSON. It must succeed.</li>
+              <li>Require <span class="mono">teamTableStats</span>, <span class="mono">paging</span>, <span class="mono">statColumns</span>.</li>
+              <li>Require <span class="mono">statColumns</span> to equal the expected list for that section and split.</li>
+            </ol>
+            <div class="note">A 200 response with an HTML challenge is a gate. A 403 is a block. A second consecutive gate stops the run. Detection is never by byte size.</div>
+          </div>
+        </div>
+        <div class="small">A missing key is written as NULL, never as zero. A rate is stored at full precision.</div>
+      </section>
+
+      <!-- 09 conflicts 1 -->
+      <section class="slide" data-sec="Contract"
+        data-note="The project documents disagree in ten places. The plan resolves each one and names the losing document. This is not bureaucracy: a plan that averages contradictions cannot be executed. R1 and R2 are about the request; R3 is about DuckDB foreign keys; R4 is Option A vs C; R5 is the snapshot id.">
+        <div>
+          <p class="kicker"><i></i>Conflicts resolved · 1 of 2</p>
+          <h2 class="display" style="margin-top:14px">Where the documents<br>disagree.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:5%">#</th><th style="width:30%">Conflict</th><th>Resolution</th><th style="width:22%">Losing document</th></tr></thead>
+            <tbody>
+              <tr><td>R1</td><td><span class="mono">statsAccumulationType=0</span> means “total” or “per game”?</td><td>Never depend on it. Send 0, record it, never interpret it. The response mixes totals and rates in one row.</td><td>Both claims; neither is safe.</td></tr>
+              <tr><td>R2</td><td>“12 requests return five tables” vs four categories × three views.</td><td>One capture is one section and one split. v1 issues nine; the fourth category, xG, is deferred.</td><td>The scrape deck's “12 requests”.</td></tr>
+              <tr><td>R3</td><td>Does DuckDB enforce foreign keys?</td><td>It does on insert in 1.5.6. There is no cascade and no self-referencing FK. Keep the fact-to-header FK and A16.</td><td>The old deck's “not enforced”.</td></tr>
+              <tr><td>R4</td><td>Option C or Option A?</td><td>v1 is Option A: the snapshot fact carries identity as plain columns. The dimension is a later view change.</td><td>The architecture recommendation.</td></tr>
+              <tr><td>R5</td><td>ULID or a derived content hash?</td><td>ULID plus <span class="mono">UNIQUE (parent, content)</span>. A derived id reproduces only on an identical replay.</td><td>The earlier schema draft.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">A losing document is named so the review does not re-litigate it from memory.</div>
+      </section>
+
+      <!-- 10 conflicts 2 -->
+      <section class="slide" data-sec="Contract"
+        data-note="R6 is the clock: the source has no event time, so observed_at is ours. R7 is the licence flag: provenance, not a verdict. R8 keeps the dependency list small. R9 says names are labels, ids are identity. R10 says v1 is cheap by not writing, not by skipping fetches.">
+        <div>
+          <p class="kicker"><i></i>Conflicts resolved · 2 of 2</p>
+          <h2 class="display" style="margin-top:14px">The rules that<br>follow.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:5%">#</th><th style="width:30%">Conflict</th><th>Resolution</th><th style="width:22%">Losing document</th></tr></thead>
+            <tbody>
+              <tr><td>R6</td><td>Is <span class="mono">observed_at</span> source time or our time?</td><td>Our time: the minimum capture time across the page and the nine feeds. The span is recorded; over 180 seconds is retried.</td><td>The field guide's implicit source time.</td></tr>
+              <tr><td>R7</td><td>Is <span class="mono">isOpta</span> a licensing verdict?</td><td>No. It is provenance. It is recorded and accepted; it is never a failure path.</td><td>Nothing; recorded as a finding.</td></tr>
+              <tr><td>R8</td><td><span class="mono">pandera</span>, <span class="mono">dlt</span>, Dagster as dependencies?</td><td>None enter v1. Pydantic validates the envelope; SQL assertions validate the tables. No data frame.</td><td>The architecture sketch.</td></tr>
+              <tr><td>R9</td><td><span class="mono">tournamentName</span> or <span class="mono">teamName</span> as identity?</td><td>Neither. Identity is <span class="mono">(tournament_id, whoscored_season_id, whoscored_stage_id, team_id)</span>. Names are labels.</td><td>Several early sketches.</td></tr>
+              <tr><td>R10</td><td>“Measure the skip rule later” vs “v1 must be cheap”.</td><td>v1 is cheap by deduplicating on publish, which is provably safe, not by skipping fetches, which is unproven.</td><td>Pipeline deck slide 6.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">Every decision in this deck rules something out. A preference that rules nothing out is not a decision.</div>
+      </section>
+
+      <!-- 11 grain -->
+      <section class="slide" data-sec="Model"
+        data-note="The header is one accepted observation of one stage. The two facts are one row per team in that snapshot. Identity comes from the source's numeric ids. The team name is stored as observed, but nothing joins on it. The standings join uses data-team-id, which is the feed's teamId.">
+        <div>
+          <p class="kicker"><i></i>Grain and identity</p>
+          <h2 class="display" style="margin-top:14px">One header.<br>Two facts. One key.</h2>
+        </div>
+        <div class="body c2">
+          <div class="schema">
+            <div class="box"><b>competition_snapshot</b><span>one row per accepted observation<br>of (tournament_id,<br>whoscored_season_id,<br>whoscored_stage_id)</span></div>
+            <div class="box"><b>fact_team_snapshot</b><span>one row per (snapshot_id, team_id)<br>60 measures</span></div>
+            <div class="box"><b>fact_standings_snapshot</b><span>one row per (snapshot_id, team_id)<br>30 measures</span></div>
+            <div class="box"><b>pipeline_checkpoint</b><span>one row per stage<br>last accepted state and outcome</span></div>
+            <div class="box"><b>ingestion_run</b><span>one row per attempt<br>the run, never the data</span></div>
+            <div class="box"><b>raw_capture</b><span>one row per captured section and view<br>the evidence ledger</span></div>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Identity is the source's own ids.</b> <span class="mono">whoscored_stage_id</span> and <span class="mono">team_id</span> are the address. <span class="mono">season_key</span> is our label; it never appears in a key, a join or a dedupe rule.</p>
+            <p class="body"><b>Names are labels.</b> <span class="mono">team_name</span> is stored as observed. Nothing joins on it. The standings join uses <span class="mono">tr[data-team-id]</span>, the same numeric id as the feed.</p>
+            <div class="room"><span class="lbl">Ruled out</span><p>Keying on <span class="mono">season_key</span> (a typo relabels a season) or <span class="mono">tournamentName</span> (a cosmetic change splits it).</p></div>
+          </div>
+        </div>
+        <div class="small">The header is the only place the observation is described. The facts carry <span class="mono">snapshot_id</span>; they do not repeat <span class="mono">observed_at</span>.</div>
+      </section>
+
+      <!-- 12 stage model -->
+      <section class="slide" data-sec="Model"
+        data-note="A stage is a domain code, separate from WhoScored's numeric stage id. The id is identity; the label is a label. The selector order on the page is not chronological, and Final Stage means the knockout phase, not the final match. A stage with no league table still returns team statistics, so has_league_table gates the standings rows, not the team rows.">
+        <div>
+          <p class="kicker"><i></i>The stage model</p>
+          <h2 class="display" style="margin-top:14px">Stages are identity,<br>not labels.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl compact">
+            <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">league</span></td><td>One table, every team plays every other team.</td></tr>
+              <tr><td><span class="mono">group</span></td><td>A group phase; more than one table can share a season.</td></tr>
+              <tr><td><span class="mono">qualification</span></td><td>Qualifying rounds before the main competition.</td></tr>
+              <tr><td><span class="mono">knockout</span></td><td>Elimination rounds; no league table, but team stats still return.</td></tr>
+              <tr><td><span class="mono">playoff</span></td><td>A promotion, relegation or qualification play-off.</td></tr>
+              <tr><td><span class="mono">final</span></td><td>The final itself, when the source publishes it as its own stage.</td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body"><b><span class="mono">whoscored_stage_id</span> is identity.</b> Labels are display text from the page's <span class="mono">#stages</span> selector; the registry declares the stage ids. A label is never used in a key or a join; the id is.</p>
+            <p class="body"><b>The registry declares the stages.</b> <span class="mono">config/stages.toml</span> lists every stage the season is expected to have. A missing stage is a configuration error, not an empty result.</p>
+            <p class="body"><b>Order is not chronology.</b> The selector order is not the calendar order, and the label <span class="mono">Final Stage</span> means the knockout phase, not the final match.</p>
+            <div class="room"><span class="lbl">Separate</span><p>The fixture calendar is a different source. v1 joins nothing to WhoScored by team name; there is no crosswalk.</p></div>
+          </div>
+        </div>
+        <div class="small"><span class="mono">has_league_table</span> gates the standings fact. It never gates the team fact.</div>
+      </section>
+
+      <!-- 13 clocks -->
+      <section class="slide" data-sec="Model"
+        data-note="The source publishes no timestamp. So the pipeline has two clocks, and both are ours. observed_at is the minimum capture time across the page and the nine feeds. It is an interval, not an instant, so the span is stored. accepted_at is when the transaction committed; it is not reproducible and never orders history.">
+        <div>
+          <p class="kicker"><i></i>Two clocks</p>
+          <h2 class="display" style="margin-top:14px">The source has no<br>clock. We do.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl compact">
+            <thead><tr><th>Clock</th><th>Meaning</th><th>Set from</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">observed_at</span></td><td>When we began reading this state</td><td><span class="mono">min(captured_at)</span> over the page and the nine feeds</td></tr>
+              <tr><td><span class="mono">accepted_at</span></td><td>When the cohort became queryable</td><td>Commit time</td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body"><b><span class="mono">observed_at</span> is an interval.</b> The header stores <span class="mono">capture_span_seconds = max(captured_at) − min(captured_at)</span>. A span over 180 seconds is retried: a sweep that slow is no longer a plausible single state.</p>
+            <p class="body"><b><span class="mono">observed_at</span> orders history.</b> It is the key for latest state, deltas and reports. <span class="mono">accepted_at</span> only records when the transaction committed; a backfill can have an older observation with a newer acceptance.</p>
+            <div class="note">Reports pin <span class="mono">(tournament_id, whoscored_season_id, whoscored_stage_id, observed_at)</span>. They never pin <span class="mono">snapshot_id</span> or <span class="mono">accepted_at</span>.</div>
+          </div>
+        </div>
+        <div class="small">No source timestamp means “the source was late” can only be inferred from our observation times.</div>
+      </section>
+
+      <!-- 13 latest trap -->
+      <section class="slide" data-sec="Model"
+        data-note="This is the most common bug in this family of models. If you take the maximum time per fact row, a team that disappears from the newest snapshot quietly reports its old row. The correct shape picks the snapshot first, then joins. A test deletes one team from the newest snapshot and asserts it does not reappear.">
+        <div>
+          <p class="kicker"><i></i>The latest-state trap</p>
+          <h2 class="display" style="margin-top:14px">A missing team must<br>disappear, not fall back.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="small red"><b>WRONG</b> — maximum time per fact row</p>
+            <div class="code">select f.*
+from fact_team_snapshot f
+join competition_snapshot s using (snapshot_id)
+where s.observed_at = (
+  select max(s2.observed_at)
+  from fact_team_snapshot f2
+  join competition_snapshot s2 using (snapshot_id)
+  where f2.team_id = f.team_id
+    and s2.whoscored_stage_id = s.whoscored_stage_id
+);</div>
+            <p class="body">A team missing from the newest snapshot still has an older row, so it reports a state that is no longer true.</p>
+          </div>
+          <div class="stack">
+            <p class="small green"><b>CORRECT</b> — pick the snapshot first</p>
+            <div class="code">select f.*
+from fact_team_snapshot f
+join (
+  select snapshot_id
+  from competition_snapshot
+  where tournament_id = $1
+    and whoscored_stage_id = $2
+  order by observed_at desc,
+           snapshot_id desc
+  limit 1
+) s using (snapshot_id);</div>
+            <p class="body">The snapshot is chosen once. Every team comes from that snapshot, and only that snapshot.</p>
+          </div>
+        </div>
+        <div class="exit"><span class="lbl">Proof</span><p>Delete one team from the newest snapshot. It must not reappear from an older one.</p></div>
+      </section>
+
+      <!-- 14 snapshot identity -->
+      <section class="slide" data-sec="Model"
+        data-note="The snapshot id is a ULID: a 26-character, sortable name. It is not the dedupe. The dedupe is the unique edge of parent and content. The parent is the last accepted snapshot by observed_at, or the literal genesis. A NULL parent would silently duplicate the first observation, so the sentinel is mandatory.">
+        <div>
+          <p class="kicker"><i></i>Snapshot identity</p>
+          <h2 class="display" style="margin-top:14px">The id is a name.<br>The edge is the guard.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">snapshot_id = ULID()
+parent      = last accepted snapshot_id
+              for this stage by observed_at,
+              or 'genesis'
+
+UNIQUE (parent_snapshot_id, content_fingerprint)
+UNIQUE (tournament_id, whoscored_season_id,
+        whoscored_stage_id, observed_at)</div>
+            <div class="note"><b>The measurement.</b> 24 cases, three implementations, 500 publishes, a real process kill, a contending writer, and a rebuild with one backfilled observation. The ULID costs +6.2% storage at 300 snapshots. Timing is not the deciding factor.</div>
+          </div>
+          <div class="stack">
+            <p class="body"><b>What the edge gives us.</b> A retry that sees the same content under the same parent inserts nothing. A revert A → B → A has a different parent from the first A, so it is recorded as a new state.</p>
+            <p class="body"><b>What the id does not give us.</b> It is not reproducible. A rebuild is content-equivalent, not id-equivalent. Nothing outside the warehouse may store it.</p>
+            <div class="room"><span class="lbl">Limits</span><p>Report address is the stage triple plus <span class="mono">observed_at</span>. <span class="mono">content_fingerprint</span> is not unique on its own. The single-writer lock is still required.</p></div>
+          </div>
+        </div>
+        <div class="small">The parent is the last accepted state by <span class="mono">observed_at</span>, not by <span class="mono">accepted_at</span>. A backfill must not become the newest state.</div>
+      </section>
+
+      <!-- 15 two nothing changed -->
+      <section class="slide dark" data-sec="Model"
+        data-note="There are two different kinds of nothing changed. The fetch gate asks whether we can skip requests. It is not safe, because an unchanged summary table might hide changed details. The publish gate asks whether this state is already published. It is safe, because it compares the full canonical content. v1 only acts on the second.">
+        <div>
+          <p class="kicker"><i></i>Two kinds of “nothing changed”</p>
+          <h2 class="display" style="margin-top:14px">Cheap by not writing.<br>Not by not fetching.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th></th><th>Fetch gate (probe)</th><th>Publish gate (content)</th></tr></thead>
+            <tbody>
+              <tr><td><b>Question</b></td><td>Can I skip eight of nine requests?</td><td>Is this state already published?</td></tr>
+              <tr><td><b>Input</b></td><td><span class="mono">summaryteam/all</span> only</td><td>All nine payloads and the standings</td></tr>
+              <tr><td><b>Safe?</b></td><td class="no">No — unknown #2</td><td class="ok">Yes, unconditionally</td></tr>
+              <tr><td><b>v1 behaviour</b></td><td>Recorded, never acted on (<span class="mono">PROBE_SKIP=0</span>)</td><td>Always acted on</td></tr>
+              <tr><td><b>What enables it</b></td><td>Experiment E2 passes</td><td>Nothing</td></tr>
+            </tbody>
+          </table>
+          <div class="c2" style="margin-top:26px">
+            <div class="room"><span class="lbl">Still useful</span><p>A change in <span class="mono">summaryteam/all</span> proves something changed, so a probe can <b>schedule</b> a full sweep. It can never prove the absence of change.</p></div>
+            <div class="room"><span class="lbl">The result</span><p>The second run of an unchanged table still costs nine requests, but costs <b>zero writes</b>, and the freshness view can prove it.</p></div>
+          </div>
+        </div>
+        <div class="small">This distinction is the heart of the plan and is missing from every earlier document.</div>
+      </section>
+
+      <!-- 16 one writer raw fail -->
+      <section class="slide" data-sec="Model"
+        data-note="DuckDB is a single-process database, so one writer is a hard rule. Raw is the system of record: it is written before parsing and never rewritten. Every failure maps to block, retry or warn. Ambiguous is not an action.">
+        <div>
+          <p class="kicker"><i></i>The operating rules</p>
+          <h2 class="display" style="margin-top:14px">One writer.<br>Raw first. Fail legible.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">Concurrency</div><h3>One writer</h3><p>Many fetchers are fine; one loader. <span class="mono">dataderby run</span> takes <span class="mono">data/state/pipeline.lock</span> before touching the database. A second writer exits with code 5. A stale lock is broken only when the PID is dead and the lock is older than 15 minutes.</p></div>
+          <div class="card a-up"><div class="tag">Evidence</div><h3>Raw is the record</h3><p>The database can be rebuilt; the source cannot. Write every payload before parsing, with exclusive create. A sidecar records URL, status, content type, bytes, SHA-256, capture time and client version. Nothing under <span class="mono">data/raw</span> is ever rewritten.</p></div>
+          <div class="card a-up"><div class="tag">Failure</div><h3>Three actions</h3><p><b>BLOCK</b> refuses the cohort, keeps raw, exits non-zero and does not advance the checkpoint. <b>RETRY</b> treats the state as a mid-publish signature. <b>WARN</b> records and continues. “Ambiguous” is not an action.</p></div>
+        </div>
+        <div class="note">The lock is a process lock. It is released by the operating system when the process dies, so there is no stale-lock daemon.</div>
+      </section>
+
+      <!-- 17 ownership -->
+      <section class="slide" data-sec="Contract"
+        data-note="Every shared metric has exactly one owner section. The other sections must agree, and A6 checks that. Nothing is taken from whichever section arrived first. Ranking is different: each section and split has its own ranking, and A7 checks that it is dense from one to N.">
+        <div>
+          <p class="kicker"><i></i>Ownership</p>
+          <h2 class="display" style="margin-top:14px">One owner<br>per column.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl compact">
+            <thead><tr><th>Metric</th><th>Owner</th><th>Agreement rule</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">apps</span></td><td>Summary</td><td>A6: identical in Defensive and Offensive</td></tr>
+              <tr><td><span class="mono">shotsPerGame</span></td><td>Summary</td><td>A6: identical in Offensive</td></tr>
+              <tr><td><span class="mono">rating</span></td><td>Summary</td><td>A6: identical in Defensive and Offensive</td></tr>
+              <tr><td><span class="mono">ranking</span></td><td>Each section and split</td><td>A7: dense 1..N; uniqueness is only a warning</td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body"><b>Why this matters.</b> Two sections publish the same number. If the loader takes whichever arrived first, a mid-publish disagreement becomes a silent value. The owner rule turns that into a retry.</p>
+            <div class="room"><span class="lbl">Rule</span><p>Exactly one owner per column. Shared metrics are asserted equal, not averaged.</p></div>
+          </div>
+        </div>
+        <div class="small">The 60-column contract is reproduced by a test that counts the columns, not by a test that trusts this slide.</div>
+      </section>
+
+      <!-- 18 types -->
+      <section class="slide" data-sec="Contract"
+        data-note="Types are chosen from what the source actually sends. Goals arrive as a double, even when the value is whole. Rates keep full precision and are rounded only at presentation. Fields we discard stay in the raw file. A missing measure is written as NULL, never as zero.">
+        <div>
+          <p class="kicker"><i></i>Types and omissions</p>
+          <h2 class="display" style="margin-top:14px">Store what arrived.<br>Never invent a zero.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl compact">
+            <thead><tr><th>Source type</th><th>Stored as</th><th>Reason</th></tr></thead>
+            <tbody>
+              <tr><td>Ids, apps, ranking</td><td><span class="mono">INTEGER</span></td><td>Integral; validated on parse.</td></tr>
+              <tr><td>Goal, yellow, red</td><td><span class="mono">DOUBLE</span></td><td>The source sends 31.0, not 31.</td></tr>
+              <tr><td>Every rate, ratio, rating</td><td><span class="mono">DOUBLE</span></td><td>Full precision preserved; round at presentation.</td></tr>
+              <tr><td>Names, urls</td><td><span class="mono">VARCHAR</span></td><td>Labels, not identity.</td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body"><b>Discarded from the fact, kept in raw:</b> <span class="mono">name</span> (an alias of <span class="mono">teamName</span>), <span class="mono">teamRegionName</span>, <span class="mono">regionCode</span>, <span class="mono">tournamentRegion*</span>, <span class="mono">paging</span> (constant zeros), <span class="mono">seasonId</span> (always 0), <span class="mono">seasonName</span> (always null).</p>
+            <div class="note"><b>Missing means NULL.</b> A consumer that sums NULL gets NULL, which is the honest answer. Zero would be a claim the source never made.</div>
+          </div>
+        </div>
+        <div class="small">If <span class="mono">name</span> and <span class="mono">teamName</span> ever diverge, A15 blocks the cohort.</div>
+      </section>
+
+      <!-- 19 standings contract -->
+      <section class="slide" data-sec="Contract"
+        data-note="The standings contract is field for field. Rank comes from a span inside the first cell; the name comes from the team link. The join key is data-team-id. A stage with no league table publishes zero rows. The fingerprint covers all three splits, so a rank change alone is a new snapshot.">
+        <div>
+          <p class="kicker"><i></i>The standings contract</p>
+          <h2 class="display" style="margin-top:14px">Ten fields.<br>Three splits. One key.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl compact">
+            <thead><tr><th>Field</th><th>Type</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">team_id</span></td><td>INTEGER</td><td><span class="mono">tr[data-team-id]</span>; equals the feed id</td></tr>
+              <tr><td><span class="mono">team_name</span></td><td>VARCHAR</td><td><span class="mono">a.team-link</span>; label only</td></tr>
+              <tr><td><span class="mono">rank_{split}</span></td><td>INTEGER</td><td>Permutation 1..N per split</td></tr>
+              <tr><td><span class="mono">played, won, drawn, lost</span></td><td>INTEGER</td><td><span class="mono">W + D + L = P</span></td></tr>
+              <tr><td><span class="mono">goals_for, goals_against</span></td><td>INTEGER</td><td>Integers</td></tr>
+              <tr><td><span class="mono">goal_difference</span></td><td>INTEGER</td><td><span class="mono">GF − GA</span></td></tr>
+              <tr><td><span class="mono">points</span></td><td>INTEGER</td><td><span class="mono">3W + D</span></td></tr>
+              <tr><td><span class="mono">form</span></td><td>VARCHAR</td><td>Last six; NULL only when P = 0</td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body"><b>Capture all three views.</b> The table is client-rendered. Clicking Overall, Home or Away re-renders the same ten columns without a network request.</p>
+            <div class="room"><span class="lbl">No table</span><p>A knockout stage has no league table. Publish zero standings rows; do not publish null measures.</p></div>
+            <div class="note">The fingerprint covers all 60 team measures and all 30 standings measures. A rank-only change creates a new snapshot.</div>
+          </div>
+        </div>
+        <div class="small">Standings are a companion fact, not a widening of the 60-column fact.</div>
+      </section>
+
+      <!-- 20 assertions 1 -->
+      <section class="slide" data-sec="Publish"
+        data-note="Assertions A1 to A11 are the first half of the publish contract. Each one returns offending rows; an empty result means pass. The action is part of the contract. A5 is a retry, not a check, because a mid-publish source can be temporarily inconsistent. A10 has an explicit override for a revoked match.">
+        <div>
+          <p class="kicker"><i></i>The publish contract · 1 of 2</p>
+          <h2 class="display" style="margin-top:14px">Assertions A1–A11.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:6%">#</th><th>Assertion</th><th style="width:27%">Action on failure</th></tr></thead>
+            <tbody>
+              <tr><td>A1</td><td>Exactly <span class="mono">expected_teams</span> rows (20 in the measured league).</td><td>BLOCK (<span class="mono">whoscored_not_ready</span> if fewer)</td></tr>
+              <tr><td>A2</td><td><span class="mono">team_id</span> is unique in the candidate.</td><td>BLOCK</td></tr>
+              <tr><td>A3</td><td>Nine feed captures, every section and split once; one page capture and three standings views (A17).</td><td>BLOCK</td></tr>
+              <tr><td>A4</td><td>The team-id set is identical across all nine feeds.</td><td>RETRY once, then BLOCK</td></tr>
+              <tr><td>A5</td><td><span class="mono">home + away = overall</span> for apps, goal, yellow, red.</td><td>RETRY, then BLOCK</td></tr>
+              <tr><td>A6</td><td>Apps, rating and shots per game agree across sections.</td><td>RETRY, then BLOCK</td></tr>
+              <tr><td>A7</td><td>Every ranking is in 1..N for its section and split.</td><td>BLOCK; uniqueness only WARN</td></tr>
+              <tr><td>A8</td><td>Rating 0..10; possession and pass success 0..1; counts ≥ 0; doubles finite.</td><td>BLOCK</td></tr>
+              <tr><td>A9</td><td>No NULL in snapshot id, team id or team name.</td><td>BLOCK</td></tr>
+              <tr><td>A10</td><td>Apps do not decrease against the last accepted snapshot of the stage.</td><td>BLOCK unless <span class="mono">--allow-apps-decrease</span></td></tr>
+              <tr><td>A11</td><td>Every capture URL contains <span class="mono">stageId=&lt;run stage&gt;</span>.</td><td>BLOCK</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note"><b>A5 is not a CHECK.</b> A mid-publish source can be inconsistent for a few seconds. A retry fetches the same state again; a CHECK would reject it forever.</div>
+      </section>
+
+      <!-- 21 assertions 2 -->
+      <section class="slide" data-sec="Publish"
+        data-note="A12 to A21 add provenance, freshness, shape drift, referential integrity and the five standings checks. A17 says the page always exists, but the three standings views exist only when the stage has a league table. A18 says the standings team ids must equal the feed team ids. A19 to A21 check the table's own arithmetic, cross-split sums and rank permutation.">
+        <div>
+          <p class="kicker"><i></i>The publish contract · 2 of 2</p>
+          <h2 class="display" style="margin-top:14px">Assertions A12–A21.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:6%">#</th><th>Assertion</th><th style="width:27%">Action on failure</th></tr></thead>
+            <tbody>
+              <tr><td>A12</td><td><span class="mono">whoscored_page_url</span> contains <span class="mono">/seasons/&lt;sid&gt;/stages/&lt;stid&gt;/</span>.</td><td>BLOCK</td></tr>
+              <tr><td>A13</td><td>Payload <span class="mono">tournamentId</span> equals config; <span class="mono">isOpta</span> is constant in the run.</td><td>BLOCK</td></tr>
+              <tr><td>A14</td><td>Capture span is at most 180 seconds.</td><td>RETRY</td></tr>
+              <tr><td>A15</td><td><span class="mono">statColumns</span> equals the expected set; <span class="mono">name</span> and <span class="mono">teamName</span> agree.</td><td>BLOCK (<span class="mono">schema_drift</span>)</td></tr>
+              <tr><td>A16</td><td>The fact-to-header anti-join is empty.</td><td>BLOCK</td></tr>
+              <tr><td>A17</td><td>Page capture always exists; three standings views exist iff <span class="mono">has_league_table</span>.</td><td>RETRY once (<span class="mono">whoscored_not_ready</span>)</td></tr>
+              <tr><td>A18</td><td>Standings team-id set equals the feed team-id set.</td><td>RETRY once, then BLOCK</td></tr>
+              <tr><td>A19</td><td>Standings arithmetic, form length and characters.</td><td>BLOCK</td></tr>
+              <tr><td>A20</td><td>Home + away = overall for P, W, D, L, GF, GA, Pts.</td><td>RETRY, then BLOCK</td></tr>
+              <tr><td>A21</td><td>Rank is a permutation 1..N in every split.</td><td>BLOCK</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="room"><span class="lbl">A10</span><p>The override exists because a provider can revoke a match. It is explicit, logged, and records who asked.</p></div>
+      </section>
+
+      <!-- 22 run 1 -->
+      <section class="slide" data-sec="Publish"
+        data-note="This is the first half of one run. The page is loaded first because it supplies the token and the standings. The nine feeds come next, with pacing and retries. Raw is written before parsing. The observed_at is the minimum capture time. The probe skip branch is recorded but disabled in v1.">
+        <div>
+          <p class="kicker"><i></i>The run · 1 of 2</p>
+          <h2 class="display" style="margin-top:14px">Steps 1 to 7.</h2>
+        </div>
+        <div class="body">
+          <div class="runlist">
+            <div class="r"><b>01</b><p><b>Lock.</b> Take <span class="mono">data/state/pipeline.lock</span>. If another writer holds it, exit 5.</p></div>
+            <div class="r"><b>02</b><p><b>Load config.</b> Read <span class="mono">config/stages.toml</span> and open an <span class="mono">ingestion_run</span> row in <span class="mono">running</span>.</p></div>
+            <div class="r"><b>03</b><p><b>Load the page.</b> Read the HTML, the <span class="mono">Model-last-Mode</span> token, the stage labels and the three standings views. Its capture time is one input to <span class="mono">observed_at</span>, which is the minimum across the page and the nine feeds.</p></div>
+            <div class="r"><b>04</b><p><b>Probe.</b> Fetch <span class="mono">summaryteam/all</span> first. Record its hash. If <span class="mono">PROBE_SKIP</span> is on and the hash matches, stop. In v1 the branch is disabled.</p></div>
+            <div class="r"><b>05</b><p><b>Fetch the other eight.</b> Sequential, at least 1.2 seconds apart, three tries, backoff 2/4/8 seconds with jitter. A second consecutive gate stops the run.</p></div>
+            <div class="r"><b>06</b><p><b>Write raw.</b> Every payload is written atomically with exclusive create, plus a sidecar and a <span class="mono">raw_capture</span> row.</p></div>
+            <div class="r"><b>07</b><p><b>Parse.</b> Nine feeds become 20 × 60 candidate rows; three standings views become 30 measures per team. Missing values are NULL.</p></div>
+            <div class="r"><b>—</b><p><b>Shape checks.</b> A3, A4, A13, A15, A8 and the standings shape checks A17, A18, A19, A21 run before the fingerprint.</p></div>
+          </div>
+        </div>
+        <div class="small">The page is one request per competition, not per stage. The token works across stages. The nine feed calls are per stage.</div>
+      </section>
+
+      <!-- 23 run 2 -->
+      <section class="slide" data-sec="Publish"
+        data-note="The second half is the publish gate and the transaction. The fingerprint covers the stats and the standings. If it matches the last committed fingerprint, the run writes nothing. Otherwise the header is inserted with do-nothing on the unique edge, then the 20 team rows and the standings rows, then the checkpoint, then commit. Recovery reconciles a run that crashed after commit.">
+        <div>
+          <p class="kicker"><i></i>The run · 2 of 2</p>
+          <h2 class="display" style="margin-top:14px">Steps 8 to 13.<br>Then recovery.</h2>
+        </div>
+        <div class="body c2">
+          <div class="runlist" style="grid-template-columns:1fr">
+            <div class="r"><b>08</b><p><b>Fingerprint.</b> Canonicalise the candidate and the standings. <span class="mono">content_fingerprint</span> covers both facts.</p></div>
+            <div class="r"><b>09</b><p><b>Publish gate.</b> If the fingerprint equals the checkpoint's last committed fingerprint, mark <span class="mono">no_change</span> and exit 0. No rows are written.</p></div>
+            <div class="r"><b>10</b><p><b>Begin.</b> Open the transaction.</p></div>
+            <div class="r"><b>11</b><p><b>Assert.</b> A1, A2, A5, A6, A7, A9, A10, A16, A20. Any failure rolls back and stops.</p></div>
+            <div class="r"><b>12</b><p><b>Insert.</b> Header with <span class="mono">ON CONFLICT (parent, content) DO NOTHING</span>; if inserted, 20 team rows and the standings rows; update the checkpoint.</p></div>
+            <div class="r"><b>13</b><p><b>Commit.</b> Mark the run <span class="mono">accepted</span>. Exit 0.</p></div>
+          </div>
+          <div class="stack">
+            <div class="note"><b>Crash recovery.</b> At start, a run still marked <span class="mono">running</span> with a committed snapshot is reconciled to <span class="mono">accepted</span>. A run that crashed before commit has no snapshot and is marked <span class="mono">abandoned</span>. The retry reuses the same parent and content, so the unique edge prevents a duplicate.</div>
+            <div class="code">BEGIN
+  insert header ... on conflict do nothing returning id
+  if inserted: insert 20 facts + standings
+  update checkpoint
+COMMIT</div>
+          </div>
+        </div>
+        <div class="small">No <span class="mono">COMMIT</span> in a <span class="mono">finally</span>. A constraint error aborts the transaction; the explicit rollback is required.</div>
+      </section>
+
+      <!-- 24 canonical -->
+      <section class="slide" data-sec="Publish"
+        data-note="Canonicalisation is the deterministic serialisation that produces the fingerprint. It must be byte-stable across machines and Python patch versions. Rows are sorted by team id, keys are sorted, floats use the shortest round-trip representation, and the standings are included in a fixed split order. A change to this function changes every future fingerprint, so it is versioned.">
+        <div>
+          <p class="kicker"><i></i>Canonicalisation</p>
+          <h2 class="display" style="margin-top:14px">Same content.<br>Same bytes. Always.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">rows sorted by team_id
+keys sorted
+floats via repr() (shortest round-trip)
+None as null
+UTF-8, newline-joined, no trailing newline</div>
+            <p class="body"><b>Included:</b> <span class="mono">team_id</span>, all 60 measures, the three standings views in <span class="mono">overall, home, away</span> order, <span class="mono">tournamentId</span> and <span class="mono">isOpta</span>.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Excluded:</b> <span class="mono">paging</span>, <span class="mono">name</span>, presentation order and <span class="mono">seasonId</span>. They carry no meaning for the state.</p>
+            <p class="body"><b>Versioned:</b> <span class="mono">canonical_version</span> is stored on the header. A change to this function is a new version, not a silent rehash.</p>
+            <div class="room"><span class="lbl">Risk</span><p>Float <span class="mono">repr</span> is stable in practice, not guaranteed by the language. The golden hash catches a change rather than hiding it.</p></div>
+          </div>
+        </div>
+        <div class="small">A row reorder or a dict-key reorder must not change the fingerprint. A single measure change must change it.</div>
+      </section>
+
+      <!-- 25 views -->
+      <section class="slide" data-sec="Serve"
+        data-note="Six views answer the five questions a consumer actually has. The latest views pick the snapshot first. The standings view is the journey over time. The delta view uses the full history, not the latest two rows. The freshness view is what an operator monitors.">
+        <div>
+          <p class="kicker"><i></i>Views</p>
+          <h2 class="display" style="margin-top:14px">Five questions,<br>six views.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:27%">View</th><th>Question it answers</th><th style="width:30%">Rule</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">v_latest_team_state</span></td><td>What does the latest snapshot say for this stage?</td><td>Pick the snapshot first, then join.</td></tr>
+              <tr><td><span class="mono">v_latest_standings</span></td><td>What is the latest league table for this stage?</td><td>Same snapshot selection; standings fact only.</td></tr>
+              <tr><td><span class="mono">v_latest_team_with_standings</span></td><td>What are the 60 measures and the 30 standings measures at the latest snapshot?</td><td>Join on <span class="mono">(snapshot_id, team_id)</span>; never on name.</td></tr>
+              <tr><td><span class="mono">v_standings_history</span></td><td>How did rank, points and form move over time?</td><td>One row per stage, team and <span class="mono">observed_at</span>.</td></tr>
+              <tr><td><span class="mono">v_snapshot_delta</span></td><td>What changed between consecutive accepted snapshots?</td><td><span class="mono">lag()</span> over the full partition, ordered by <span class="mono">observed_at</span>.</td></tr>
+              <tr><td><span class="mono">v_pipeline_freshness</span></td><td>Is the pipeline fresh, and what was the last outcome?</td><td>One row per stage; age, attempts, accepted count.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">Delta is defined only for <span class="mono">apps, goal, yellow_card, red_card</span>. Rates and ratings are already normalised; their difference is not a count of anything.</div>
+      </section>
+
+      <!-- 26 limit -->
+      <section class="slide dark" data-sec="Serve"
+        data-note="This is the honest limit of the source. It is cumulative season-to-date data, not match events. You can estimate a cumulative total from a rate times apps, but differencing two cumulative products double-counts the rounding of apps, and the home and away splits use different denominators. v1 answers movement, not match N.">
+        <div>
+          <p class="kicker"><i></i>The limit on the tin</p>
+          <h2 class="display" style="margin-top:14px">Season-to-date<br>movement, not<br>match events.</h2>
+        </div>
+        <div class="body c2">
+          <p class="pull" style="max-width:22ch">“How did the table move?” is a true question. “What happened in match 7?” is not.</p>
+          <div class="stack">
+            <p class="body">Given <span class="mono">shotsPerGame</span> and <span class="mono">apps</span>, you can form <span class="mono">shots ≈ shotsPerGame × apps</span>. That product is exact only for the cumulative value.</p>
+            <p class="body">Differencing two cumulative products double-counts the rounding of <span class="mono">apps</span>. The home and away splits have a different denominator per team.</p>
+            <div class="room"><span class="lbl">README</span><p>What the data can and cannot answer belongs in the README, not a footnote. This limit is part of the product.</p></div>
+          </div>
+        </div>
+        <div class="small">The source is a cumulative season-to-date table. It is not a match feed and cannot be made into one by subtraction.</div>
+      </section>
+
+      <!-- 27 six tables -->
+      <section class="slide" data-sec="Schema"
+        data-note="Six tables carry the whole model. The constraints do the guarding, not application code. The unique edge on parent and content is the dedupe. The fact-to-header foreign key is enforced on insert. The checkpoint is keyed by stage, not by snapshot. The raw ledger is keyed by run, section and view.">
+        <div>
+          <p class="kicker"><i></i>The six tables</p>
+          <h2 class="display" style="margin-top:14px">The database<br>guards itself.</h2>
+        </div>
+        <div class="body c2">
+          <div class="schema" style="grid-template-columns:1fr 1fr">
+            <div class="box"><b>ingestion_run</b><span>one row per attempt<br>outcome describes the run</span></div>
+            <div class="box"><b>raw_capture</b><span>one row per section and view<br>unique by run, section, view</span></div>
+            <div class="box"><b>competition_snapshot</b><span>accepted observations only<br>parent, content, observed_at</span></div>
+            <div class="box"><b>fact_team_snapshot</b><span>60 measures per team<br>FK to the header</span></div>
+            <div class="box"><b>fact_standings_snapshot</b><span>30 measures per team<br>FK to the header</span></div>
+            <div class="box"><b>pipeline_checkpoint</b><span>one row per stage<br>last accepted state</span></div>
+          </div>
+          <table class="tbl compact">
+            <thead><tr><th>Constraint</th><th>Why it exists</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">UNIQUE (parent, content)</span></td><td>The dedupe. The primary key is only a name.</td></tr>
+              <tr><td><span class="mono">UNIQUE (stage, observed_at)</span></td><td>One observation per stage and instant.</td></tr>
+              <tr><td><span class="mono">FOREIGN KEY (snapshot_id)</span></td><td>No fact row without its header.</td></tr>
+              <tr><td><span class="mono">CHECK (count &gt;= 0)</span></td><td>Negative counts are meaningless; NULL passes, which is what we want.</td></tr>
+              <tr><td>No FK on <span class="mono">parent</span></td><td>A self-referencing FK does not work here; A16 is the anti-join guard.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">The verbatim DDL lives in <span class="mono">sql/001_schema.sql</span>. The header is separate from the facts so a late change cannot rewrite an accepted row; a single wide row would have to be updated.</div>
+      </section>
+
+      <!-- 28 old bugs -->
+      <section class="slide" data-sec="Model"
+        data-note="These are the eight failure modes from the earlier model review. Five are designed out by the snapshot shape, two are fixed by specific choices, and one, referential integrity, is fixed differently because DuckDB enforces the FK on insert. The five model bugs that survive without Option C each have a named fix and a test.">
+        <div>
+          <p class="kicker"><i></i>The old bugs</p>
+          <h2 class="display" style="margin-top:14px">Designed out,<br>not remembered.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:5%">#</th><th style="width:34%">Failure</th><th>Status in v1</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>NULL <span class="mono">valid_to</span> join</td><td class="ok">Gone — no validity intervals.</td></tr>
+              <tr><td>2</td><td>Overlapping or gapped intervals</td><td class="ok">Gone — append-only, no intervals.</td></tr>
+              <tr><td>3</td><td>Two current rows per team</td><td class="ok">Gone — no <span class="mono">is_current</span>; latest is a snapshot selection.</td></tr>
+              <tr><td>4</td><td><span class="mono">is_current</span> vs <span class="mono">valid_to</span> divergence</td><td class="ok">Gone — one representation.</td></tr>
+              <tr><td>5</td><td>Which clock bounds validity</td><td class="ok">Fixed — <span class="mono">observed_at</span> orders; <span class="mono">accepted_at</span> records.</td></tr>
+              <tr><td>6</td><td>Unenforced referential integrity</td><td class="ok">Fixed differently — FK is enforced on insert; A16 anti-join; parent is a plain column.</td></tr>
+              <tr><td>7</td><td>Spurious versions from cosmetic drift</td><td class="ok">Fixed — names are labels; ids are identity; A15 catches divergence.</td></tr>
+              <tr><td>8</td><td>Restatement rewrites the past</td><td class="ok">Fixed — reports pin stage and <span class="mono">observed_at</span>; raw is immutable.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="room"><span class="lbl">Also fixed</span><p>Latest takes the max per fact row · delta over “latest two” · missing header clock · mixed candidate and accepted rows · name as identity.</p></div>
+      </section>
+
+      <!-- 29 failure 1 -->
+      <section class="slide" data-sec="Operations"
+        data-note="The failure matrix is the operational contract. The first half covers fetch and parse. Notice that a gate page, a 403, a short cohort, a mid-publish split and schema drift all have a specific action. In every case raw is kept and the old snapshot remains latest.">
+        <div>
+          <p class="kicker"><i></i>Failure matrix · 1 of 2</p>
+          <h2 class="display" style="margin-top:14px">Fetch and parse.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:27%">What happens</th><th style="width:19%">Detection</th><th>Behaviour</th><th style="width:19%">Data after</th></tr></thead>
+            <tbody>
+              <tr><td>Gate page: 200 with HTML</td><td>Structure check</td><td>Retry with backoff; two in a row stops the run.</td><td>No rows; raw kept.</td></tr>
+              <tr><td>403</td><td>Status</td><td>Retry with backoff; escalate to cookie refresh.</td><td>No rows.</td></tr>
+              <tr><td>BOM or <span class="mono">text/html</span> JSON</td><td>Parser</td><td>Accepted normally.</td><td>Normal.</td></tr>
+              <tr><td>One section returns 19 teams</td><td>A1 / A4</td><td>Retry, then BLOCK.</td><td>Old snapshot still latest.</td></tr>
+              <tr><td>Overall published, splits not yet</td><td>A5</td><td>Retry twice, then BLOCK.</td><td>Old snapshot still latest.</td></tr>
+              <tr><td>Provider adds a column</td><td>A15</td><td>BLOCK <span class="mono">schema_drift</span>.</td><td>Raw kept; parser must change.</td></tr>
+              <tr><td>Provider removes a column</td><td>A15</td><td>BLOCK <span class="mono">schema_drift</span>.</td><td>Raw kept.</td></tr>
+              <tr><td>League stage has no standings table</td><td>A17</td><td>Retry once, then BLOCK.</td><td>Old snapshot still latest.</td></tr>
+              <tr><td>Standings ids disagree with feed</td><td>A18</td><td>Retry once, then BLOCK.</td><td>Old snapshot still latest.</td></tr>
+              <tr><td>Standings arithmetic breaks</td><td>A19 / A21</td><td>BLOCK.</td><td>Raw page kept; parser repair.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">The raw archive is the evidence in every row. A blocked cohort never advances the checkpoint.</div>
+      </section>
+
+      <!-- 30 failure 2 -->
+      <section class="slide" data-sec="Operations"
+        data-note="The second half covers publish and operations. The key rows are a revert, two overlapping runs, a crash mid-publish, a crash after commit, and a disk full. The transaction and the startup reconcile are what make these safe. A value that is missing is NULL, never zero.">
+        <div>
+          <p class="kicker"><i></i>Failure matrix · 2 of 2</p>
+          <h2 class="display" style="margin-top:14px">Publish and operations.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:27%">What happens</th><th style="width:19%">Detection</th><th>Behaviour</th><th style="width:19%">Data after</th></tr></thead>
+            <tbody>
+              <tr><td>Home + away ≠ overall in the table</td><td>A20</td><td>Retry, then BLOCK.</td><td>Old snapshot still latest.</td></tr>
+              <tr><td>A value is missing</td><td>Parser</td><td>Write NULL, never 0.</td><td>Honest unknown.</td></tr>
+              <tr><td>Same table, details changed</td><td>Content fingerprint</td><td>New snapshot.</td><td>Both states kept.</td></tr>
+              <tr><td>Revert A → B → A</td><td>Unique edge (parent, content)</td><td>New snapshot; delta marks the correction.</td><td>All three kept.</td></tr>
+              <tr><td>Two runs overlap</td><td>Process lock</td><td>Second exits 5.</td><td>None.</td></tr>
+              <tr><td>Crash mid-publish</td><td>Transaction</td><td>Nothing committed.</td><td>Old state.</td></tr>
+              <tr><td>Crash after commit, before run update</td><td>Startup reconcile</td><td>Run marked accepted.</td><td>State intact.</td></tr>
+              <tr><td>Disk full</td><td><span class="mono">OSError</span></td><td>Run fails; no database write.</td><td>Old state.</td></tr>
+              <tr><td>Wrong stage in config</td><td>A11 / A12</td><td>BLOCK.</td><td>None.</td></tr>
+              <tr><td>Apps decrease (revoked match)</td><td>A10</td><td>BLOCK unless <span class="mono">--allow-apps-decrease</span>.</td><td>Explicit override.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="room"><span class="lbl">Promise</span><p>No failure path writes a partial snapshot, and no failure path deletes evidence.</p></div>
+      </section>
+
+      <!-- 31 tests -->
+      <section class="slide" data-sec="Prove"
+        data-note="The five must-haves are the original contract. They are not replaced by the larger test count. Every assertion gets a poisoned fixture and a clean fixture. Every test is offline by default, using the nine captures; there is one opt-in live test. The four quality gates are the same ones AGENTS.md names.">
+        <div>
+          <p class="kicker"><i></i>The proof</p>
+          <h2 class="display" style="margin-top:14px">Five must-haves.<br>Fifty-eight tests.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <h3>The five must-haves</h3>
+            <ol class="body" style="padding-left:20px;line-height:1.6">
+              <li><b>Publish twice = once.</b> One snapshot.</li>
+              <li><b>Crash before commit = nothing.</b> Zero snapshots; abandoned run.</li>
+              <li><b>Revert is recorded.</b> A → B → A is three snapshots.</li>
+              <li><b>NULL is not zero.</b> Removing a measure yields NULL, and aggregation yields NULL.</li>
+              <li><b>Golden parse.</b> Nine feeds and three standings views produce a frozen checksum.</li>
+            </ol>
+            <p class="small">Also: latest-state leak, delta partition, id stability, assertion traps, FK and anti-join, schema shape, gate detection, one live test.</p>
+            <p class="small">Five view tests cover six views: the two latest views share the snapshot-selection test.</p>
+          </div>
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Area</th><th class="n">Tests</th><th>Level</th></tr></thead>
+              <tbody>
+                <tr><td>Config</td><td class="n">4</td><td>unit</td></tr>
+                <tr><td>Contract</td><td class="n">4</td><td>unit, goldens</td></tr>
+                <tr><td>Schema</td><td class="n">7</td><td>integration</td></tr>
+                <tr><td>Fetch</td><td class="n">6</td><td>replay server</td></tr>
+                <tr><td>Parse</td><td class="n">6</td><td>golden + traps</td></tr>
+                <tr><td>Standings</td><td class="n">6</td><td>golden DOM + traps</td></tr>
+                <tr><td>Canonical</td><td class="n">6</td><td>property</td></tr>
+                <tr><td>Publish</td><td class="n">10</td><td>integration</td></tr>
+                <tr><td>Views</td><td class="n">5</td><td>integration</td></tr>
+                <tr><td>CLI</td><td class="n">4</td><td>integration</td></tr>
+                <tr class="hi"><td><b>Total</b></td><td class="n"><b>58</b></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="note"><b>Gates:</b> <span class="mono">ruff format</span> · <span class="mono">ruff check</span> · <span class="mono">mypy main.py</span> · <span class="mono">pytest</span>. No phase closes before all four pass.</div>
+      </section>
+
+      <!-- 32 experiments -->
+      <section class="slide" data-sec="Prove"
+        data-note="Six experiments close the remaining source questions. E1 asks whether the summary probe is sufficient. E2 asks whether an unchanged table means unchanged details; it is the release gate for the skip rule, not for v1. E3 is retroactive corrections. E4 is team-id stability. E5 is publication latency. E6 is gate behaviour.">
+        <div>
+          <p class="kicker"><i></i>The experiments</p>
+          <h2 class="display" style="margin-top:14px">E1 to E6.<br>No guessing.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:5%">#</th><th style="width:29%">Question</th><th style="width:29%">Method</th><th>Pass condition</th></tr></thead>
+            <tbody>
+              <tr><td>E1</td><td>Is <span class="mono">summaryteam/all</span> a sufficient probe?</td><td>Compare 100 consecutive probe and sweep pairs.</td><td>Probe change implies sweep change, 100/100.</td></tr>
+              <tr><td>E2</td><td>Does an unchanged table mean unchanged details?</td><td>Freeze a fingerprint and diff all nine across a live matchday.</td><td>No detail moves while the table is identical, over two matchdays.</td></tr>
+              <tr><td>E3</td><td>Are values corrected retroactively?</td><td>Re-fetch 24 hours after acceptance and compare.</td><td>Classify: none, additive late, or rewrite.</td></tr>
+              <tr><td>E4</td><td>Is <span class="mono">team_id</span> stable across seasons?</td><td>Two seasons of the same competition.</td><td>Same ids for the same clubs.</td></tr>
+              <tr><td>E5</td><td>How long after a final whistle does the source publish?</td><td>Probe every five minutes across a match window.</td><td>A distribution, not a single number.</td></tr>
+              <tr><td>E6</td><td>Does the gate become cookie-bound?</td><td>Run probe-only for seven days and log every gate trip.</td><td>Under 1% gate rate; no cookie needed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="room"><span class="lbl">E2</span><p>E2 is the release gate for the optimisation, not for v1. If it fails, the pipeline still works; it simply keeps paying nine requests.</p></div>
+      </section>
+
+      <!-- 33 cadence -->
+      <section class="slide" data-sec="Operations"
+        data-note="There is no source timestamp to read, so cadence is measured, not guessed. The cache is two minutes, there is no ETag, and Last-Modified is the response time. The provisional schedule is a daily heartbeat plus post-matchday sweeps. E5 runs on the EPL matchday on 24 October and replaces the offsets with a measured p95.">
+        <div>
+          <p class="kicker"><i></i>Refresh cadence</p>
+          <h2 class="display" style="margin-top:14px">No clock to read.<br>Measure it instead.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Signal</th><th>Measured</th></tr></thead>
+              <tbody>
+                <tr><td><span class="mono">cache-control</span></td><td>private, max-age=120</td></tr>
+                <tr><td>ETag</td><td>absent</td></tr>
+                <tr><td><span class="mono">last-modified</span></td><td>response time, not data time</td></tr>
+                <tr><td>Feed timestamp</td><td>none</td></tr>
+                <tr><td>Page timestamp</td><td>none</td></tr>
+                <tr><td>Feed latency</td><td>0.5–0.7 seconds per call</td></tr>
+              </tbody>
+            </table>
+            <div class="note"><b>Until E5:</b> 06:00 IST daily heartbeat, plus last kickoff + 2 hours and + 6 hours for competitions that played in the last 24 hours. Weekly stage discovery. A 24-hour freshness check.</div>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Conditional GET is an optimisation, not a truth.</b> Send <span class="mono">If-Modified-Since</span> from the last 200. On 304, reuse the last raw payload and still run the canonical fingerprint. Never skip the standings read.</p>
+            <div class="room"><span class="lbl">E5 window</span><p>EPL, 24 October 2026, 22:00 IST to 25 October, 04:00 IST. The probe runs every five minutes and logs raw hashes, rank, form and max played.</p></div>
+            <p class="small">Do not poll faster than the two-minute cache. Five minutes is the practical floor.</p>
+          </div>
+        </div>
+        <div class="small">After E5: set post-match sweeps to <span class="mono">last kickoff + p95</span>, floored at 30 minutes and capped at 6 hours. Keep the daily heartbeat for retroactive corrections.</div>
+      </section>
+
+      <!-- 34 build map -->
+      <section class="slide" data-sec="Build"
+        data-note="The implementation plan uses milestones M0 to M6. The build plan uses work phases P0 to P10. They are the same journey at two levels. The milestones are the outcomes a reviewer checks; the phases are the order of work. Every phase has a goal, tasks, proof and an exit.">
+        <div>
+          <p class="kicker"><i></i>The build map</p>
+          <h2 class="display" style="margin-top:14px">Milestones and<br>work phases.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:9%">Milestone</th><th style="width:31%">Outcome</th><th style="width:18%">Build phases</th><th>Exit a reviewer can check</th></tr></thead>
+            <tbody>
+              <tr><td>M0</td><td>Decisions and hygiene</td><td>P0, P1</td><td>ADRs exist; dependencies installed; all four gates run on an empty tree.</td></tr>
+              <tr><td>M1</td><td>Schema and contract</td><td>P2, P3</td><td>Schema applies twice; every constraint and assertion has a trap test.</td></tr>
+              <tr><td>M2</td><td>Fetch and raw landing</td><td>P4</td><td>A replay sweep writes page, three standings views and nine feeds; a second sweep writes no duplicate rows.</td></tr>
+              <tr><td>M3</td><td>Parse and canonicalise</td><td>P5</td><td>Golden checksum matches; the 60-column arithmetic is reproduced by counting.</td></tr>
+              <tr><td>M4</td><td>Publish and views</td><td>P6, P7</td><td>Five must-haves green; replay reproduces the content map.</td></tr>
+              <tr><td>M5</td><td>Measurement harness</td><td>P9</td><td>E1 and E3 produce written results; E2 has a scheduled window.</td></tr>
+              <tr><td>M6</td><td>Ops and the v1 gate</td><td>P8, P10</td><td>Two unattended runs; the second writes nothing; a poisoned cohort is refused; backup restore works.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">Phases are sequential. P6 depends on P3 and P5. Nothing else has a hard dependency, but the order de-risks each step.</div>
+      </section>
+
+      <!-- 35 repo -->
+      <section class="slide" data-sec="Build"
+        data-note="This is the repository we create. The left side is the SQL and the package; the right side is the tests and the local data. main.py exists because the quality gate names it literally. The data directory is ignored before the first run because raw payloads are not redistributable.">
+        <div>
+          <p class="kicker"><i></i>The repository</p>
+          <h2 class="display" style="margin-top:14px">What exists<br>after v1.</h2>
+        </div>
+        <div class="body c2">
+          <div class="code">main.py                 entrypoint for the gate
+pyproject.toml          deps + tool config
+config/stages.toml      stage registry
+sql/
+  001_schema.sql        six tables
+  002_assertions.sql    A1–A21
+  003_views.sql         latest / history / delta / freshness
+src/dataderby/
+  cli.py                run | probe | replay | verify | freshness | stages
+  config.py             StageSpec, Settings
+  contract.py           60 columns, 30 standings columns, ownership
+  db.py                 connect, migrate, transaction
+  page.py               stage page, token, stage labels
+  standings.py          three splits from data-team-id
+  fetch.py              session, retries, gate detection
+  raw.py                atomic write + sidecar
+  parse.py              bytes to CandidateRows
+  parse_standings.py    three views to standings rows
+  canonical.py          candidate + standings to fingerprint
+  publish.py            transaction
+  validate.py           A1–A21 execution
+  lock.py               cross-platform lock
+  observe.py            structured JSON logs
+  ulid.py               26-character ULID</div>
+          <div class="code">tests/
+  conftest.py
+  golden/               nine feeds + three standings views
+  fixtures/             poisoned cohorts
+  test_config.py
+  test_contract.py
+  test_schema.py
+  test_parse.py
+  test_standings.py
+  test_canonical.py
+  test_fetch.py
+  test_publish.py
+  test_views.py
+  test_cli.py
+docs/
+  whoscored-decisions.md
+  whoscored-cadence.md
+data/                   ignored: raw/ dataderby.duckdb logs/ state/</div>
+        </div>
+        <div class="small">The package is installed, not a flat script. The src layout only catches import mistakes if the package is installed.</div>
+      </section>
+
+      <!-- 36 rules -->
+      <section class="slide" data-sec="Build"
+        data-note="These rules hold for every phase. uv only. No new dependency without a written reason. Raw is immutable. Data is ignored before the first run. No print for operations. Public functions typed and documented. One writer. The pending dependencies are duckdb and pydantic for runtime, and hypothesis for dev-only property tests.">
+        <div>
+          <p class="kicker"><i></i>Rules and dependencies</p>
+          <h2 class="display" style="margin-top:14px">The rules do not<br>change per phase.</h2>
+        </div>
+        <div class="body c3">
+          <div class="stack">
+            <h3>Ground rules</h3>
+            <p class="small">uv only; no pip, no requirements file.</p>
+            <p class="small">No new dependency without a recorded reason.</p>
+            <p class="small">Raw is immutable; data/ is ignored before the first run.</p>
+            <p class="small">No print for operations; structured JSON via observe.py.</p>
+            <p class="small">Public functions typed, Google-style docstrings.</p>
+            <p class="small">One writer; process lock plus DuckDB's own lock.</p>
+          </div>
+          <div class="stack">
+            <h3>Dependencies</h3>
+            <table class="tbl compact">
+              <thead><tr><th>Package</th><th>Why</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><span class="mono">duckdb</span></td><td>The store</td><td class="no">approval pending</td></tr>
+                <tr><td><span class="mono">pydantic</span></td><td>Config and envelope models</td><td class="no">approval pending</td></tr>
+                <tr><td><span class="mono">hypothesis</span></td><td>Property tests for canonicalisation</td><td class="no">dev-only, pending</td></tr>
+                <tr><td><span class="mono">pytest</span></td><td>Tests</td><td class="ok">existing</td></tr>
+                <tr><td><span class="mono">ruff</span></td><td>Format and lint</td><td class="ok">existing</td></tr>
+                <tr><td><span class="mono">mypy</span></td><td>Types</td><td class="ok">existing</td></tr>
+              </tbody>
+            </table>
+            <p class="small">No pandas, pandera, requests, dlt, dbt or orchestrator. curl-cffi and patchright are already present.</p>
+          </div>
+          <div class="stack">
+            <h3>Quality gates</h3>
+            <div class="code">uv run ruff format --check
+uv run ruff check
+uv run mypy main.py
+uv run pytest</div>
+            <p class="small">All four pass before a phase closes. A fresh clone must pass with no data/ directory present.</p>
+            <div class="note">The gates are local today. CI is a later addition, not a v1 deliverable.</div>
+          </div>
+        </div>
+        <div class="small">If hypothesis is declined, P5 falls back to 20 table-driven cases — workable, but weaker.</div>
+      </section>
+
+      <!-- 37 P0 P1 -->
+      <section class="slide" data-sec="Build"
+        data-note="P0 and P1 make the repository and the decisions. P0 is the skeleton: tool config, an installable package, the dependencies, main.py, the gitignore and a clean uv sync. P1 writes the six decision records, the stage registry and the validated config. The exit is a fresh clone where all four gates pass and the config loads.">
+        <div>
+          <p class="kicker"><i></i>P0–P1 · 1 day</p>
+          <h2 class="display" style="margin-top:14px">Skeleton, decisions,<br>configuration.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <h3>P0 · Skeleton and gates · ½ day</h3>
+            <p class="small"><b>Goal:</b> every quality gate runs and passes before there is any logic.</p>
+            <p class="small">Configure ruff, mypy and pytest. Make the project an installable package. Add duckdb and pydantic; add pytest, ruff, mypy and hypothesis as dev tools. Create main.py and __init__.py. Extend .gitignore. Run uv sync.</p>
+            <p class="small"><b>Proof:</b> ruff format makes no changes; ruff check clean; mypy main.py success; pytest exits 0 with one trivial test.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>A fresh clone runs the four gates green with no data/ directory present.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P1 · Decisions and configuration · ½ day</h3>
+            <p class="small"><b>Goal:</b> the six decision records exist and the stage registry loads with validation.</p>
+            <p class="small">Write ADRs 0001–0006. Create config/stages.toml with the LaLiga 2026/27 stage. Build StageSpec and Settings with ids, season_key, competition, expected_teams, whoscored_page_url and has_league_table. Reject missing keys, duplicate stage ids and unknown keys.</p>
+            <p class="small"><b>Proof:</b> test_config.py loads a valid file; missing key names the field; duplicate id raises; unknown key raises; the repo config parses.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>The config loads and prints the stage; nothing else is needed.</p></div>
+          </div>
+        </div>
+        <div class="small">P0 is the only phase where an empty pytest run is acceptable, and even there we add one trivial test so the gate exits 0.</div>
+      </section>
+
+      <!-- 38 P2 P3 -->
+      <section class="slide" data-sec="Build"
+        data-note="P2 is the contract: one module owns the 60 columns, the 30 standings columns and the expected stat columns. P3 is the schema: six tables that enforce the invariants without application code. The exit for P2 is an arithmetic test that counts. The exit for P3 is a test that proves every constraint fires.">
+        <div>
+          <p class="kicker"><i></i>P2–P3 · 1.5 days</p>
+          <h2 class="display" style="margin-top:14px">Contract, then<br>schema.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <h3>P2 · The contract · ½ day</h3>
+            <p class="small"><b>Goal:</b> one module owns the 60 columns, the 30 standings columns and the source's expected shape.</p>
+            <p class="small">Define SECTIONS, VIEWS, EXPECTED_STAT_COLUMNS, MEASURE_COLUMNS, STANDINGS_MEASURES, OWNERSHIP and WHOSCORED_TO_WAREHOUSE. The expected columns come from the nine captures, not from a document.</p>
+            <p class="small"><b>Proof:</b> 60 unique measures; every expected list matches the golden capture in order; one owner per column; 30 standings measures.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>The 57 − 9 − 6 + 3 + 3 + 3 + 9 = 60 arithmetic is reproduced by a test that counts.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P3 · Schema · 1 day</h3>
+            <p class="small"><b>Goal:</b> six tables that enforce the invariants without application code.</p>
+            <p class="small">Create 001_schema.sql with ingestion_run, raw_capture, competition_snapshot, fact_team_snapshot, fact_standings_snapshot and pipeline_checkpoint. Add db.py with connect, migrate and a transaction context manager. No COMMIT in finally.</p>
+            <p class="small"><b>Proof:</b> schema applies twice; fact without header fails; standings without header fails; duplicate parent/content fails; duplicate stage/observed_at fails; CHECK rejects a negative count and accepts NULL.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>Every constraint has a test that proves it fires.</p></div>
+          </div>
+        </div>
+        <div class="small">The unique edge on parent and content is the dedupe. If someone removes it, every idempotency test must fail.</div>
+      </section>
+
+      <!-- 39 P4 P5 -->
+      <section class="slide" data-sec="Build"
+        data-note="P4 is the page, the standings and the feed: one page load, three standings views and nine feed payloads, written atomically with a ledger row. P5 is parse and canonicalise: nine payloads and three views become 20 times 60 rows, one standings fact and one stable fingerprint. Both phases are tested offline against the captures and a replay server.">
+        <div>
+          <p class="kicker"><i></i>P4–P5 · 2 days</p>
+          <h2 class="display" style="margin-top:14px">Capture, then<br>understand.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <h3>P4 · Fetch and raw landing · 1 day</h3>
+            <p class="small"><b>Goal:</b> the page, three standings views and nine feed payloads on disk, atomically, with a ledger row.</p>
+            <p class="small">Build observe.py and lock.py. page.py loads a headed browser, aborts fingerprint routes, reads the token, the stage labels and the three tables. standings.py parses data-team-id. fetch.py uses one session, 1.2-second pacing, retries, structure-based gate detection. raw.py uses exclusive create, temp-then-replace and a sidecar.</p>
+            <p class="small"><b>Proof:</b> replay server writes page, three standings views and nine files whose SHA-256 match; a second sweep writes no duplicate ledger rows; gate, 403, truncated body, BOM and empty body are covered.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>The page, three standings views and nine feeds are on disk; a second identical sweep adds nothing.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P5 · Parse and canonicalise · 1 day</h3>
+            <p class="small"><b>Goal:</b> nine payloads and three views become 20 × 60 rows, one standings fact and one stable fingerprint.</p>
+            <p class="small">parse.py produces SourceRows and a Candidate. parse_standings.py produces one row per team with three splits. canonical.py sorts rows and keys, uses repr for floats, includes the 60 and the 30, excludes paging, name and order. Copy goldens and expected.json.</p>
+            <p class="small"><b>Proof:</b> golden parse; drift trap; missing value becomes NULL; 19-team cohort raises; row reorder does not change the fingerprint; one measure change does; rank or form change does.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>The golden checksum matches; property tests pass.</p></div>
+          </div>
+        </div>
+        <div class="small">P4 does not parse; P5 does not fetch. The boundary keeps both testable.</div>
+      </section>
+
+      <!-- 40 P6 P7 -->
+      <section class="slide" data-sec="Build"
+        data-note="P6 is the transaction that makes the system safe to retry, crash and backfill. P7 is the views that answer the questions without repeating the old bugs. The exit for P6 is the five must-haves plus the crash and revert cases. The exit for P7 is five view tests, including the latest-state leak and the standings join.">
+        <div>
+          <p class="kicker"><i></i>P6–P7 · 2 days</p>
+          <h2 class="display" style="margin-top:14px">Publish, then<br>serve.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <h3>P6 · Publish · 1.5 days</h3>
+            <p class="small"><b>Goal:</b> one transaction that is safe to retry, crash and backfill.</p>
+            <p class="small">validate.py runs A1–A21 and maps each to BLOCK, RETRY or WARN. publish.py begins, inserts the header with ON CONFLICT DO NOTHING RETURNING, inserts the 20 team rows and the standings rows, updates the checkpoint and commits. Literal SQL builder; no parameters. Parent is the latest accepted by observed_at. reconcile at startup.</p>
+            <p class="small"><b>Proof:</b> publish twice → one snapshot; crash after header → zero snapshots; standings failure rolls back the team facts; knockout publishes zero standings rows; revert → three snapshots; backfill does not become latest; constraint error leaves a clean connection.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>Publish tests green against a temp DuckDB file, not :memory:.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P7 · Views · ½ day</h3>
+            <p class="small"><b>Goal:</b> the questions the data can answer, with the known bugs designed out.</p>
+            <p class="small">Create v_latest_team_state, v_latest_standings, v_latest_team_with_standings, v_standings_history, v_snapshot_delta and v_pipeline_freshness. Pick the snapshot first; delta over full history; join on ids, never names.</p>
+            <p class="small"><b>Proof:</b> latest-state leak; delta partition gap; backfill does not change latest; standings join has one row per team; knockout has zero standings columns populated; freshness has one row per stage.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>Five view tests green; the latest query is a view, not a CTE copied into dashboards.</p></div>
+          </div>
+        </div>
+        <div class="small">P6 is where the system becomes safe. Nothing before it is allowed to write to the real database.</div>
+      </section>
+
+      <!-- 41 P8 P10 -->
+      <section class="slide" data-sec="Build"
+        data-note="P8 to P10 close the loop. P8 is the operator interface: run, probe, replay, verify, freshness and stages, with explicit exit codes. P9 turns the experiments into commands. P10 is the v1 gate: schedule, backup, the licence record, the README and two unattended runs. The second run must report no_change and write nothing.">
+        <div>
+          <p class="kicker"><i></i>P8–P10 · 2.5 days</p>
+          <h2 class="display" style="margin-top:14px">Operate, measure,<br>close the gate.</h2>
+        </div>
+        <div class="body c3">
+          <div class="stack">
+            <h3>P8 · CLI and operations · 1 day</h3>
+            <p class="small">argparse, no new dependency. Commands: <span class="mono">run</span>, <span class="mono">probe</span>, <span class="mono">replay</span>, <span class="mono">verify</span>, <span class="mono">freshness</span>, <span class="mono">stages</span>.</p>
+            <p class="small">Exit codes: 0 ok/no_change · 2 fetch_failed · 3 blocked · 4 config · 5 locked · 6 internal.</p>
+            <p class="small">Replay compares the stage and observation address to the content fingerprint; it does not compare ids. Verify checks the anti-join, the unique edge and the address uniqueness.</p>
+            <div class="exit"><span class="lbl">Exit</span><p><span class="mono">run --dry-run</span> exits 0 and writes nothing; freshness prints one row per stage.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P9 · Measurement · ½ day</h3>
+            <p class="small">Add <span class="mono">measure e1|e3|e5</span>. Write the E2 protocol and report template. Seed <span class="mono">docs/open-questions.md</span> with E1–E6, owner and status.</p>
+            <p class="small">E1 and E3 must produce a written result from live data. E2 must have a scheduled window.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>The open questions are commands and documents, not a chat thread.</p></div>
+          </div>
+          <div class="stack">
+            <h3>P10 · The v1 gate · 1 day</h3>
+            <p class="small">Schedule the daily heartbeat and post-match window. Back up raw and document a restore drill. Point ADR 0006 at the 2026-10-20 decision. Write the README limits.</p>
+            <p class="small"><b>Gate:</b> two unattended runs; second writes nothing; poisoned 19-team cohort refused; freshness shows both; restored raw replays to the same content map; all four AGENTS gates pass.</p>
+            <div class="exit"><span class="lbl">Exit</span><p>v1 is done when a reviewer can check these six conditions without reading the code.</p></div>
+          </div>
+        </div>
+        <div class="small">The licence is already decided. The remaining M6 work is the record link and the backup/replay drill, not a legal decision.</div>
+      </section>
+
+      <!-- 42 first 48 -->
+      <section class="slide" data-sec="Build"
+        data-note="The first two days are 24 hours of work, not 48 hours of clock time. P0 and P1 are the skeleton and decisions. P2 is the contract. P3 is the schema. P4 is the page, standings and fetch. P5 is parse and canonicalise. P6 is where the system becomes safe; nothing before it writes to the real database.">
+        <div>
+          <p class="kicker"><i></i>The first 48 hours</p>
+          <h2 class="display" style="margin-top:14px">The order I<br>would start in.</h2>
+        </div>
+        <div class="body c2">
+          <table class="tbl">
+            <thead><tr><th>Step</th><th>Phase</th><th class="n">Hours</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Skeleton; all gates green</td><td class="n">2</td></tr>
+              <tr><td>2</td><td>ADRs 0001–0005 and the stage registry</td><td class="n">2</td></tr>
+              <tr><td>3</td><td>Contract; 60-column and 30-standings tests</td><td class="n">3</td></tr>
+              <tr><td>4</td><td>Schema and db.py; schema tests</td><td class="n">5</td></tr>
+              <tr><td>5</td><td>Page, standings and fetch against the replay server</td><td class="n">6</td></tr>
+              <tr><td>6</td><td>Parse and canonicalise; goldens and property tests</td><td class="n">6</td></tr>
+              <tr class="hi"><td></td><td><b>Total</b></td><td class="n"><b>24</b></td></tr>
+            </tbody>
+          </table>
+          <div class="stack">
+            <p class="body">That is two working days. The proof for each step is a gate, not a demo.</p>
+            <div class="room"><span class="lbl">P6</span><p>P6 is where the system becomes safe. Nothing before it is allowed to write to the real database.</p></div>
+            <p class="small">P0 needs no external dependency beyond the tools already in the repository; P3 needs DuckDB and Pydantic approval.</p>
+          </div>
+        </div>
+        <div class="small">The 24 hours are estimates for the work, not a promise about elapsed time.</div>
+      </section>
+
+      <!-- 43 risks -->
+      <section class="slide" data-sec="Risks"
+        data-note="These are the risks that remain after the design. Each has a likelihood, an impact and a mitigation. The source can change shape, the gate can tighten, the raw archive can be lost, and the team id can be unstable across seasons. The plan does not pretend these are solved; it says how we detect them.">
+        <div>
+          <p class="kicker"><i></i>Risks</p>
+          <h2 class="display" style="margin-top:14px">What can still<br>bite.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:27%">Risk</th><th style="width:10%">Likelihood</th><th style="width:10%">Impact</th><th>Mitigation and detection</th></tr></thead>
+            <tbody>
+              <tr><td>Gate tightens: cookie-bound or JavaScript</td><td>Medium</td><td>High</td><td>patchright fallback is installed; E6 measures; gate rate in freshness.</td></tr>
+              <tr><td>Source changes shape mid-season</td><td>Medium</td><td>Medium</td><td>A15 blocks; raw keeps the evidence; parser repair and replay.</td></tr>
+              <tr><td>Silent mid-publish cohort</td><td>Medium</td><td>High</td><td>A4–A6 plus retry; validation failures and correction flag.</td></tr>
+              <tr><td>Licence is withdrawn or terms change</td><td>Low</td><td>Total</td><td>The recorded posture is local, private and non-redistributed; re-check before publication.</td></tr>
+              <tr><td>Out-of-order backfill</td><td>Low</td><td>Medium</td><td>History is ordered by observed_at; replay proves the content map.</td></tr>
+              <tr><td>Raw archive lost</td><td>Low</td><td>Total</td><td>Backup plus a restore drill at the v1 gate.</td></tr>
+              <tr><td>DuckDB lock contention</td><td>Low</td><td>Low</td><td>Single-writer process lock; exit code 5.</td></tr>
+              <tr><td>A10 blocks a legitimate revocation</td><td>Low</td><td>Medium</td><td>Explicit, logged <span class="mono">--allow-apps-decrease</span>.</td></tr>
+              <tr><td>Standings DOM or split toggle changes</td><td>Medium</td><td>Medium</td><td>A18–A21 block; page HTML is raw, so the parser can be repaired and replayed.</td></tr>
+              <tr><td>Page gate while the feed is open</td><td>Medium</td><td>Medium</td><td>A gate is <span class="mono">blocked</span>, not a partial snapshot; one page request per stage.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">A risk with no detection is not mitigated. Every row names what tells us it happened.</div>
+      </section>
+
+      <!-- 44 abandon -->
+      <section class="slide dark" data-sec="Risks"
+        data-note="A plan without a falsifier is a belief. These are the four findings that would make me stop and redesign rather than patch. If the summary table is unchanged while details move, the probe is useless. If team ids are unstable, identity needs a crosswalk sooner. If the licence is withdrawn, v1 becomes an offline exercise. If the source stops publishing cumulative tables, the snapshot premise is wrong.">
+        <div>
+          <p class="kicker"><i></i>What would make us abandon</p>
+          <h2 class="display" style="margin-top:14px">The findings that<br>change the plan.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="card a-up"><div class="tag">E2 fails</div><h3>The table is unchanged while details move.</h3><p>The probe is useless. The design survives, but the schedule must be full sweeps and the cost model in the decks does not.</p></div>
+            <div class="card a-up"><div class="tag">E4 fails</div><h3>Team ids are not stable across seasons.</h3><p>Identity needs a name-based crosswalk sooner than planned, and the deferred dimension stops being optional.</p></div>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Licence</div><h3>The decision is withdrawn.</h3><p>v1 becomes an offline exercise over the captured evidence, and M5 and M6 change shape entirely.</p></div>
+            <div class="card a-up"><div class="tag">Source</div><h3>It stops publishing cumulative tables.</h3><p>The snapshot premise is wrong. The plan should be discarded, not patched into a match feed.</p></div>
+          </div>
+        </div>
+        <div class="small">These are not edge cases. They are the assumptions the plan is built on.</div>
+      </section>
+
+      <!-- 45 decisions -->
+      <section class="slide dark" data-sec="Decide"
+        data-note="Three things are decided: the licence is accepted, the scope is A plus C, and the identity is a ULID with a unique edge. Two things need approval before the build goes past P0: the runtime dependencies duckdb and pydantic, and hypothesis as a dev-only property-test tool. The report, the deck and the plans are uncommitted.">
+        <div>
+          <p class="kicker"><i></i>Decisions and next steps</p>
+          <h2 class="display" style="margin-top:14px">What is settled.<br>What I need.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Decision</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Licence: <span class="mono">isOpta</span> for internal use</td><td class="ok">accepted, 20 Oct 2026</td></tr>
+                <tr><td>Scope: 60 columns plus standings at the same grain</td><td class="ok">decided</td></tr>
+                <tr><td>Identity: ULID plus unique parent/content edge</td><td class="ok">decided</td></tr>
+                <tr><td>Stage registry: <span class="mono">config/stages.toml</span>, not a scrape</td><td class="ok">decided</td></tr>
+                <tr><td>Raw payloads: persist page, standings and nine feeds</td><td class="ok">decided</td></tr>
+                <tr><td>Runtime dependencies: <span class="mono">duckdb</span>, <span class="mono">pydantic</span></td><td class="no">approval pending</td></tr>
+                <tr><td>Dev dependency: <span class="mono">hypothesis</span></td><td class="no">approval pending</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <h3>Next</h3>
+            <p class="body">1. Approve the runtime and dev dependencies.</p>
+            <p class="body">2. Start P0: the skeleton and the four gates.</p>
+            <p class="body">3. Run P1 to P3: decisions, config, contract and schema.</p>
+            <p class="body">4. Run E5 on the 24 October EPL window.</p>
+            <div class="room"><span class="lbl">State</span><p>The report, the discovery deck and the plans are written. The working tree is uncommitted. No pipeline code has been written yet.</p></div>
+          </div>
+        </div>
+        <div class="small">The plan is executable without further design work. The only thing missing is the dependency approval to start P0.</div>
+      </section>
+
+    </div>
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">←</button>
+      <button id="next" aria-label="Next">→</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) {
+    return dec ? v.toFixed(+dec) : String(Math.round(v));
+  }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+
+    const paths = slide.querySelectorAll('.pitch path,.pitch circle,.pitch rect');
+    if (paths.length) {
+      paths.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(paths, { strokeDashoffset: 0, duration: 1.6, stagger: .03, ease: 'power2.out' }, .1);
+    }
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    document.body.classList.toggle('dark', slide.classList.contains('dark'));
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) {
+      show(i, true);
+      busy = false;
+      return;
+    }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>

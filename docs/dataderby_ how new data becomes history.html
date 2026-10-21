@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>dataderby: how new data becomes history</title>
+<style>
+:root{--bg:#f4f2ec;--fg:#1c2128;--mu:#5c646e;--card:#fff;--bd:#dcd9d0;--bl:#1d4ed8;--am:#b45309;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--fg:#eef1f5;--mu:#9aa6b2;--card:#18202a;--bd:#2c3440;--bl:#6ea8ff;--am:#f5a742;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141b;--fg:#eef1f5;--mu:#9aa6b2;--card:#18202a;--bd:#2c3440;--bl:#6ea8ff;--am:#f5a742;color-scheme:dark}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'Helvetica Neue',Arial,sans-serif;overflow:hidden}
+.s{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;gap:2.2vmin;box-sizing:border-box;padding:calc(4vmin + env(safe-area-inset-top,0px)) 6vw calc(12vmin + env(safe-area-inset-bottom,0px));overflow:auto}
+h1{font-size:clamp(34px,7vw,84px);margin:0;line-height:1.05}
+h2{font-size:clamp(24px,4vw,50px);margin:0;line-height:1.1}
+p{margin:0}.mu{color:var(--mu)}.am{color:var(--am)}.bl{color:var(--bl)}
+.lead{font-size:clamp(18px,2.6vw,32px);line-height:1.35;color:var(--mu)}
+.cap{display:grid;min-height:4.6em;font-size:clamp(16px,2.2vw,27px);line-height:1.35}.cap span{grid-area:1/1}
+.ng .cap span{grid-area:auto}
+svg{width:100%;max-height:52vh}svg text{fill:var(--fg);font-family:inherit}
+.n{fill:var(--card);stroke:var(--bl);stroke-width:3}.t2{fill:var(--mu)!important}
+.ln{stroke:var(--mu);stroke-width:3;fill:none}.hd{fill:var(--mu)}
+.row{display:grid;grid-template-columns:.6fr 1.3fr 1fr .8fr;gap:12px;padding:9px 14px;background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;font-size:clamp(14px,1.9vw,23px)}
+.row.d{grid-template-columns:1.5fr repeat(4,1fr)}.hdr{background:none;border:0;color:var(--mu)}
+.g{position:relative;margin-bottom:10px}.fr{position:absolute;inset:-4px;border:3px solid var(--bl);border-radius:12px;pointer-events:none}
+.gr{display:grid;grid-template-columns:2.4em 1fr;gap:10px;align-items:center}
+.cells{display:grid;grid-template-columns:repeat(20,1fr);gap:5px}
+.c{position:relative;aspect-ratio:1;background:var(--bl);border-radius:6px}
+.c i{position:absolute;inset:0;background:var(--am);border-radius:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-top:5px solid var(--bl);border-radius:14px;padding:18px;font-size:clamp(15px,2vw,24px);line-height:1.3}
+.card b{display:block;margin-bottom:6px;font-size:1.1em}
+.badge{display:inline-block;padding:8px 14px;border:2px solid var(--am);border-radius:10px;color:var(--am);font-weight:700;font-size:clamp(15px,2vw,24px)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 6vw calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--bd);font-size:18px;color:var(--mu)}
+nav button{font:inherit;font-weight:700;padding:10px 22px;border-radius:10px;border:2px solid var(--bl);background:none;color:var(--bl);cursor:pointer}
+nav button:disabled{opacity:.35;cursor:default}
+</style>
+</head>
+<body>
+<section class="s" data-id="title">
+<p class="bl" style="font-weight:700;font-size:clamp(14px,2vw,24px)">DATADERBY · ARCHITECTURE</p>
+<h1>How new data becomes history</h1>
+<p class="lead">Data flow, snapshot storage, and three edge cases. Press Next or the right arrow to step through.</p>
+</section>
+
+<section class="s" data-id="flow">
+<h2>One capture, five steps, one snapshot</h2>
+<svg id="fs" viewBox="0 0 1000 330" aria-label="Pipeline: source, raw files, parse, validate, publish, with a reject branch and a snapshot stack"></svg>
+<div class="cap"><span class="c1">The sweep saves the source answer as a raw file. Nothing is changed. Raw files only grow.</span><span class="c2">Parse turns the raw file into typed rows. We can redo this step from the raw file at any time.</span><span class="c3">Validate checks the whole cohort. If one check fails, we reject it and keep the evidence.</span><span class="c4">Publish writes the header and all team rows in one transaction. All or nothing.</span><span class="c5">Only now does the checkpoint move. A crash before this line means a safe retry.</span></div>
+</section>
+
+<section class="s" data-id="store">
+<h2>History is stored by adding rows, never by editing</h2>
+<p class="mu">Example data. Each snapshot holds every team. Three teams shown.</p>
+<div id="tb"></div>
+<div class="cap"><span class="c1">Snapshot S1 arrives. Three rows are added.</span><span class="c2">S2 arrives. Three new rows go under S1. S1 is not touched.</span><span class="c3">S3 arrives. The table only grows. A retry cannot overwrite a row.</span><span class="c4">“Latest” is a view. It picks the newest accepted snapshot, then reads its rows. Old snapshots stay for history.</span></div>
+</section>
+
+<section class="s" data-id="one">
+<h2>Edge case 1: only one team’s numbers change</h2>
+<div id="g1"></div><div id="g2"></div>
+<div class="cap"><span class="c1">S1: a full snapshot of 20 teams.</span><span class="c2">S2: still 20 rows. 19 rows repeat the old values. We copy them, so every snapshot is a complete cohort.</span><span class="c3">One team changed, 10 → 13 points. The delta view shows only that team. The extra rows cost a few KB.</span></div>
+</section>
+
+<section class="s" data-id="win">
+<h2>Edge case 2: two matches end 5 minutes apart</h2>
+<svg id="ts" viewBox="0 0 1000 310" aria-label="Timeline: two match ends, two separate sweeps versus one sweep after a shared window, and a bounded retry"></svg>
+<div class="cap"><span class="c1">Match 1 and match 2 finish 5 minutes apart. The fixture list tells us these times.</span><span class="c2">Naive: one sweep per match. That is 2 sweeps, 18 requests. The source publishes both results together anyway.</span><span class="c3">Better: merge both end times into one window. Wait the grace time after the last end. Then run one sweep, 9 requests.</span><span class="c4">If the source is late, retry a few times, then stop. We log “source late”. No endless polling.</span></div>
+</section>
+
+<section class="s" data-id="void">
+<h2>Edge case 3: a result is revoked</h2>
+<p class="mu">Example: Team A beat Team B 2–1. Later the match is voided.</p>
+<div id="dt"></div>
+<div class="cap"><span class="c1">S1 and S2 are accepted. S2 counted the match: +3 points, +2 goals for A.</span><span class="c2">S3 shows the old totals again. We add S3 as a new snapshot. S2 stays as it was. We never edit it.</span><span class="c3">The delta is negative. A running total should not go down. So we flag it as a correction, not as a new match.</span><span class="c4">Latest shows S3. History keeps S2. We can still show that the match was counted and then revoked.</span></div>
+<p class="badge" id="bd">Negative change in a running total = correction</p>
+</section>
+
+<section class="s" data-id="sum">
+<h2>Four rules to remember</h2>
+<div class="cards" id="cd"></div>
+<p class="mu" id="nt">Open check: does an unchanged table mean unchanged details? Measure it before skipping any fetch. Counts and times here are examples.</p>
+</section>
+
+<nav><button id="pv">Back</button><span id="ct"></span><button id="nx">Next</button></nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const G=window.gsap,R=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $$=(s,e=document)=>[...e.querySelectorAll(s)],S=$$('.s'),B={},st=[];let cur=-1;
+if(!G)document.body.classList.add('ng');
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" ${o}>${t}</text>`;
+const head=(x,y)=>`<polygon points="${x},${y} ${x-12},${y-8} ${x-12},${y+8}" fill="var(--mu)"/>`;
+/* slide 2 */
+(()=>{const N=[['Source','feed'],['Raw files','append-only'],['Parse','typed rows'],['Validate','whole cohort'],['Publish','1 transaction']];let h='';
+N.forEach((n,i)=>{const x=i*212;h+=`<g class="n${i}"><rect class="n" x="${x}" y="30" width="150" height="84" rx="12"/>${T(x+75,68,n[0],'text-anchor="middle" font-size="24" font-weight="700"')}${T(x+75,96,n[1],'class="t2" text-anchor="middle" font-size="19"')}</g>`;
+if(i<4)h+=`<g class="a${i}"><line class="ln" x1="${x+152}" y1="72" x2="${x+198}" y2="72"/>${head(x+210,72)}</g>`});
+h+=`<g class="rj"><line x1="711" y1="116" x2="711" y2="196" stroke="var(--am)" stroke-width="3" stroke-dasharray="7 5"/><rect x="611" y="198" width="200" height="60" rx="12" fill="var(--card)" stroke="var(--am)" stroke-width="3"/>${T(711,224,'Reject','text-anchor="middle" font-size="22" font-weight="700"')}${T(711,248,'keep evidence','class="t2" text-anchor="middle" font-size="18"')}</g>`;
+h+=`<g class="stk">${[1,2,3].map((k,i)=>`<g class="sk"><rect x="${848}" y="${196+i*34}" width="150" height="28" rx="6" fill="var(--bl)"/>${T(923,216+i*34,'S'+k,'text-anchor="middle" font-size="19" fill="#fff" style="fill:#fff"')}</g>`).join('')}</g>`;
+h+=`<g class="cp">${T(923,318,'checkpoint → S3','text-anchor="middle" font-size="21" font-weight="700" style="fill:var(--bl)"')}</g><circle id="pk" cx="75" cy="72" r="13" fill="var(--am)"/>`;
+$$('#fs')[0].innerHTML=h})();
+/* slide 3 */
+(()=>{const D=[['S1','Sat 18:00',[10,8,7]],['S2','Sun 20:00',[13,8,7]],['S3','Mon 09:00',[13,11,7]]];
+let h=`<div class="row hdr"><span>Snapshot</span><span>Observed</span><span>Team</span><span>Points</span></div>`;
+D.forEach((d,i)=>{h+=`<div class="g g${i+1}">`+d[2].map((p,j)=>`<div class="row"><b>${d[0]}</b><span>${d[1]}</span><span>Team ${'ABC'[j]}</span><span>${p}</span></div>`).join('')+`<div class="fr"></div></div>`});
+$$('#tb')[0].innerHTML=h})();
+/* slide 4 */
+(()=>{const c=(r)=>`<div class="gr"><b>${r}</b><div class="cells">${Array.from({length:20},(_,i)=>`<div class="c ${r}">${r=='S2'&&i==6?'<i></i>':''}</div>`).join('')}</div></div>`;
+$$('#g1')[0].innerHTML=c('S1');$$('#g2')[0].innerHTML=c('S2')})();
+/* slide 5 */
+(()=>{let h=`<line class="ln" x1="40" y1="170" x2="960" y2="170"/>`;
+[[260,'Match 1 ends'],[330,'Match 2 ends']].forEach((m,i)=>{h+=`<g class="m"><circle cx="${m[0]}" cy="170" r="11" fill="var(--bl)"/>${T(m[0],i?210:150,m[1],'text-anchor="middle" font-size="19"')}</g>`});
+h+=`<g class="nv">${[[460,30],[530,100]].map((p,i)=>`<line x1="${p[0]}" y1="${p[1]+50}" x2="${p[0]}" y2="158" stroke="var(--am)" stroke-width="3"/><rect x="${p[0]-50}" y="${p[1]}" width="100" height="50" rx="10" fill="var(--card)" stroke="var(--am)" stroke-width="3"/>${T(p[0],p[1]+31,'sweep '+(i+1),'text-anchor="middle" font-size="19"')}`).join('')}${T(640,70,'2 sweeps = 18 requests','font-size="22" font-weight="700" style="fill:var(--am)"')}</g>`;
+h+=`<g class="cw"><rect x="260" y="160" width="270" height="20" rx="6" fill="var(--bl)" opacity=".45"/>${T(395,150,'one window + grace time','text-anchor="middle" font-size="18"')}<line x1="530" y1="182" x2="530" y2="236" stroke="var(--bl)" stroke-width="3"/><rect x="480" y="236" width="100" height="50" rx="10" fill="var(--card)" stroke="var(--bl)" stroke-width="3"/>${T(530,267,'sweep','text-anchor="middle" font-size="19"')}${T(600,268,'1 sweep = 9 requests','font-size="22" font-weight="700" style="fill:var(--bl)"')}</g>`;
+h+=`<g class="rt"><line x1="580" y1="261" x2="760" y2="261" stroke="var(--am)" stroke-width="3" stroke-dasharray="7 5"/><rect x="760" y="236" width="150" height="50" rx="10" fill="var(--card)" stroke="var(--am)" stroke-width="3" stroke-dasharray="7 5"/>${T(835,267,'retry (few)','text-anchor="middle" font-size="19"')}</g>`;
+$$('#ts')[0].innerHTML=h})();
+/* slide 6 */
+(()=>{const D=[['Team A points',10,13,10,'−3'],['Team A goals',12,14,12,'−2'],['Team B goals',9,10,9,'−1']];
+const r=(a,cls)=>`<div class="row d ${cls}"><span class="k1">${a[0]}</span><span class="k1">${a[1]}</span><span class="k1">${a[2]}</span><span class="k2">${a[3]}</span><span class="k3 am">${a[4]}</span></div>`;
+$$('#dt')[0].innerHTML=r(['Metric','S1','S2','S3','Δ S2→S3'],'hdr')+D.map(d=>r(d,'')).join('')})();
+/* slide 7 */
+$$('#cd')[0].innerHTML=[['Append, never edit','New state = new rows. Old rows stay.'],['One window, one sweep','Merge close match ends. Wait. Fetch once.'],['Full cohort every time','All teams, or the snapshot is rejected.'],['Corrections are snapshots','A drop in a total is flagged, not hidden.']].map(c=>`<div class="card"><b>${c[0]}</b>${c[1]}</div>`).join('');
+/* builders */
+const rv=(s,q,pos=0,x=0,y=14)=>s.fromTo(q,{autoAlpha:0,x,y},{autoAlpha:1,x:0,y:0,duration:.45,stagger:.1},pos);
+const cap=(s,q,k)=>{if(k>1)s.to(q('.c'+(k-1)),{autoAlpha:0,duration:.2},0);s.fromTo(q('.c'+k),{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.4},0)};
+B.flow=(step,q)=>{for(let k=1;k<=4;k++)step(s=>{rv(s,q('.a'+(k-1)+',.n'+k),0,0,0);s.to(q('#pk'),{x:212*k,duration:.7,ease:'power2.inOut'},.15);cap(s,q,k);if(k==3)rv(s,q('.rj'),.5);if(k==4)rv(s,q('.sk'),.5,-16,0)});
+step(s=>{cap(s,q,5);rv(s,q('.cp'),0)})};
+B.store=(step,q)=>{for(let k=1;k<=3;k++)step(s=>{rv(s,q('.g'+k+' .row'),0,-16,0);cap(s,q,k)});
+step(s=>{s.to(q('.g1,.g2'),{opacity:.3,duration:.4},0);rv(s,q('.g3 .fr'),0,0,0);cap(s,q,4)})};
+B.one=(step,q)=>{step(s=>{s.fromTo(q('.c.S1'),{autoAlpha:0,scale:.6},{autoAlpha:1,scale:1,duration:.4,stagger:.02},0);cap(s,q,1)});
+step(s=>{s.fromTo(q('.c.S2'),{autoAlpha:0,scale:.6},{autoAlpha:1,scale:1,duration:.4,stagger:.02},0);cap(s,q,2)});
+step(s=>{s.fromTo(q('.c i'),{autoAlpha:0,scale:.3},{autoAlpha:1,scale:1,duration:.5,ease:'back.out(2)'},0);cap(s,q,3)})};
+B.win=(step,q)=>{step(s=>{rv(s,q('.m'),0,0,0);cap(s,q,1)});
+step(s=>{rv(s,q('.nv'),0);cap(s,q,2)});
+step(s=>{s.to(q('.nv'),{opacity:.25,duration:.4},0);rv(s,q('.cw'),.2);cap(s,q,3)});
+step(s=>{rv(s,q('.rt'),0);cap(s,q,4)})};
+B.void=(step,q)=>{step(s=>{rv(s,q('.k1'),0,0,10);cap(s,q,1)});
+step(s=>{rv(s,q('.k2'),0,0,10);cap(s,q,2)});
+step(s=>{rv(s,q('.k3'),0,0,10);rv(s,q('#bd'),.3);cap(s,q,3)});
+step(s=>{cap(s,q,4)})};
+B.sum=(step,q)=>{step(s=>rv(s,q('.card'),0));step(s=>rv(s,q('#nt'),0,0,8))};
+/* engine */
+function build(i){const el=S[i],tl=G.timeline({paused:true}),ends=[0];
+const step=fn=>{const s=G.timeline();fn(s);tl.add(s,'>');ends.push(tl.duration())};
+if(B[el.dataset.id])B[el.dataset.id](step,sel=>$$(sel,el));st[i]={tl,ends,k:0}}
+function upd(){const x=st[cur];$$('#ct')[0].textContent=(cur+1)+' / '+S.length+(x&&x.ends.length>1?' · step '+x.k+' of '+(x.ends.length-1):'');
+$$('#pv')[0].disabled=cur==0&&(!x||x.k==0);$$('#nx')[0].disabled=cur==S.length-1&&(!x||x.k>=x.ends.length-1)}
+function go(i,fin){if(i<0||i>=S.length)return;if(G&&!st[i])build(i);if(cur>=0)S[cur].style.display='none';cur=i;const s=S[i];s.style.display='flex';
+if(G){const x=st[i];G.killTweensOf(s);G.killTweensOf(x.tl);x.k=fin?x.ends.length-1:0;x.tl.pause().time(x.ends[x.k],true);
+if(R)G.set(s,{opacity:1});else G.fromTo(s,{opacity:0},{opacity:1,duration:.3,overwrite:true})}upd()}
+function nxt(){const x=st[cur];if(!G||!x||x.k>=x.ends.length-1){go(cur+1,0);return}
+x.k++;G.killTweensOf(x.tl);R?x.tl.time(x.ends[x.k],true):x.tl.tweenTo(x.ends[x.k],{ease:'none'});upd()}
+function prv(){const x=st[cur];if(!G||!x||x.k<=0){go(cur-1,1);return}
+x.k--;G.killTweensOf(x.tl);R?x.tl.time(x.ends[x.k],true):x.tl.tweenTo(x.ends[x.k],{duration:.3,ease:'power1.out'});upd()}
+$$('#nx')[0].onclick=nxt;$$('#pv')[0].onclick=prv;
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();nxt()}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prv()}});
+go(0,0);
+</script>
+</body>
+</html>

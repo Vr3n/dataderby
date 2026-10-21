@@ -1,0 +1,54 @@
+{
+  "canonical": {
+    "row_reorder_stable": true,
+    "key_reorder_stable": true,
+    "json_roundtrip_stable": true,
+    "one_value_change_detected": true
+  },
+  "spurious": {
+    "a": {
+      "reason": "no_change",
+      "snapshots": 1
+    },
+    "b": {
+      "reason": "no_change",
+      "snapshots": 1
+    },
+    "bnull": {
+      "reason": "no_change",
+      "snapshots": 1
+    }
+  },
+  "rebuild": {
+    "a": {
+      "approach": "A-derived",
+      "snapshots": 200,
+      "rebuild_ms_total": 15974.5,
+      "rebuild_ms_per_snapshot": 79.873,
+      "db_bytes": 3420160,
+      "bytes_per_snapshot": 17100.8,
+      "bytes_per_fact_row": 855.0,
+      "id_examples": [
+        "snap_56822dad813380f427bbeae854b068d2",
+        "snap_b1c7194d8b5afd1ff51ed01f135eb2fb",
+        "snap_7ce8214b10dc1cbf6c3de46ceb05b5a5"
+      ],
+      "id_length": 37
+    },
+    "b": {
+      "approach": "B-ulid",
+      "snapshots": 200,
+      "rebuild_ms_total": 17827.2,
+      "rebuild_ms_per_snapshot": 89.136,
+      "db_bytes": 3682304,
+      "bytes_per_snapshot": 18411.5,
+      "bytes_per_fact_row": 920.6,
+      "id_examples": [
+        "01M5A7TE8EHAKKG8HWTCHC4PQJ",
+        "01M5A7TEAX9BX0YRN53JB22XFX",
+        "01M5A7TEDSMRG1Y2DE7XC8BED8"
+      ],
+      "id_length": 26
+    }
+  }
+}
