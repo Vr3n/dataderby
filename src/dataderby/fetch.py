@@ -19,15 +19,15 @@ from dataderby.contract import EXPECTED_STAT_COLUMNS, SECTIONS, VIEWS, Section, 
 
 FEED_URL = "https://www.whoscored.com/statisticsfeed/1/getteamstatistics"
 
-_CATEGORY: dict[Section, str] = {
-    "summary": "summaryteam",
+_SUBCATEGORY: dict[Section, str] = {
+    "summary": "all",
     "defensive": "defensive",
     "offensive": "offensive",
 }
-_SUBCATEGORY: dict[View, str] = {
-    "overall": "all",
-    "home": "home",
-    "away": "away",
+_FIELD: dict[View, str] = {
+    "overall": "Overall",
+    "home": "Home",
+    "away": "Away",
 }
 
 
@@ -68,12 +68,24 @@ def feed_url(
     *,
     base_url: str = FEED_URL,
 ) -> str:
-    """Build one feed URL for a configured stage."""
+    """Build one feed URL for a configured stage.
+
+    The live endpoint takes the section in ``subcategory`` and the split in
+    ``field``. ``category`` is always ``summaryteam``; sending ``defensive``
+    there, or a split in ``subcategory``, returns a body with an empty
+    ``statColumns`` list, which the contract check correctly rejects.
+    """
     query = urlencode(
         {
             "stageId": spec.whoscored_stage_id,
-            "category": _CATEGORY[section],
-            "subcategory": _SUBCATEGORY[view],
+            "category": "summaryteam",
+            "subcategory": _SUBCATEGORY[section],
+            "field": _FIELD[view],
+            "statsAccumulationType": 0,
+            "tournamentOptions": spec.whoscored_tournament_id,
+            "numberOfTeamsToPick": spec.expected_teams,
+            "isCurrent": "true",
+            "sortBy": "Rating",
         }
     )
     return f"{base_url}?{query}"

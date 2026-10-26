@@ -73,6 +73,12 @@ def test_parses_three_views_and_preserves_team_ids() -> None:
     assert parsed["overall"][0].form == "wwwwww"
 
 
+def test_uppercase_form_is_normalised_to_lowercase() -> None:
+    row = _row(211, "Brighton", 1, played=3, form="WWL")
+
+    assert parse_view("overall", (row,))[0].form == "wwl"
+
+
 def test_form_length_follows_played() -> None:
     short = (_row(211, "Brighton", 1, played=3, form="wdl"),)
     assert parse_view("overall", short)[0].form == "wdl"

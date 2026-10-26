@@ -129,11 +129,12 @@ def parse_capture(section: Section, view: View, body: bytes) -> list[SourceRow]:
         team_id = _as_int(item["teamId"], "teamId")
         if team_id is None or team_id <= 0:
             raise SourceParseError(f"invalid teamId: {item['teamId']!r}")
+        # ``name`` is the short label ("Man City"); ``teamName`` is the full
+        # name ("Manchester City") and matches the standings table. The full
+        # name is the warehouse key, so the short label is not compared.
         team_name = item["teamName"]
         if not isinstance(team_name, str) or not team_name.strip():
             raise SourceParseError(f"invalid teamName: {team_name!r}")
-        if "name" in item and item["name"] != team_name:
-            raise SourceParseError("name and teamName disagree")
         tournament_id = _as_int(item["tournamentId"], "tournamentId")
         if tournament_id is None or tournament_id <= 0:
             raise SourceParseError(f"invalid tournamentId: {item['tournamentId']!r}")

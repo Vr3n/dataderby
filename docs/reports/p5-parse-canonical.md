@@ -161,6 +161,9 @@ src/dataderby/canonical.py` check.
 - The golden fixture is synthetic; the first real sweep must be compared with
   the parser's assumptions, especially `teamName`/`name`, `isOpta`, and the
   `ranking` shape.
+- Resolved 2026-10-26: a live capture is committed in
+  `tests/fixtures/whoscored/epl-2026-2027-25544`. `teamName` is canonical and
+  `name` is the short label. See `docs/reports/live-capture.md`.
 - A15's name divergence is currently a parser error; the caller's assertion
   mapping is P6.
 - A19/A20/A21 arithmetic and rank/form checks on standings are P6 validation,

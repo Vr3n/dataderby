@@ -1,0 +1,22 @@
+{
+  "captured_at": "2026-10-26T07:39:18.256040+00:00",
+  "expected_teams": 20,
+  "files": {
+    "defensive__away.json": "cf4aa078eb02555ddb22632a03faaa7cccba3c1f9971964bf2c30c341d0551f4",
+    "defensive__home.json": "08e6b5b24f7d13ff11f5cb44a81827dd479af5163931014a8a0731eb8c0251e8",
+    "defensive__overall.json": "2d29492c9b43665d49bf8e03bb16b08ced9d86fee6aeb65b906f71ae46d9b6dd",
+    "offensive__away.json": "e8709f12110a83200ca5355bb5d01110491e106d6ac8b6307a1a1d27bd14ae5e",
+    "offensive__home.json": "cdce8a59ce932acfa50a8247d5bf87b227a615f35e0a0682f23bddc11ab9ff7a",
+    "offensive__overall.json": "eedab9d7986336b2bc5f63c34aa22dacc5dddb08e2bcff215413eea5d1a78414",
+    "standings__away.json": "297de038a3fecba553630a24cad9513d765c829550d606eb6ea78d77178eb504",
+    "standings__home.json": "8134e1d264e6056f632f556e02ef63c9202307880a579a60d8886df4096f0fdd",
+    "standings__overall.json": "7f118461a12c18ced77f27485a1bf08fac1adc75de4a33e0199ebf47a5e65678",
+    "summary__away.json": "c9dd7b9adc69d8c683b889d4ff56eb877ac2806a378f1d0175810b06ffae3815",
+    "summary__home.json": "c66ee8002ba28f2eefb99999dd337f71da3ee564cf0982f7e5f3c41002e14158",
+    "summary__overall.json": "15d5bcc3737cb426ddfbab78c3ed023645a50c8242a72107061c506c9e4886d1"
+  },
+  "stage": "epl-2026-2027",
+  "whoscored_season_id": 11141,
+  "whoscored_stage_id": 25544,
+  "whoscored_tournament_id": 2
+}

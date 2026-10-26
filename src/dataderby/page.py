@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
 from dataderby.contract import VIEWS, View
 from dataderby.standings import RawStandingsRow
+
+_TOKEN_RE = re.compile(r"gSiteHeaderValue\s*:\s*['\"]([^'\"]+)['\"]")
 
 _STANDINGS_JS = """
 () => {
@@ -66,6 +69,24 @@ def _rows_from_js(items: list[dict[str, Any]]) -> tuple[RawStandingsRow, ...]:
     return tuple(RawStandingsRow(**item) for item in items)
 
 
+def _token_from_html(html: str) -> str | None:
+    """Return ``gSiteHeaderValue`` from the page HTML, when it is present.
+
+    The site used to expose the token through the AMD ``require`` object. On the
+    live page in October 2026 that object is absent, but the inline bootstrap
+    still contains the value. Reading both keeps the capture working whichever
+    shape the page ships.
+
+    Args:
+        html: The document HTML.
+
+    Returns:
+        The token, or ``None`` when the page does not contain one.
+    """
+    match = _TOKEN_RE.search(html)
+    return match.group(1) if match else None
+
+
 def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
     """Load a WhoScored stage page in a headed Chromium and read the tables.
 
@@ -100,8 +121,10 @@ def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
                 has_table = False
 
             html = page.content()
-            token_value = page.evaluate(_TOKEN_JS)
-            token = "" if token_value is None else str(token_value)
+            token = _token_from_html(html) or ""
+            if not token:
+                token_value = page.evaluate(_TOKEN_JS)
+                token = "" if token_value is None else str(token_value)
             if not token:
                 raise RuntimeError("page did not expose gSiteHeaderValue")
             stages = tuple(str(label) for label in page.evaluate(_STAGES_JS))
@@ -109,11 +132,14 @@ def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
             standings: dict[View, tuple[RawStandingsRow, ...]] = {}
             if has_table:
                 for view in VIEWS:
-                    selector = f'a.option[data-source="{view.title()}"]'
+                    # The live page uses lower-case data-source values
+                    # ("overall", "home", "away"); title-casing them silently
+                    # matches nothing and leaves every view identical.
+                    selector = f'a.option[data-source="{view}"]'
                     toggle = page.locator(selector)
                     if toggle.count():
                         toggle.first.click()
-                        page.wait_for_timeout(250)
+                        page.wait_for_timeout(400)
                     items = page.evaluate(_STANDINGS_JS)
                     if not isinstance(items, list):
                         raise RuntimeError(f"standings rows were not a list for {view}")

@@ -26,8 +26,8 @@ from dataderby.fetch import (
 )
 
 _SPEC = load_settings(Path("config/stages.toml")).stages["epl-2026-2027"]
-_CATEGORY = {"summary": "summaryteam", "defensive": "defensive", "offensive": "offensive"}
-_SUBCATEGORY = {"overall": "all", "home": "home", "away": "away"}
+_SUBCATEGORY = {"summary": "all", "defensive": "defensive", "offensive": "offensive"}
+_FIELD = {"overall": "Overall", "home": "Home", "away": "Away"}
 
 
 def _payload(section: Section, view: View, *, columns: tuple[str, ...] | None = None) -> bytes:
@@ -55,8 +55,8 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             key = (
                 int(params["stageId"][0]),
-                params["category"][0],
                 params["subcategory"][0],
+                params["field"][0].lower(),
             )
         except (KeyError, IndexError, ValueError):
             status, body, content_type = 400, b"bad request", "text/plain"
@@ -96,7 +96,7 @@ def _all_responses(
     *, body: bytes | None = None
 ) -> dict[tuple[int, str, str], tuple[int, bytes, str]]:
     return {
-        (_SPEC.whoscored_stage_id, _CATEGORY[section], _SUBCATEGORY[view]): (
+        (_SPEC.whoscored_stage_id, _SUBCATEGORY[section], _FIELD[view].lower()): (
             200,
             body if body is not None else _payload(section, view),
             "text/html",
@@ -112,6 +112,7 @@ def test_feed_url_contains_stage_and_category() -> None:
     assert "stageId=25544" in url
     assert "category=summaryteam" in url
     assert "subcategory=all" in url
+    assert "field=Overall" in url
 
 
 def test_fetches_nine_captures_in_summary_first_order() -> None:
@@ -132,7 +133,7 @@ def test_fetches_nine_captures_in_summary_first_order() -> None:
 
 def test_bom_is_stripped_before_json_decode() -> None:
     responses = _all_responses()
-    key = (_SPEC.whoscored_stage_id, "summaryteam", "all")
+    key = (_SPEC.whoscored_stage_id, "all", "overall")
     status, body, content_type = responses[key]
     responses[key] = (status, b"\xef\xbb\xbf" + body, content_type)
 
@@ -172,7 +173,7 @@ def test_non_envelope_bodies_are_gate_pages(body: bytes) -> None:
 def test_changed_columns_are_schema_drift() -> None:
     wrong = ("apps", "goal")
     responses = _all_responses()
-    key = (_SPEC.whoscored_stage_id, "summaryteam", "all")
+    key = (_SPEC.whoscored_stage_id, "all", "overall")
     responses[key] = (200, _payload("summary", "overall", columns=wrong), "text/html")
 
     with _serve(responses) as (base_url, _), pytest.raises(SchemaDrift):

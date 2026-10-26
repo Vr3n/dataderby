@@ -22,7 +22,6 @@ from dataderby.fetch import Capture, SchemaDrift
 from dataderby.parse import (
     IncompleteCohort,
     OwnershipMismatch,
-    SourceParseError,
     build_candidate,
     parse_capture,
 )
@@ -202,10 +201,12 @@ def test_shared_measure_must_agree_across_sections() -> None:
         build_candidate(captures, _SPEC)
 
 
-def test_name_and_team_name_must_agree() -> None:
-    captures = _captures(overrides={100: {"name": "Different"}})
-    with pytest.raises(SourceParseError, match="name and teamName"):
-        build_candidate(captures, _SPEC)
+def test_short_name_is_accepted_when_it_differs_from_the_full_name() -> None:
+    captures = _captures(overrides={100: {"name": "Short"}})
+
+    candidate = build_candidate(captures, _SPEC)
+
+    assert candidate.rows[0].whoscored_team_name == "Team 100"
 
 
 def test_parse_capture_preserves_source_ids() -> None:

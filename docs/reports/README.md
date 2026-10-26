@@ -24,6 +24,7 @@ Reports for a single change that is not a build phase.
 | Change | Report | Status |
 |---|---|---|
 | Timestamps | [TIMESTAMPTZ migration](timestamptz-migration.md) | complete |
+| Live capture | [One real capture, and what it broke](live-capture.md) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.

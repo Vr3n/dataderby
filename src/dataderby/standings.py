@@ -102,7 +102,9 @@ def parse_view(view: View, rows: tuple[RawStandingsRow, ...]) -> tuple[Standings
             raise StandingsParseError("whoscored_team_name is empty")
 
         played = _as_int(raw.played, "played")
-        form = raw.form.strip() or None
+        # The page renders form in upper case ("WWWWWL"); the stored convention
+        # is lower case, and the validator only accepts w/d/l.
+        form = raw.form.strip().lower() or None
         _validate_form(form, played)
 
         row = StandingsRow(
