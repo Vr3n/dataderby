@@ -102,9 +102,10 @@ Key points:
 
 ## What is still open
 
-- `429`/`Retry-After` handling is #6, not this change.
-- The request ceiling per run is #6.
-- The robots position is recorded in the ADR, not checked at runtime.
+- `429`/`Retry-After` handling and the request ceiling are implemented in
+  `docs/adr/0009-fetch-policy.md` (#6).
+- The robots position is recorded in the ADR, not checked at runtime. Re-check
+  it with `scripts/check_robots.py`.
 
 ## Sources
 

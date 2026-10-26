@@ -5,7 +5,15 @@ from __future__ import annotations
 import pytest
 
 from dataderby.contract import SECTIONS, VIEWS
-from dataderby.fetch import GatePage, SchemaDrift, feed_url
+from dataderby.fetch import (
+    FetchBlocked,
+    FetchBudgetExceeded,
+    FetchError,
+    GatePage,
+    RequestBudget,
+    SchemaDrift,
+    feed_url,
+)
 from dataderby.page import _token_from_html, collect_feeds
 from tests.test_whoscored_parse import _SPEC, _captures
 
@@ -39,7 +47,7 @@ def test_collect_feeds_returns_all_nine_in_order() -> None:
     by_url = _by_url()
 
     def fetch(url: str) -> tuple[int, bytes, str | None]:
-        return 200, by_url[url], "application/json"
+        return 200, by_url[url], "application/json", None
 
     feeds = collect_feeds(_SPEC, "token", fetch, sleep=lambda _: None)
 
@@ -54,7 +62,7 @@ def test_collect_feeds_honours_the_only_filter() -> None:
     by_url = _by_url()
 
     def fetch(url: str) -> tuple[int, bytes, str | None]:
-        return 200, by_url[url], "application/json"
+        return 200, by_url[url], "application/json", None
 
     feeds = collect_feeds(
         _SPEC,
@@ -72,7 +80,7 @@ def test_collect_feeds_paces_between_requests() -> None:
     sleeps: list[float] = []
 
     def fetch(url: str) -> tuple[int, bytes, str | None]:
-        return 200, by_url[url], "application/json"
+        return 200, by_url[url], "application/json", None
 
     collect_feeds(
         _SPEC,
@@ -92,7 +100,7 @@ def test_a_gate_page_is_retried_then_raised() -> None:
     def gate(url: str) -> tuple[int, bytes, str | None]:
         nonlocal calls
         calls += 1
-        return 200, b"<html>verify</html>", "text/html"
+        return 200, b"<html>verify</html>", "text/html", None
 
     with pytest.raises(GatePage):
         collect_feeds(
@@ -115,7 +123,7 @@ def test_schema_drift_is_not_retried() -> None:
         nonlocal calls
         calls += 1
         body = b'{"teamTableStats": [], "paging": {}, "statColumns": ["apps"]}'
-        return 200, body, "application/json"
+        return 200, body, "application/json", None
 
     with pytest.raises(SchemaDrift):
         collect_feeds(
@@ -128,3 +136,81 @@ def test_schema_drift_is_not_retried() -> None:
         )
 
     assert calls == 1
+
+
+def test_a_429_honours_retry_after_then_succeeds() -> None:
+    by_url = _by_url()
+    url = feed_url(_SPEC, "summary", "overall")
+    responses = iter(
+        [
+            (429, b"", "text/html", "5"),
+            (200, by_url[url], "application/json", None),
+        ]
+    )
+    sleeps: list[float] = []
+
+    feeds = collect_feeds(
+        _SPEC,
+        "token",
+        lambda _: next(responses),
+        only=(("summary", "overall"),),
+        sleep=sleeps.append,
+    )
+
+    assert len(feeds) == 1
+    assert sleeps[0] == 5.0
+
+
+def test_a_403_is_terminal() -> None:
+    calls = 0
+
+    def blocked(url: str) -> tuple[int, bytes, str | None, str | None]:
+        nonlocal calls
+        calls += 1
+        return 403, b"", "text/html", None
+
+    with pytest.raises(FetchBlocked):
+        collect_feeds(
+            _SPEC,
+            "token",
+            blocked,
+            only=(("summary", "overall"),),
+            max_attempts=3,
+            sleep=lambda _: None,
+        )
+
+    assert calls == 1
+
+
+def test_a_404_is_not_retried() -> None:
+    calls = 0
+
+    def missing(url: str) -> tuple[int, bytes, str | None, str | None]:
+        nonlocal calls
+        calls += 1
+        return 404, b"", "text/html", None
+
+    with pytest.raises(FetchError):
+        collect_feeds(
+            _SPEC,
+            "token",
+            missing,
+            only=(("summary", "overall"),),
+            max_attempts=3,
+            sleep=lambda _: None,
+        )
+
+    assert calls == 1
+
+
+def test_the_request_budget_stops_the_run() -> None:
+    by_url = _by_url()
+    budget = RequestBudget(limit=2)
+
+    def fetch(url: str) -> tuple[int, bytes, str | None, str | None]:
+        return 200, by_url[url], "application/json", None
+
+    with pytest.raises(FetchBudgetExceeded):
+        collect_feeds(_SPEC, "token", fetch, budget=budget, sleep=lambda _: None)
+
+    assert budget.used == 2

@@ -20,6 +20,7 @@ from dataderby.fetch import (
     Capture,
     FeedFetcher,
     FetchBlocked,
+    FetchError,
     GatePage,
     SchemaDrift,
     feed_url,
@@ -205,8 +206,8 @@ class _FakeSession:
 def test_retry_uses_two_then_four_seconds_and_keeps_the_third_attempt() -> None:
     session = _FakeSession(
         [
-            _FakeResponse(403, b"", {}),
-            _FakeResponse(403, b"", {}),
+            _FakeResponse(500, b"", {}),
+            _FakeResponse(500, b"", {}),
             _FakeResponse(200, _payload("summary", "overall"), {"content-type": "text/html"}),
         ]
     )
@@ -313,3 +314,59 @@ def test_pacing_waits_1_2_seconds_between_successful_requests() -> None:
 
     assert len(clock.sleeps) == 8
     assert all(abs(seconds - 1.2) < 1e-9 for seconds in clock.sleeps)
+
+
+def test_a_403_is_not_retried() -> None:
+    session = _FakeSession([_FakeResponse(403, b"", {})])
+
+    with pytest.raises(FetchBlocked):
+        FeedFetcher(
+            session=session,
+            base_url="http://replay/feed",
+            spacing=0,
+            max_attempts=3,
+            sleep=lambda _: None,
+        ).fetch_one(_SPEC, "summary", "overall", "token")
+
+    assert len(session.calls) == 1
+
+
+def test_a_429_honours_retry_after() -> None:
+    session = _FakeSession(
+        [
+            _FakeResponse(429, b"", {"retry-after": "5"}),
+            _FakeResponse(
+                200,
+                _payload("summary", "overall"),
+                {"content-type": "text/html"},
+            ),
+        ]
+    )
+    sleeps: list[float] = []
+
+    capture = FeedFetcher(
+        session=session,
+        base_url="http://replay/feed",
+        spacing=0,
+        max_attempts=2,
+        sleep=sleeps.append,
+        jitter=lambda: 0.0,
+    ).fetch_one(_SPEC, "summary", "overall", "token")
+
+    assert capture.attempt == 2
+    assert sleeps == [5.0]
+
+
+def test_a_404_is_not_retried() -> None:
+    session = _FakeSession([_FakeResponse(404, b"", {})])
+
+    with pytest.raises(FetchError):
+        FeedFetcher(
+            session=session,
+            base_url="http://replay/feed",
+            spacing=0,
+            max_attempts=3,
+            sleep=lambda _: None,
+        ).fetch_one(_SPEC, "summary", "overall", "token")
+
+    assert len(session.calls) == 1

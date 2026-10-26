@@ -8,6 +8,7 @@ the network and to write under `data/`, which normal code is not.
 | `audit_all_stages.py` | Captures every configured stage, validates all nine feeds, publishes each into a scratch database, records failures and continues. | `data/live-audit/<timestamp>/` (git-ignored) | No — needs the live source and a browser. |
 | `capture_live_stage.py` | Captures one stage and writes a redacted fixture for tests. | The chosen fixture directory (committed only after review). | No. |
 | `dagster.ps1` | Starts the Dagster UI for the fixture-calendar pipeline. | `data/dagster/` | No. |
+| `check_robots.py` | Fetches `robots.txt` and prints its status, date, SHA-256, and body. | Nothing | No — one network request. |
 
 ## Rules
 

@@ -154,6 +154,7 @@ def land_stage(
     *,
     feeds: tuple[Capture, ...] | None = None,
     run_id: str | None = None,
+    requests: int | None = None,
     log_dir: Path = Path("data/logs"),
     verbose: bool = False,
 ) -> LandingResult:
@@ -175,6 +176,8 @@ def land_stage(
         fetcher: Feed fetcher; injectable for tests. Ignored when ``feeds`` is set.
         feeds: Feeds already captured in the page's session.
         run_id: Optional caller-supplied run id.
+        requests: Feed requests actually made, including retries. Defaults to the
+            attempts recorded on the accepted captures.
         log_dir: JSON-lines log directory.
         verbose: Also log to stderr.
 
@@ -208,12 +211,10 @@ def land_stage(
 
         with transaction(con):
             _insert_raw_captures(con, actual_run_id, raw_files)
-            _update_run(
-                con,
-                actual_run_id,
-                observed_at,
-                1 + sum(capture.attempt for capture in feeds),
+            feed_requests = (
+                requests if requests is not None else sum(capture.attempt for capture in feeds)
             )
+            _update_run(con, actual_run_id, observed_at, 1 + feed_requests)
     except FetchError:
         _fail_run(con, actual_run_id, "fetch_failed")
         log("run.fetch_failed", log_dir=log_dir, verbose=verbose, run_id=actual_run_id)

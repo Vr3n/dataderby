@@ -9,6 +9,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 from urllib.parse import urlencode
 
@@ -36,7 +37,60 @@ class FetchError(RuntimeError):
 
 
 class FetchBlocked(FetchError):
-    """The source returned HTTP 403."""
+    """The source returned HTTP 403. A policy answer, not a transient error."""
+
+
+class FetchBudgetExceeded(FetchError):
+    """A run tried to make more requests than its budget allows."""
+
+
+@dataclass(slots=True)
+class RequestBudget:
+    """A hard ceiling on requests for one run."""
+
+    limit: int
+    used: int = 0
+
+    def consume(self) -> None:
+        """Count one request, or fail when the ceiling is reached.
+
+        Raises:
+            FetchBudgetExceeded: If the budget is already exhausted.
+        """
+        if self.used >= self.limit:
+            raise FetchBudgetExceeded(f"request budget exhausted: {self.used}/{self.limit}")
+        self.used += 1
+
+
+def retry_after_seconds(value: str | None, *, now: datetime | None = None) -> float | None:
+    """Parse an HTTP ``Retry-After`` value into seconds.
+
+    Supports both forms allowed by HTTP: a number of seconds and an HTTP-date.
+    The caller caps the result, so a hostile header cannot stall a run.
+
+    Args:
+        value: The header value, or ``None``.
+        now: Injectable clock for the HTTP-date form.
+
+    Returns:
+        Seconds to wait, or ``None`` when the header is absent or unparseable.
+    """
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    try:
+        return max(0.0, float(text))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(text)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - (now or datetime.now(UTC))).total_seconds())
 
 
 class GatePage(FetchError):
@@ -181,7 +235,10 @@ class FeedFetcher:
             An accepted capture.
 
         Raises:
-            FetchBlocked: If every attempt is HTTP 403.
+            FetchBlocked: Immediately on HTTP 403. A denied request is a policy
+                answer, not a transient failure.
+            FetchError: Immediately on any other 4xx, or after the attempts on a
+                5xx, timeout, or gate page.
             GatePage: If every attempt is a gate page or malformed body.
             SchemaDrift: Immediately, because a changed column list is not a
                 transient failure.
@@ -201,9 +258,20 @@ class FeedFetcher:
                 last_error = FetchError(f"{section}/{view}: request failed: {exc}")
             else:
                 status = int(response.status_code)
+                headers: Mapping[str, str] = getattr(response, "headers", {})
                 if status == 403:
-                    last_error = FetchBlocked(f"{section}/{view}: HTTP 403")
-                elif status != 200:
+                    raise FetchBlocked(f"{section}/{view}: HTTP 403")
+                if status == 429:
+                    wait = retry_after_seconds(headers.get("retry-after"))
+                    if attempt < self._max_attempts:
+                        self._sleep(
+                            min(60.0, wait) if wait is not None else 2**attempt + self._jitter()
+                        )
+                        continue
+                    raise FetchError(f"{section}/{view}: HTTP 429 after every attempt")
+                if 400 <= status < 500:
+                    raise FetchError(f"{section}/{view}: HTTP {status}")
+                if status != 200:
                     last_error = FetchError(f"{section}/{view}: HTTP {status}")
                 else:
                     try:
@@ -213,7 +281,6 @@ class FeedFetcher:
                     except GatePage as exc:
                         last_error = exc
                     else:
-                        headers: Mapping[str, str] = getattr(response, "headers", {})
                         return Capture(
                             section=section,
                             view=view,

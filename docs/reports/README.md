@@ -30,6 +30,7 @@ Reports for a single change that is not a build phase.
 | All-league capture (deck) | [Companion slides](../slides/all-league-capture-slides.html) | complete |
 | Repository structure | [Repository reorganisation](repo-reorganization.md) | complete |
 | Browser transport | [Browser feed transport](browser-transport.md) | complete |
+| Fetch policy | [Fetch policy](fetch-policy.md) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.

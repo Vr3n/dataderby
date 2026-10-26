@@ -37,7 +37,7 @@ from dataderby.canonical import fingerprint
 from dataderby.config import Settings, StageSpec, load_settings
 from dataderby.contract import SECTIONS, VIEWS, View
 from dataderby.db import MigrationError, connect, migrate
-from dataderby.fetch import Capture, FetchBlocked, FetchError, SchemaDrift
+from dataderby.fetch import Capture, FetchBlocked, FetchError, RequestBudget, SchemaDrift
 from dataderby.landing import LandingResult, land_stage
 from dataderby.lock import LockHeld, exclusive_lock
 from dataderby.page import PageCapture, StageCapture, capture_stage
@@ -566,8 +566,9 @@ def _dry_run_one(
     settings: Settings,
     runtime: Runtime,
     out: TextIO,
+    budget: RequestBudget,
 ) -> Exit:
-    stage = runtime.sweep(spec.whoscored_page_url, spec)
+    stage = runtime.sweep(spec.whoscored_page_url, spec, budget=budget)
     page = stage.page
     feeds = stage.feeds
     observed_at = min([page.captured_at, *(capture.captured_at for capture in feeds)])
@@ -613,10 +614,11 @@ def _run(
     out: TextIO,
 ) -> Exit:
     keys = _keys(settings, key)
+    budget = RequestBudget(limit=max(20, 9 * len(keys) * 2))
 
     if dry_run:
         for stage_key in keys:
-            code = _dry_run_one(settings.stages[stage_key], settings, runtime, out)
+            code = _dry_run_one(settings.stages[stage_key], settings, runtime, out, budget)
             if code is not Exit.OK:
                 return code
         return Exit.OK
@@ -628,13 +630,15 @@ def _run(
             reconcile(con)
             for stage_key in keys:
                 spec = settings.stages[stage_key]
-                stage = runtime.sweep(spec.whoscored_page_url, spec)
+                before = budget.used
+                stage = runtime.sweep(spec.whoscored_page_url, spec, budget=budget)
                 landed = land_stage(
                     con,
                     spec,
                     settings.raw_dir,
                     stage.page,
                     feeds=stage.feeds,
+                    requests=budget.used - before,
                     log_dir=settings.log_dir,
                 )
                 candidate = build_candidate(list(landed.feeds), spec)
@@ -670,6 +674,7 @@ def _probe(
             spec.whoscored_page_url,
             spec,
             only=(("summary", "overall"),),
+            budget=RequestBudget(limit=3),
         )
         if not stage.feeds:
             raise FetchError(f"{spec.key}: probe returned no feed")

@@ -24,6 +24,8 @@ not a licensing verdict and not a failure condition.
   product.
 - The v1 licence gate is closed. The remaining M6 work is the written record,
   the backup/replay drill, and the scheduled-run evidence.
+- Operational fetch limits (rate, retries, `Retry-After`, request budget, robots
+  evidence) are in `docs/adr/0009-fetch-policy.md`.
 
 ## Consequences
 

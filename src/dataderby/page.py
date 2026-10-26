@@ -17,9 +17,11 @@ from dataderby.fetch import (
     FetchBlocked,
     FetchError,
     GatePage,
+    RequestBudget,
     SchemaDrift,
     feed_url,
     parse_envelope,
+    retry_after_seconds,
 )
 from dataderby.standings import RawStandingsRow
 
@@ -78,6 +80,7 @@ async (args) => {
   return {
     status: response.status,
     type: response.headers.get('content-type'),
+    retryAfter: response.headers.get('retry-after'),
     body: await response.text()
   };
 }
@@ -206,41 +209,53 @@ def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
             browser.close()
 
 
-def _fetch_one(page: Any, url: str, token: str) -> tuple[int, bytes, str | None]:
+def _fetch_one(page: Any, url: str, token: str) -> tuple[int, bytes, str | None, str | None]:
     """Fetch one feed from inside the page's own session."""
     result = page.evaluate(_FEED_JS, {"url": url, "token": token})
     if not isinstance(result, dict):
         raise FetchError("feed fetch returned no result")
     body = str(result.get("body", "")).encode("utf-8")
     content_type = result.get("type")
-    return int(result.get("status", 0)), body, str(content_type) if content_type else None
+    retry_after = result.get("retryAfter")
+    return (
+        int(result.get("status", 0)),
+        body,
+        str(content_type) if content_type else None,
+        str(retry_after) if retry_after else None,
+    )
 
 
 def collect_feeds(
     spec: StageSpec,
     token: str,
-    fetch_one: Callable[[str], tuple[int, bytes, str | None]],
+    fetch_one: Callable[[str], tuple[int, bytes, str | None, str | None]],
     *,
     only: tuple[tuple[Section, View], ...] | None = None,
     pacing: float = 1.2,
     max_attempts: int = 3,
+    budget: RequestBudget | None = None,
     sleep: Callable[[float], None] = time.sleep,
     jitter: Callable[[], float] = random.random,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> tuple[Capture, ...]:
-    """Fetch and validate one stage's feeds, with pacing and retries.
+    """Fetch and validate one stage's feeds, with pacing, retries, and a budget.
 
     The transport is injected as ``fetch_one``: in production it runs JavaScript
     in the page; in tests it returns canned bytes. That keeps the retry,
-    pacing, and envelope rules testable without a browser.
+    pacing, budget, and envelope rules testable without a browser.
+
+    Policy: 403 is terminal, 429 honours ``Retry-After`` (capped at 60 s), other
+    4xx are terminal, and 5xx or a gate page are retried.
 
     Args:
         spec: Stage to fetch.
         token: ``Model-last-Mode`` token from the page.
-        fetch_one: Callable returning ``(status, body, content_type)`` for a URL.
+        fetch_one: Callable returning
+            ``(status, body, content_type, retry_after)`` for a URL.
         only: Optional subset of ``(section, view)`` pairs. Defaults to all nine.
         pacing: Seconds between requests.
         max_attempts: Attempts per feed.
+        budget: Shared request ceiling. Defaults to a fresh budget of 20.
         sleep: Injectable sleep, for tests.
         jitter: Injectable jitter, for tests.
         now: Injectable clock, for tests.
@@ -249,10 +264,13 @@ def collect_feeds(
         Accepted captures in request order.
 
     Raises:
+        FetchBlocked: Immediately on HTTP 403.
+        FetchBudgetExceeded: If the budget is exhausted.
         SchemaDrift: Immediately, because a changed column list is not transient.
         FetchError: If a feed cannot be accepted after every attempt.
     """
     pairs = only if only is not None else tuple((s, v) for s in SECTIONS for v in VIEWS)
+    feed_budget = budget if budget is not None else RequestBudget(limit=20)
     feeds: list[Capture] = []
     first_request = True
 
@@ -267,16 +285,24 @@ def collect_feeds(
         last_error: FetchError | None = None
 
         for attempt in range(1, max_attempts + 1):
+            feed_budget.consume()
             pace()
+            delay: float | None = None
             try:
-                status, body, content_type = fetch_one(url)
+                status, body, content_type, retry_after = fetch_one(url)
             except FetchError:
                 raise
             except Exception as exc:
                 last_error = FetchError(f"{section}/{view}: request failed: {exc}")
             else:
                 if status == 403:
-                    last_error = FetchBlocked(f"{section}/{view}: HTTP 403")
+                    raise FetchBlocked(f"{section}/{view}: HTTP 403")
+                if status == 429:
+                    wait = retry_after_seconds(retry_after)
+                    last_error = FetchError(f"{section}/{view}: HTTP 429")
+                    delay = min(60.0, wait) if wait is not None else None
+                elif 400 <= status < 500:
+                    raise FetchError(f"{section}/{view}: HTTP {status}")
                 elif status != 200:
                     last_error = FetchError(f"{section}/{view}: HTTP {status}")
                 else:
@@ -302,7 +328,7 @@ def collect_feeds(
                         break
 
             if attempt < max_attempts:
-                sleep(2**attempt + jitter())
+                sleep(delay if delay is not None else 2**attempt + jitter())
         else:
             if last_error is None:
                 raise FetchError(f"{section}/{view}: no attempt was made")
@@ -316,6 +342,7 @@ def capture_stage(
     spec: StageSpec,
     *,
     only: tuple[tuple[Section, View], ...] | None = None,
+    budget: RequestBudget | None = None,
     timeout_ms: int = 45_000,
 ) -> StageCapture:
     """Capture a stage page and its feeds in one browser session.
@@ -327,6 +354,7 @@ def capture_stage(
         url: The stage's ``show`` URL.
         spec: Stage configuration, used to build the feed URLs.
         only: Optional subset of feeds, used by ``probe``.
+        budget: Shared request ceiling for the run.
         timeout_ms: Navigation and selector timeout.
 
     Returns:
@@ -349,6 +377,7 @@ def capture_stage(
                 page_capture.token,
                 lambda feed: _fetch_one(page, feed, page_capture.token),
                 only=only,
+                budget=budget,
             )
             return StageCapture(page=page_capture, feeds=feeds)
         finally:

@@ -65,7 +65,9 @@ def _runtime(
     selected = feeds if feeds is not None else _captures()
     stage = StageCapture(page=page or _page(), feeds=tuple(selected))
 
-    def sweep(url: str, spec: object, *, only: object = None) -> StageCapture:
+    def sweep(
+        url: str, spec: object, *, only: object = None, budget: object = None
+    ) -> StageCapture:
         return stage
 
     return Runtime(sweep=sweep)
@@ -299,7 +301,9 @@ def test_a_missing_config_is_a_config_error(
 def test_schema_drift_is_blocked_rather_than_a_fetch_failure(tmp_path: Path) -> None:
     config = _config(tmp_path)
 
-    def drifting(url: str, spec: object, *, only: object = None) -> StageCapture:
+    def drifting(
+        url: str, spec: object, *, only: object = None, budget: object = None
+    ) -> StageCapture:
         raise SchemaDrift("statColumns changed")
 
     runtime = Runtime(sweep=drifting)
