@@ -50,6 +50,36 @@ Namespaces are one honking great idea -- let's do more of those!
 - Validate request bodies with Pydantic models.
 - Embrace idiomatic Python like comprehensions, generators, and decorators.
 
+## Documentation
+
+Every implementation ships its documentation in the same commit. This is not
+optional and there is no "small change" exemption for code.
+
+- **A build phase** gets `docs/reports/pN-<slug>.md`.
+- **A single change that is not a phase** gets `docs/reports/<slug>.md`.
+- **An architectural or hard-to-reverse decision** gets
+  `docs/adr/NNNN-<slug>.md`. The ADR records the decision and the rejected
+  alternatives; the report records the implementation.
+- **A change that spans several artifacts** also gets a one-page
+  `docs/<slug>-summary.md`.
+- Update the index (`docs/reports/README.md`) and any README link in the same
+  commit.
+
+A report is written for a co-worker who was not in the room, and must contain:
+
+1. Goal, in one paragraph.
+2. What changed, as a file → change → why table.
+3. Design decisions and rejected alternatives.
+4. Test matrix: what each test pins, and what it deliberately does not.
+5. Evidence: the exact commands and their results.
+6. Deviations and open items.
+7. Risks and mitigations.
+8. A reviewer checklist.
+9. References, including any external source.
+
+Start from [`docs/reports/TEMPLATE.md`](docs/reports/TEMPLATE.md). A change
+without a report is not done.
+
 ## Quality Gates
 
 A task is done only when all of these pass:
