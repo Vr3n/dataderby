@@ -561,6 +561,20 @@ def test_a19_standings_arithmetic_blocks(con: duckdb.DuckDBPyConnection) -> None
     assert "A19" in _ids(failures)
 
 
+def test_a_points_deduction_is_not_blocked(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+    row = standings.rows[0]
+    points = int(row.measures["points_overall"])  # type: ignore[arg-type]
+    deducted = _replace_standings_measure(standings, 0, "points_overall", points - 4)
+
+    failures = run_assertions(con, candidate, deducted, _SPEC, run)
+
+    assert "A19" not in _ids(failures)
+    assert "A20" not in _ids(failures)
+
+
 def test_a20_home_away_standings_must_add_up(
     con: duckdb.DuckDBPyConnection,
 ) -> None:

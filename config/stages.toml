@@ -155,9 +155,10 @@ expected_teams = 36
 whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/11294/stages/25801/show/europe-europa-league-2026-2027"
 has_league_table = true
 
-# Conference League shows 27 teams in the feed against a 108-match calendar.
-# The count is measured; the format anomaly is still open and must be checked
-# against the fixtures page before the first live scrape.
+# Live page on 2026-10-26 shows 36 teams, not the 27 measured earlier. The feed
+# for these ids returns an empty teamTableStats, so the stage can be captured but
+# cannot publish until the source feed is fixed. See
+# docs/reports/all-league-capture.md. Do not schedule this stage yet.
 [[stage]]
 key = "conference-league-2026-2027"
 whoscored_tournament_id = 715
@@ -167,6 +168,6 @@ season_key = "2026-2027"
 competition = "Conference League"
 stage = "league"
 expected_stages = ["league", "knockout", "final"]
-expected_teams = 27
+expected_teams = 36
 whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/715/seasons/11296/stages/25802/show/europe-conference-league-2026-2027"
 has_league_table = true

@@ -4,6 +4,12 @@
 -- while validate.py reads the marker-delimited SQL below. Each query returns
 -- offending rows; an empty result means the assertion passed.
 --
+-- A19 and A20 and points deductions: a deduction makes the reported overall
+-- total lower than 3*won+drawn. That is legitimate (EFL clubs have them), so
+-- only a total above the maximum is impossible. Points are also excluded from
+-- A20's home+away sums, because a deduction applies to the overall total, not
+-- to the split tables. The deduction is stored as reported and shown in reports.
+--
 -- @@A1|BLOCK
 -- SELECT count(*) AS actual, (SELECT expected_teams FROM _assert_run) AS expected
 -- FROM _assert_team
@@ -248,7 +254,8 @@
 --    OR goal_difference IS NULL
 --    OR points IS NULL
 --    OR won + drawn + lost <> played
---    OR points <> 3 * won + drawn
+--    OR points > 3 * won + drawn
+--    OR points < 0
 --    OR goal_difference <> goals_for - goals_against
 --    OR (played = 0 AND form IS NOT NULL)
 --    OR (
@@ -298,12 +305,6 @@
 --         AND goals_against_home IS NOT NULL
 --         AND goals_against_away IS NOT NULL
 --         AND goals_against_home + goals_against_away <> goals_against_overall
---     )
---    OR (
---         points_overall IS NOT NULL
---         AND points_home IS NOT NULL
---         AND points_away IS NOT NULL
---         AND points_home + points_away <> points_overall
 --     )
 --
 -- @@A21|BLOCK

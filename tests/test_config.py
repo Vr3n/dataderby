@@ -117,6 +117,8 @@ def test_repository_stage_registry_loads() -> None:
 
     assert len(settings.stages) == 12
     assert settings.stages["la-liga-2026-2027"].expected_teams == 20
-    assert settings.stages["conference-league-2026-2027"].expected_teams == 27
+    # Live page on 2026-10-26 shows 36 teams; the feed is empty (see
+    # docs/reports/all-league-capture.md).
+    assert settings.stages["conference-league-2026-2027"].expected_teams == 36
     assert all(spec.stage in spec.expected_stages for spec in settings.stages.values())
     assert len({spec.whoscored_stage_id for spec in settings.stages.values()}) == 12
