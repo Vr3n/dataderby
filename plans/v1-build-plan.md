@@ -2,8 +2,8 @@
 
 **Status:** execution plan · 20 Oct 2026
 **Design source of truth:** `plans/v1-implementation-plan.md`
-**Research input:** `docs/production-patterns-research.md`
-**Decision record:** `experiments/id-scheme/results/summary.md`, `docs/snapshot-identity-review.html`, `docs/whoscored-decisions.md`
+**Research input:** `docs/research/production-patterns-research.md`
+**Decision record:** `experiments/id-scheme/results/summary.md`, `docs/reference/snapshot-identity-review.html`, `docs/research/whoscored-decisions.md`
 
 This document is the *order of work*. The v1 plan says what the system is; this says what
 I create, in which sequence, and how each step is proven before the next one starts.
@@ -94,7 +94,7 @@ tests/
   test_publish.py               NEW
   test_views.py                 NEW
   test_cli.py                   NEW
-docs/whoscored-decisions.md     NEW   licence + scope decisions (2026-10-20)
+docs/research/whoscored-decisions.md     NEW   licence + scope decisions (2026-10-20)
 data/                           IGNORED  raw/ dataderby.duckdb logs/ state/
 ```
 
@@ -161,10 +161,10 @@ intentionally breaking a type in `cli.py` and seeing the gate fail.
 3. `0003-two-clocks.md` — `observed_at` vs `accepted_at`; ordering uses `observed_at`.
 4. `0004-raw-is-system-of-record.md` — backup policy is raw, not the `.duckdb`.
 5. `0005-duckdb-as-store.md` — single writer, FK on insert, measured binding cost, and
-   the transaction gotchas recorded in `docs/production-patterns-research.md` §2.
+   the transaction gotchas recorded in `docs/research/production-patterns-research.md` §2.
    Record the exact DuckDB version; the `RETURNING`/abort behaviour was measured on 1.5.6.
 6. `0006-source-use.md` — **decided 2026-10-20**: `isOpta` accepted by the owner;
-   link to `docs/whoscored-decisions.md` and keep the local/private/non-redistributed
+   link to `docs/research/whoscored-decisions.md` and keep the local/private/non-redistributed
    posture.
 7. `config/stages.toml` with the LaLiga 2026-27 stage.
 8. `config.py`:
@@ -660,10 +660,10 @@ E1 and E3 produce a written result from live data; E2 has a scheduled window.
 
 ### Tasks
 
-1. Schedule: daily heartbeat plus a post-match window (`docs/whoscored-cadence.md`).
+1. Schedule: daily heartbeat plus a post-match window (`docs/research/whoscored-cadence.md`).
 2. Backup: `data/raw/` to a second location; restore drill documented.
 3. `docs/adr/0006-source-use.md` points at the 2026-10-20 decision in
-   `docs/whoscored-decisions.md`; no licence question remains open.
+   `docs/research/whoscored-decisions.md`; no licence question remains open.
 4. README: what the data can and cannot answer (v1 §8.3).
 
 ### Exit — the v1 gate

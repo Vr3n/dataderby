@@ -3,7 +3,7 @@
 **Decision date: 2026-10-20 · owner: project owner · status: accepted.**
 
 These are the answers to the five questions in
-`docs/whoscored-discovery-report.html` (slide 16). They supersede the
+`docs/slides/whoscored-discovery-report.html` (slide 16). They supersede the
 pre-decision wording in `plans/v1-implementation-plan.md` where the two differ.
 
 ---
@@ -79,7 +79,7 @@ alone is a new snapshot.
 **Not fixed yet.** The source has no timestamp, so the cadence is measured, not
 read. Experiment E5 runs on the next matchday; the provisional schedule is a
 06:00 IST daily heartbeat plus post-matchday sweeps at `last kickoff + 2 h` and
-`+6 h`. Full evidence and method: `docs/whoscored-cadence.md`.
+`+6 h`. Full evidence and method: `docs/research/whoscored-cadence.md`.
 
 The important consequence for the build: a sweep is **page + nine feeds**, not
 nine feeds. The page load supplies the token, the stage labels and the three

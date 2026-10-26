@@ -6,9 +6,9 @@ uniqueness constraint is shared code.
 
 Read `SPEC.md` first, then `results/summary.md`. Two narrative versions exist:
 
-* `docs/snapshot-identity-review.html` — the review deck: built to be presented to
+* `docs/reference/snapshot-identity-review.html` — the review deck: built to be presented to
   senior engineers and to close the decision. Press `N` in the deck for talking points.
-* `docs/id-scheme-report.html` — the original, shorter write-up of the same results.
+* `docs/reference/id-scheme-report.html` — the original, shorter write-up of the same results.
 
 ## Layout
 

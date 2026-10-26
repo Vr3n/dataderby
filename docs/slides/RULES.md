@@ -2,8 +2,8 @@
 
 **Applies to:** every deck in `docs/`, and every request that says "make a slide
 deck".
-**Reference decks:** `docs/whoscored-discovery-report.html` (paper/editorial),
-`docs/production-readiness-slides.html` (dark technical).
+**Reference decks:** `docs/slides/whoscored-discovery-report.html` (paper/editorial),
+`docs/slides/production-readiness-slides.html` (dark technical).
 
 The purpose of these rules is simple: a reader who was not in the room should be
 able to follow the deck without the presenter explaining a single term.

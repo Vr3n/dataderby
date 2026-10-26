@@ -80,6 +80,20 @@ A report is written for a co-worker who was not in the room, and must contain:
 Start from [`docs/reports/TEMPLATE.md`](docs/reports/TEMPLATE.md). A change
 without a report is not done.
 
+## Repository layout
+
+Production code is `src/dataderby/`; tests mirror it in `tests/`; the database
+contract is `sql/`; runtime configuration is `config/`; operator tools are
+`scripts/`; design and reports are under `docs/`.
+
+- New code goes in `src/dataderby/`, never in a notebook or an operator script.
+- New tests go in `tests/test_<module>.py`.
+- New SQL is one file, one change, in `sql/`.
+- New docs go in the matching `docs/` subfolder. Nothing new at the `docs/` root.
+- Raw data goes in `data/`, which is git-ignored.
+- The full map, including the Databricks/Azure mapping, is in
+  [`docs/design/project-structure.md`](docs/design/project-structure.md).
+
 ## Slide decks
 
 When asked for a slide deck, follow [`docs/slides/RULES.md`](docs/slides/RULES.md).

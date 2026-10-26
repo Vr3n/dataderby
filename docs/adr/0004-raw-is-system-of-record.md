@@ -1,7 +1,7 @@
 # 0004 - Raw is the system of record
 
 **Status:** accepted, 2026-10-21
-**Evidence:** `docs/whoscored-decisions.md` section 5
+**Evidence:** `docs/research/whoscored-decisions.md` section 5
 
 ## Context
 

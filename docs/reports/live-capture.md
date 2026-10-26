@@ -197,7 +197,7 @@ that adds the fixture.
 
 ## References
 
-- `docs/live-capture-slides.html` — companion deck: data shape, database behaviour,
+- `docs/slides/live-capture-slides.html` — companion deck: data shape, database behaviour,
   first-run findings, and recommendations. Press `n` for presenter notes that explain
   each decision.
 

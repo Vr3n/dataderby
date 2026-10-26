@@ -16,21 +16,26 @@ The two datasets come from different websites, on purpose:
 | Team season stats (planned) | WhoScored | Per-team measure tables, not available as a bulk export |
 
 The WhoScored discovery notes and decision deck are in
-[`docs/whoscored-discovery-report.md`](docs/whoscored-discovery-report.md) and
-[`docs/whoscored-discovery-report.html`](docs/whoscored-discovery-report.html). The
+[`docs/research/whoscored-discovery-report.md`](docs/research/whoscored-discovery-report.md) and
+[`docs/slides/whoscored-discovery-report.html`](docs/slides/whoscored-discovery-report.html). The
 decisions and the cadence evidence are in
-[`docs/whoscored-decisions.md`](docs/whoscored-decisions.md) and
-[`docs/whoscored-cadence.md`](docs/whoscored-cadence.md).
+[`docs/research/whoscored-decisions.md`](docs/research/whoscored-decisions.md) and
+[`docs/research/whoscored-cadence.md`](docs/research/whoscored-cadence.md).
 
 The final v1 plan and its 47-slide deck are in
 [`plans/v1-implementation-plan.md`](plans/v1-implementation-plan.md) and
-[`docs/dataderby-v1-plan.html`](docs/dataderby-v1-plan.html). The executable build
+[`docs/slides/dataderby-v1-plan.html`](docs/slides/dataderby-v1-plan.html). The executable build
 order and test matrix are in [`plans/v1-build-plan.md`](plans/v1-build-plan.md).
 
 The P0–P7 production-readiness review is a beginner-oriented animated deck in
-[`docs/production-readiness-slides.html`](docs/production-readiness-slides.html):
+[`docs/slides/production-readiness-slides.html`](docs/slides/production-readiness-slides.html):
 one concept per slide, each with a plain-language explanation, a source, and a
 recommendation. Open it in a browser; it works offline.
+
+Documentation is organised by kind — decisions, reports, decks, research, design,
+and archived reference. Start at [`docs/README.md`](docs/README.md); the layout
+and its Databricks/Azure mapping are in
+[`docs/design/project-structure.md`](docs/design/project-structure.md).
 
 They are independent inputs. The calendar is used to decide *when* to scrape team
 stats, not to join against them: the fixture site publishes display names
@@ -68,7 +73,7 @@ uv run dataderby verify
 Exit codes: `0` ok, `2` fetch failed, `3` blocked, `4` config, `5` locked,
 `6` internal or verification mismatch. The phase report is
 [`docs/reports/p8-cli-operations.md`](docs/reports/p8-cli-operations.md) and the
-one-page summary is [`docs/p8-summary.md`](docs/p8-summary.md).
+one-page summary is [`docs/reports/p8-summary.md`](docs/reports/p8-summary.md).
 
 The schema is applied through a checksummed ledger (`schema_migration`), so an
 applied SQL file is never re-run and never silently edited.

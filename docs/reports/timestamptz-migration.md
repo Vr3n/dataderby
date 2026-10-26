@@ -234,7 +234,7 @@ change is exercised by the same suite.
   That is out of scope for v1 and is called out in the README.
 - If a future schedule means "09:00 local", store `09:00` plus the zone, not a UTC
   instant. ADR 0008 records this rule.
-- `docs/reports/p8-cli-operations.md` and `docs/p8-summary.md` now point at this
+- `docs/reports/p8-cli-operations.md` and `docs/reports/p8-summary.md` now point at this
   change; the P8 evidence line records 192 tests.
 
 ## References

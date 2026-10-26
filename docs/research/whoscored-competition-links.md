@@ -351,7 +351,7 @@ apps, shotsPerGame, shotOnTargetPerGame, dribbleWonPerGame, foulGivenPerGame
 The same three lists came back for all twelve stages, in all three `field` splits.
 `rating` and `ranking` are **not** in `statColumns` but are present on every row.
 
-### Row fields (23, unchanged from `docs/whoscored-api.md`)
+### Row fields (23, unchanged from `docs/research/whoscored-api.md`)
 
 ```
 name, teamId, teamName, teamRegionName, seasonId, seasonName, tournamentId, isOpta,
@@ -434,7 +434,7 @@ Present on the Team Statistics page, outside the 60-column contract:
 - **Positional statistics** — touches by `Left / Middle / Right`; attempt direction
   `Left / Middle / Right`; attempt zone `In 6 Yards Box / In 18 Yards Box / Outside
   of Box`; touch zone `Own Third / Middle Third / Opposition Third`.
-- **xG** — `category=xg-teamstats` exists in the feed per `docs/whoscored-api.md`;
+- **xG** — `category=xg-teamstats` exists in the feed per `docs/research/whoscored-api.md`;
   not exercised this session.
 - **Player and referee statistics** — separate tabs with their own feeds; out of
   scope for v1.

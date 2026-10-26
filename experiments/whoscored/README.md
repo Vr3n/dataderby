@@ -1,7 +1,7 @@
 # WhoScored reconnaissance — 2026-10-20
 
 What was measured, and how to repeat it. The readable summary is
-`docs/whoscored-competition-links.md`; this folder holds the raw bits.
+`docs/research/whoscored-competition-links.md`; this folder holds the raw bits.
 
 ## Files
 
@@ -71,7 +71,7 @@ different values). `cache-control: private, max-age=120` sets a 2-minute floor.
 `cadence_probe.ps1` is the E5 instrument: it reads the three standings views, fetches
 the nine feed payloads, hashes both, and appends one JSON line every 5 minutes. Run it
 on a matchday. The method, the evidence and the provisional schedule are in
-`docs/whoscored-cadence.md`.
+`docs/research/whoscored-cadence.md`.
 
 ## Findings that changed the plan
 
@@ -98,4 +98,4 @@ on a matchday. The method, the evidence and the provisional schedule are in
 - xG feed (`xg-teamstats`).
 - Player and referee statistics.
 - Publication latency and retroactive corrections. E5 is the measurement; the
-  provisional schedule is in `docs/whoscored-cadence.md`.
+  provisional schedule is in `docs/research/whoscored-cadence.md`.

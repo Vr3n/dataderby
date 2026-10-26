@@ -2,7 +2,7 @@
 
 **Status:** accepted, 2026-10-20
 **Decision owner:** project owner
-**Evidence:** `docs/whoscored-decisions.md`
+**Evidence:** `docs/research/whoscored-decisions.md`
 
 ## Context
 

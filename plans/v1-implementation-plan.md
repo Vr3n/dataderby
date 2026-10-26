@@ -221,7 +221,7 @@ UNIQUE (tournament_id, whoscored_season_id, whoscored_stage_id, observed_at)
 `experiments/id-scheme/`: 24 cases, 3 implementations, 500 publishes, a real process
 kill, a contending writer, and a rebuild with one backfilled observation. Raw results
 are `results/summary.md`, `results/final.json`, `results/backfill.json`; the narrative
-deck is `docs/id-scheme-report.html`.
+deck is `docs/reference/id-scheme-report.html`.
 
 What the experiment established:
 
@@ -760,7 +760,7 @@ Nothing here blocks M1–M4. Each is scheduled, each has a pass condition.
 | E6 | Does the gate become cookie-bound? | Run probe-only for 7 days, log every gate trip | < 1% gate rate, no cookie needed | cookie refresh, request pacing |
 
 E5 is executable now: `experiments/whoscored/cadence_probe.ps1` logs one JSON line per
-interval, and `docs/whoscored-cadence.md` records the header evidence, the method and
+interval, and `docs/research/whoscored-cadence.md` records the header evidence, the method and
 the provisional schedule. Next window: EPL, 2026-10-24 22:00 IST to 2026-10-25 04:00
 IST. Until it reports, the schedule is a 06:00 IST daily heartbeat plus
 `last kickoff + 2 h` and `+6 h` sweeps.
@@ -780,7 +780,7 @@ WhoScored is presenting it under some arrangement. It is not proof of a violatio
 it is not proof of permission.
 
 **Decision (2026-10-20): accepted by the project owner.** The decision and its scope are
-recorded in `docs/whoscored-decisions.md`. The operational posture is unchanged:
+recorded in `docs/research/whoscored-decisions.md`. The operational posture is unchanged:
 
 - local and private;
 - raw payloads never committed;
@@ -860,7 +860,7 @@ exactly, with ids excluded from the diff.
 - [ ] lock, structured logs, `v_pipeline_freshness`, exit codes
 - [ ] backup of `data/raw` (second disk or object store) **and a restore drill**
 - [ ] scheduler entry (daily probe + post-match window)
-- [x] licence decision recorded, 2026-10-20 (`docs/whoscored-decisions.md`, §15)
+- [x] licence decision recorded, 2026-10-20 (`docs/research/whoscored-decisions.md`, §15)
 - [ ] README: what the data can and cannot answer (§8.3)
 
 **Exit — the v1 gate:**

@@ -28,9 +28,9 @@ fact at the same `(snapshot, team)` grain, over the stage axis.** Standings are 
 scope; player and referee stats remain out.
 
 **Decision update (2026-10-20):** the five questions are answered in
-`docs/whoscored-decisions.md`. Home/away is in scope, standings are in scope at the
+`docs/research/whoscored-decisions.md`. Home/away is in scope, standings are in scope at the
 same grain, raw payloads are persisted, and the refresh cadence is being measured
-(E5, `docs/whoscored-cadence.md`).
+(E5, `docs/research/whoscored-cadence.md`).
 
 ---
 
@@ -85,7 +85,7 @@ the token and cookies are in hand.
 | `europa-league` | Europa League | 250 | 30 | 11294 | 25801 | 36 |
 | `conference-league` | Conference League | 250 | 715 | 11296 | 25802 | 27 |
 
-The full URL for every competition is in `docs/whoscored-competition-links.md`.
+The full URL for every competition is in `docs/research/whoscored-competition-links.md`.
 
 ---
 
@@ -375,7 +375,7 @@ qualification phase or WhoScored is mid-publication.
 - **Payloads:** small JSON; ~20–36 rows each.
 - **Storage:** roughly 12 × 24 × 60 ≈ 17k measures per full snapshot. Negligible.
 - **Refresh:** a 2-minute cache sets the floor; daily heartbeat plus post-matchday
-  sweeps is the provisional schedule (`docs/whoscored-cadence.md`).
+  sweeps is the provisional schedule (`docs/research/whoscored-cadence.md`).
 
 There is no bulk export. The fixture calendar is a separate source and is not
 joined to this data by team name.
@@ -397,7 +397,7 @@ joined to this data by team name.
 | Standings vs stats grain | **same grain, separate fact** | join on `(snapshot_id, data-team-id)`; never on name |
 
 The `isOpta` flag is provenance. The owner accepted it on 2026-10-20; the decision and
-its scope are in `docs/whoscored-decisions.md`. The technical posture is unchanged.
+its scope are in `docs/research/whoscored-decisions.md`. The technical posture is unchanged.
 
 ---
 
@@ -466,8 +466,8 @@ its scope are in `docs/whoscored-decisions.md`. The technical posture is unchang
 | 5 | What refresh cadence? | **Measured** (E5); provisional daily + post-matchday |
 | 6 | Persist raw JSON? | **Yes**, including the page and standings views |
 
-Full record: `docs/whoscored-decisions.md`; cadence evidence:
-`docs/whoscored-cadence.md`.
+Full record: `docs/research/whoscored-decisions.md`; cadence evidence:
+`docs/research/whoscored-cadence.md`.
 
 ---
 
@@ -475,7 +475,7 @@ Full record: `docs/whoscored-decisions.md`; cadence evidence:
 
 | File | Contents |
 |---|---|
-| `docs/whoscored-competition-links.md` | URLs, stage model, column inventory |
+| `docs/research/whoscored-competition-links.md` | URLs, stage model, column inventory |
 | `experiments/whoscored/stages.json` | 12 competitions → season → stage |
 | `experiments/whoscored/stage-labels.json` | observed stage labels and derivation |
 | `experiments/whoscored/brighton-60.json` | one verified 60-column row |
@@ -486,6 +486,6 @@ Full record: `docs/whoscored-decisions.md`; cadence evidence:
 | `experiments/whoscored/cadence_probe.js` | one cadence fingerprint (standings + 9 feeds) |
 | `experiments/whoscored/cadence_probe.ps1` | E5 interval loop, JSONL output |
 | `experiments/whoscored/README.md` | browser recipe and findings |
-| `docs/whoscored-decisions.md` | the five decisions, 2026-10-20 |
-| `docs/whoscored-cadence.md` | header evidence, E5 method, provisional schedule |
-| `docs/whoscored-api.md` | feed details and the 23 row fields |
+| `docs/research/whoscored-decisions.md` | the five decisions, 2026-10-20 |
+| `docs/research/whoscored-cadence.md` | header evidence, E5 method, provisional schedule |
+| `docs/research/whoscored-api.md` | feed details and the 23 row fields |

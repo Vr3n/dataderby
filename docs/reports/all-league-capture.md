@@ -226,7 +226,7 @@ ERROR IncompleteCohort: expected 36 teams, found 0
 ## References
 
 - `scripts/audit_all_stages.py` - the sweep.
-- `docs/all-league-capture-slides.html` - companion deck in the paper/editorial
+- `docs/slides/all-league-capture-slides.html` - companion deck in the paper/editorial
   theme: 25 slides, GSAP motion, talking points on every slide. It defines every
   term in the first four pages, including what a feed, a split, an assertion, and
   issue #14 are.

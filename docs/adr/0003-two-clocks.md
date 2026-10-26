@@ -1,7 +1,7 @@
 # 0003 - Two clocks
 
 **Status:** accepted, 2026-10-21
-**Evidence:** `docs/whoscored-cadence.md`, header probes from 2026-10-20
+**Evidence:** `docs/research/whoscored-cadence.md`, header probes from 2026-10-20
 
 ## Context
 

@@ -1,7 +1,7 @@
 # 0002 - Store full precision, round at presentation
 
 **Status:** accepted, 2026-10-21
-**Evidence:** `docs/whoscored-api.md`, the nine captures at `recon-evidence`
+**Evidence:** `docs/research/whoscored-api.md`, the nine captures at `recon-evidence`
 
 ## Context
 

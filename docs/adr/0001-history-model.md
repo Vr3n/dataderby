@@ -3,7 +3,7 @@
 **Status:** accepted, 2026-10-21
 **Decision owner:** project owner
 **Evidence:** `experiments/id-scheme/results/summary.md`,
-`docs/snapshot-identity-review.html`
+`docs/reference/snapshot-identity-review.html`
 
 ## Context
 

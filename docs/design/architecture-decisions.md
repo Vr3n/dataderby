@@ -12,7 +12,7 @@ You asked for every option, with the why / how / what and the technical detail, 
 
 It is written against two inputs:
 
-1. `docs/football_competition_data_engineering_field_guide.docx` — the design guide already in the repo.
+1. `docs/reference/football_competition_data_engineering_field_guide.docx` — the design guide already in the repo.
 2. The established literature the guide is unknowingly re-deriving: Kimball dimensional modelling, SCD Type 2, bi-temporal modelling, Functional Data Engineering (Beauchemin), dbt/SQLMesh snapshots, dlt, Dagster, data contracts, Monte Carlo's observability pillars, event-time/watermark theory, and Simon Willison's git-scraping.
 
 §2 is the important part: it shows that the guide's instincts are correct but that it is missing four named patterns, two of which change the design. §3 lists what is settled and not worth re-litigating. §4–§7 are the four decisions. §8 covers the cross-cutting concerns that every option has to answer anyway. §9 is the recommendation assembled into one picture.
