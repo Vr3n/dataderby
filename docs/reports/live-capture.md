@@ -152,7 +152,7 @@ teams in summary/overall: 20
 Fixture:
 
 ```
-12 files, 110 KB
+13 files, 97 KB (9 feeds, 3 standings, manifest)
 summary/overall: 20 teams, 8 columns
 fingerprint: ddd500267e1134f8df4506cb13d7efe8b5d02cbeaac082bd78ffdb3448cec5ea
 ```
@@ -196,6 +196,10 @@ that adds the fixture.
 - [ ] The browser transport gap is tracked, not implied to work.
 
 ## References
+
+- `docs/live-capture-slides.html` — companion deck: data shape, database behaviour,
+  first-run findings, and recommendations. Press `n` for presenter notes that explain
+  each decision.
 
 - `docs/reports/p5-parse-canonical.md` — the synthetic-fixture open item this closes.
 - `docs/adr/0004-raw-is-system-of-record.md` — raw bundles and replay.

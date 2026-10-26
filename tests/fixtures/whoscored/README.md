@@ -9,7 +9,7 @@ One real capture of the 2026/27 Premier League stage, taken on 2026-10-26.
 | `whoscored_season_id` | 11141 |
 | `whoscored_stage_id` | 25544 |
 | Teams | 20 |
-| Captured at | 2026-10-26T07:34:46Z |
+| Captured at | 2026-10-26T07:39:18Z (the committed manifest) |
 
 ## What is here
 
