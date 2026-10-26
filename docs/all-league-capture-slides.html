@@ -261,9 +261,9 @@
     </div>
 
     <div id="slides">
-      <!-- 01 cover -->
+<!-- 01 cover -->
       <section class="slide cover" data-sec="The sweep" data-chrome="off"
-        data-note="Open with the result, not the method: ten leagues published on the first pass, one exposed a rule we had wrong. The audience is a senior data engineer, so lead with the fact that the contract generalised and the failure was about football, not parsing.">
+        data-note="Open with the result. We captured every configured competition, not one row. Ten published on the first pass; one was refused by a rule we had wrong; one had no data at all. The rest of the deck explains each of those in plain terms.">
         <svg class="pitch" viewBox="0 0 760 760" aria-hidden="true">
           <rect x="40" y="40" width="680" height="680"/>
           <line x1="380" y1="40" x2="380" y2="720"/>
@@ -278,24 +278,24 @@
           <p class="kicker"><i></i>All-league sweep &nbsp;·&nbsp; 26 October 2026</p>
           <h1 class="display">
             <span class="l"><span>Twelve leagues.</span></span>
-            <span class="l"><span>One afternoon.</span></span>
-            <span class="l"><span>Two surprises.</span></span>
+            <span class="l"><span>Ten published.</span></span>
+            <span class="l"><span>Two did not.</span></span>
           </h1>
-          <p class="standfirst">We stopped testing one row and captured every competition.
-            Ten published on the first pass. One exposed a rule we had wrong about football.</p>
+          <p class="standfirst">This is what we ran, what the data looked like, and the two
+            reasons a league can fail. Every term is defined on the way in.</p>
           <p class="byline">Data engineering · 108 live feed calls · measured, not estimated</p>
         </div>
         <div class="cover-stats">
           <div class="stat"><div class="v" data-count="12">0</div><div class="k">competitions</div></div>
           <div class="stat"><div class="v" data-count="108">0</div><div class="k">feed calls</div></div>
-          <div class="stat"><div class="v" data-count="10">0</div><div class="k">first-pass publishes</div></div>
-          <div class="stat"><div class="v" data-count="1">0</div><div class="k">contract fix</div></div>
+          <div class="stat"><div class="v" data-count="10">0</div><div class="k">published first pass</div></div>
+          <div class="stat"><div class="v" data-count="2">0</div><div class="k">failures to explain</div></div>
         </div>
       </section>
 
       <!-- 02 why -->
       <section class="slide" data-sec="The sweep"
-        data-note="The first capture followed Manchester City in one league. It proved real bytes parse. It could not prove the contract holds for an 18-team league, a 36-team league, or a club with a points deduction. That distinction is the reason for this sweep.">
+        data-note="The first capture followed one team in one league. It proved real bytes parse. It could not prove the contract holds for an 18-team league, a 36-team league, or a club with a points deduction. That distinction is the reason for this sweep.">
         <div>
           <p class="kicker"><i></i>Why another sweep</p>
           <h2 class="display" style="margin-top:14px">One row proved<br>the parser. Not the rules.</h2>
@@ -306,21 +306,80 @@
             <p class="body">It left the important question open. Does the contract still hold when the league has 18 teams, or 36? When a club has a points deduction? When a competition publishes no data at all?</p>
             <div class="room a-up">
               <span class="lbl">So what</span>
-              <p>A green suite on one row is a claim about that row. Twelve leagues is a claim about the model.</p>
+              <p>A green test suite on one row is a claim about that row. Twelve leagues is a claim about the model.</p>
             </div>
           </div>
           <div class="stack">
-            <div class="card a-up"><div class="tag">First pass</div><h3>One stage, one team</h3><p>Real bytes, four defects, one fixture.</p></div>
+            <div class="card a-up"><div class="tag">First pass</div><h3>One stage, one team</h3><p>Real bytes, four defects, one saved fixture.</p></div>
             <div class="card a-up"><div class="tag">This pass</div><h3>All twelve, all nine feeds</h3><p>Same parser, same assertions, one scratch database.</p></div>
             <div class="card a-up"><div class="tag">The point</div><h3>Find the rules, not the bytes</h3><p>Parsing was never the risk. The rules about football were.</p></div>
           </div>
         </div>
-        <div class="small">Method first, then the one failure that mattered.</div>
+        <div class="small">The next page defines every term used in this deck. Nothing is assumed.</div>
       </section>
 
-      <!-- 03 method -->
+      <!-- 03 glossary -->
       <section class="slide" data-sec="The sweep"
-        data-note="One browser session per stage: read the token and the league table, then nine feeds at 1.2 seconds apart. One transaction per stage into a scratch database. A failure is recorded and the sweep continues, so one bad league cannot hide eleven good ones.">
+        data-note="Read this page slowly if the audience is outside the project. A stage is one phase of a competition, with a numeric id from WhoScored. A split is overall, home or away. A feed is the JSON endpoint behind the page. A measure is one number per team per split. An assertion is a rule that returns bad rows. Publish means write the snapshot; fixture means a saved copy of real data used by tests.">
+        <div>
+          <p class="kicker"><i></i>The words used here</p>
+          <h2 class="display" style="margin-top:14px">Eight terms.<br>Then the story.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:180px">Term</th><th>What it means in this project</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td><b>Stage</b></td><td>One phase of a competition, e.g. the 2026/27 league phase. WhoScored gives it a number: <span class="mono">25588</span> is the Championship stage.</td></tr>
+              <tr class="a-row"><td><b>Split</b></td><td>Overall, home or away. The same team, seen three ways.</td></tr>
+              <tr class="a-row"><td><b>Feed</b></td><td>The JSON endpoint the page calls. There are nine per stage: 3 sections × 3 splits.</td></tr>
+              <tr class="a-row"><td><b>Measure</b></td><td>One number per team per split, e.g. <span class="mono">apps</span>, <span class="mono">goals</span>, <span class="mono">rating</span>.</td></tr>
+              <tr class="a-row"><td><b>Snapshot</b></td><td>One complete observation of a stage at one moment. Never edited; a new one is added.</td></tr>
+              <tr class="a-row"><td><b>Assertion</b></td><td>A SQL rule that returns bad rows. Zero rows means pass. <span class="mono">A19</span> is one of them.</td></tr>
+              <tr class="a-row"><td><b>Publish</b></td><td>Write the snapshot to the database in one transaction. All of it lands, or none of it.</td></tr>
+              <tr class="a-row"><td><b>Fixture</b></td><td>A saved copy of real payloads, committed so tests can run without the network.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">These eight words cover almost every sentence in the rest of the deck.</div>
+      </section>
+
+      <!-- 04 feed -->
+      <section class="slide" data-sec="The sweep"
+        data-note="The page is for humans; the numbers come from a JSON endpoint. We call it nine times: summary, defensive and offensive, each overall, home and away. The response names its columns and then gives one object per team. That is the entire input to the parser.">
+        <div>
+          <p class="kicker"><i></i>What a feed is</p>
+          <h2 class="display" style="margin-top:14px">A page for people.<br>JSON for the pipeline.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body">The stage page renders a league table. Underneath it, the site calls a JSON endpoint for the team numbers.</p>
+            <p class="body">We call that endpoint <b>nine times</b>: three sections — summary, defensive, offensive — each in three splits — overall, home, away.</p>
+            <div class="code">page  →  token  →  9 calls
+  summary    overall | home | away
+  defensive  overall | home | away
+  offensive  overall | home | away</div>
+            <p class="small">The same envelope every time; only the column list and the numbers change.</p>
+          </div>
+          <div class="stack">
+            <div class="code">{
+  "statColumns": ["apps", "goal", "rating", …],
+  "teamTableStats": [
+    { "teamName": "Manchester City",
+      "teamId": 167,
+      "apps": 8, "goal": 20, … }
+    , … 19 more teams
+  ]
+}</div>
+            <p class="body"><b>statColumns</b> says which numbers are present. <b>teamTableStats</b> holds one object per team.</p>
+            <p class="small">A missing column is schema drift. The parser refuses the payload instead of storing nulls.</p>
+          </div>
+        </div>
+        <div class="small">Sixty measures per team come from these nine payloads. The page's league table is a separate source, read from the browser.</div>
+      </section>
+
+      <!-- 05 method -->
+      <section class="slide" data-sec="The sweep"
+        data-note="The sweep is a one-off operator script, not the scheduled pipeline. It opens one browser page per stage, reads the token and the league table, calls the nine feeds 1.2 seconds apart, parses, runs the assertions, and publishes into a scratch database. A failure is recorded and the sweep continues.">
         <div>
           <p class="kicker"><i></i>The method</p>
           <h2 class="display" style="margin-top:14px">Same pipeline.<br>Every league.</h2>
@@ -333,22 +392,53 @@
             <div class="link"></div>
             <div class="node"><b>Parse</b><span>60 measures</span></div>
             <div class="link"></div>
-            <div class="node"><b>Validate</b><span>A1–A21</span></div>
+            <div class="node"><b>Assert</b><span>A1–A21</span></div>
             <div class="link"></div>
             <div class="node hot"><b>Publish</b><span>one transaction</span></div>
           </div>
           <div class="c3" style="margin-top:36px">
-            <div class="card a-up"><div class="tag">One browser</div><h3>Per stage, not per feed</h3><p>The page mints the token and holds the session. The feeds are called from inside it.</p></div>
-            <div class="card a-up"><div class="tag">One database</div><h3>Scratch, disposable</h3><p>Every stage publishes for real against the real schema. Nothing is committed to a production file.</p></div>
-            <div class="card a-up"><div class="tag">No fail-fast</div><h3>Record, then continue</h3><p>A blocked league is evidence. Stopping at the first one would hide the other eleven.</p></div>
+            <div class="card a-up"><div class="tag">What ran</div><h3>A one-off sweep</h3><p><span class="mono">scripts/audit_all_stages.py</span>. Not the scheduled pipeline; a tool that captures and checks every stage.</p></div>
+            <div class="card a-up"><div class="tag">Where it wrote</div><h3>A scratch database</h3><p>Every stage published for real against the real schema. The production file was never touched.</p></div>
+            <div class="card a-up"><div class="tag">When it failed</div><h3>It kept going</h3><p>One bad league is recorded, then the next stage starts. Otherwise the first failure hides the other eleven.</p></div>
           </div>
         </div>
-        <div class="small">108 feed requests, 1.1 MB, 295 seconds. The sweep is an operator tool, not a CI test: CI cannot reach the source.</div>
+        <div class="small">108 feed requests, 1.1 MB, 295 seconds. Raw payloads went to a git-ignored folder; the report keeps the table.</div>
       </section>
 
-      <!-- 04 numbers -->
+      <!-- 06 assertions -->
       <section class="slide" data-sec="The sweep"
-        data-note="Ten published on the first pass. The eleventh was blocked by a contract rule, not by a parse error. The twelfth had no feed data at all. Those two are the rest of the deck.">
+        data-note="An assertion is not a unit test. It is a SQL query that selects offending rows. If it returns nothing, the rule passed. If it returns rows, the rule failed. Each rule has an action: BLOCK stops the publish, RETRY asks for a fresh capture, WARN records without stopping. A19 and A20 are simply two of these numbered rules; they matter later.">
+        <div>
+          <p class="kicker"><i></i>What an assertion is</p>
+          <h2 class="display" style="margin-top:14px">A rule that looks<br>for bad rows.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body">Before a snapshot is published, the pipeline runs 21 SQL checks. Each one asks a question and returns the rows that break it.</p>
+            <div class="verdict" style="border-width:1.5px">
+              <div>
+                <div class="big" style="color:#2E6B4F">0</div>
+                <div class="cap">rows returned → pass</div>
+              </div>
+              <div>
+                <div class="big" style="color:#D4382A">n</div>
+                <div class="cap">rows returned → fail</div>
+              </div>
+            </div>
+            <p class="small">The checks are numbered A1–A21. The number is just an id; the rule is the sentence next to it.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Action · BLOCK</div><h3>Stop the publish</h3><p>The data is incoherent or impossible. A human or a config change is needed.</p></div>
+            <div class="card a-up"><div class="tag">Action · RETRY</div><h3>Fetch again</h3><p>The source may be mid-update. Retry, then give up.</p></div>
+            <div class="card a-up"><div class="tag">Action · WARN</div><h3>Record, keep going</h3><p>Suspicious but survivable. It does not stop the snapshot.</p></div>
+          </div>
+        </div>
+        <div class="small">A19 and A20, later in this deck, are two of these rules. They check the league table's arithmetic.</div>
+      </section>
+
+      <!-- 07 numbers -->
+      <section class="slide" data-sec="The sweep"
+        data-note="Ten published on the first pass. The eleventh was blocked by a rule, not by a parse error. The twelfth had no feed data at all. Those two are the rest of the deck.">
         <div>
           <p class="kicker"><i></i>The sweep in numbers</p>
           <h2 class="display" style="margin-top:14px">One afternoon,<br>measured.</h2>
@@ -356,7 +446,7 @@
         <div class="body">
           <div class="c4">
             <div class="stat a-up"><div class="v" data-count="12">0</div><div class="k">stages</div><div class="s">every configured competition</div></div>
-            <div class="stat a-up"><div class="v" data-count="108">0</div><div class="k">feed calls</div><div class="s">nine per stage</div></div>
+            <div class="stat a-up"><div class="v" data-count="108">0</div><div class="k">feed calls</div><div class="s">12 stages × 9 feeds</div></div>
             <div class="stat a-up"><div class="v" data-count="1.1" data-dec="1">0</div><div class="k">megabytes</div><div class="s">validated, not sampled</div></div>
             <div class="stat a-up"><div class="v" data-count="295">0</div><div class="k">seconds</div><div class="s">pacing included</div></div>
           </div>
@@ -371,12 +461,12 @@
             </div>
           </div>
         </div>
-        <div class="small">Eleven publish after the fix on page 11. The twelfth is a source problem, not a code problem.</div>
+        <div class="small">Eleven publish after the fix explained later. The twelfth is a source problem, not a code problem.</div>
       </section>
 
-      <!-- 05 table -->
+      <!-- 08 table -->
       <section class="slide" data-sec="The sweep"
-        data-note="Read the outcome column, not the team counts. Ten green, one blocked, one with no data. The blocked row is the interesting one: the numbers parsed perfectly and the database refused them. The Conference row is different: the page has a table, the feed has nothing.">
+        data-note="Read the outcome column. Ten green, one blocked, one with no data. The blocked row parsed perfectly and the database refused it. The Conference row is different: the page has a table, the feed has nothing.">
         <div>
           <p class="kicker"><i></i>Coverage</p>
           <h2 class="display" style="margin-top:14px">Ten published.<br>Two did not.</h2>
@@ -400,10 +490,10 @@
             </tbody>
           </table>
         </div>
-        <div class="small">Championship is fixed on page 11. The table shows the first pass, before the contract changed.</div>
+        <div class="small">This is the first pass. The Championship is fixed later, in the section on points.</div>
       </section>
 
-      <!-- 06 what held -->
+      <!-- 09 what held -->
       <section class="slide" data-sec="The sweep"
         data-note="The positive result is easy to skip. Eleven leagues, four team counts, 108 payloads: no null measures, no name mismatches, no schema drift. The contract is not Premier-League-shaped. The failures were about rules, not reading.">
         <div>
@@ -430,7 +520,7 @@
         <div class="small">No missing numbers, no renamed clubs, no changed column lists. The boring result is the good one.</div>
       </section>
 
-      <!-- 07 act break -->
+<!-- 10 break -->
       <section class="slide dark" data-sec="Finding 01 · the deduction"
         data-note="Pause here. Everything worked, and then a routine table was refused. The reason was not a bug in the reader. It was an assumption in our contract: that points can be calculated from wins and draws. Football does not always work that way.">
         <div>
@@ -443,7 +533,7 @@
         <div class="small">Championship · stage 25588 · 26 October 2026</div>
       </section>
 
-      <!-- 08 southampton -->
+      <!-- 11 southampton -->
       <section class="slide" data-sec="Finding 01 · the deduction"
         data-note="Put the arithmetic on the screen. Seven wins and three draws is twenty-four points. The table says twenty. Home and away add up to twenty-four, so the missing four are not a split problem. This is what a deduction looks like in the data.">
         <div>
@@ -472,35 +562,32 @@
         <div class="small">Championship · Southampton · stage 25588 · 26 October 2026</div>
       </section>
 
-      <!-- 09 refused -->
+      <!-- 12 refusal -->
       <section class="slide" data-sec="Finding 01 · the deduction"
-        data-note="Two assertions fired. A19 said points must equal three wins plus draws. A20 said points home plus points away must equal points overall. Both are reasonable-looking rules. Both assume points are derived. The publish was refused before anything reached the warehouse.">
+        data-note="Two numbered rules fired. A19 said overall points must equal three wins plus draws. A20 said home points plus away points must equal overall points. Both are in sql/002_assertions.sql. A19 is a BLOCK; A20 is a RETRY. The publish was refused before anything reached the warehouse.">
         <div>
           <p class="kicker"><i></i>Finding 01 · what the pipeline did</p>
-          <h2 class="display" style="margin-top:14px">It refused<br>to publish.</h2>
+          <h2 class="display" style="margin-top:14px">Two rules refused<br>the table.</h2>
         </div>
         <div class="body c2">
           <div class="stack">
-            <div class="code">A19  points = 3 * won + drawn
-     20     = 24            <span style="color:#D4382A">fail</span>
-
-A20  points_home + points_away = points_overall
-     16 + 8                = 20   <span style="color:#D4382A">fail</span></div>
+            <div class="card a-up"><div class="tag">Rule A19 · BLOCK</div><h3>Points from wins and draws</h3><p><span class="mono">points = 3 × won + drawn</span></p><p style="margin-top:8px">Southampton: 20 = 24. <span class="red">Fail.</span></p></div>
+            <div class="card a-up"><div class="tag">Rule A20 · RETRY</div><h3>Points split adds up</h3><p><span class="mono">points_home + points_away = points_overall</span></p><p style="margin-top:8px">Southampton: 16 + 8 = 20? No, 24. <span class="red">Fail.</span></p></div>
+            <p class="small">Both rules live in <span class="mono">sql/002_assertions.sql</span>.</p>
+          </div>
+          <div class="stack">
             <div class="room a-up">
               <span class="lbl">The good part</span>
               <p>Nothing was written. The bad table never became history. The assertions did their job.</p>
             </div>
-          </div>
-          <div class="stack">
             <p class="body"><b>Blocking was correct behaviour</b> given the rule. The rule was the problem.</p>
-            <p class="body">We had written that points are a function of wins and draws. That is true for most rows, and false for a club with a deduction.</p>
-            <p class="body">A model that calls a real league table "incoherent" is not strict. It is wrong.</p>
+            <p class="body">We had written that points are a function of wins and draws. True for most rows; false for a club with a deduction.</p>
           </div>
         </div>
-        <div class="small">A19 BLOCK and A20 RETRY. The retry would not help: the deduction is permanent until it is rescinded.</div>
+        <div class="small">A RETRY would not help: the deduction is permanent until it is rescinded.</div>
       </section>
 
-      <!-- 10 why wrong -->
+      <!-- 13 why -->
       <section class="slide dark" data-sec="Finding 01 · the deduction"
         data-note="This is the conceptual slide. Points deductions are a real mechanism in English football. They apply to the overall total, not to the home and away tables. Once you see points as reported rather than derived, A19 and A20 stop being checks and become assumptions.">
         <div>
@@ -533,29 +620,29 @@ A20  points_home + points_away = points_overall
         <div class="small">A deduction is rare, permanent, and invisible to an arithmetic check. Rare is not the same as impossible.</div>
       </section>
 
-      <!-- 11 fix -->
+      <!-- 14 fix -->
       <section class="slide" data-sec="Finding 01 · the deduction"
-        data-note="The fix is smaller than the explanation. A19 only blocks a total above the maximum, or below zero. A20 stops checking points and keeps checking games and goals. A new test pins it: a four-point deduction passes, an impossible total still blocks.">
+        data-note="The fix is smaller than the explanation. In sql/002_assertions.sql, A19 now blocks only a total above the maximum or below zero. A20 stops checking points and keeps checking games and goals. A new test in tests/test_assertions.py pins it: a four-point deduction passes, an impossible total still blocks.">
         <div>
           <p class="kicker"><i></i>Finding 01 · the fix</p>
           <h2 class="display" style="margin-top:14px">Points are reported.<br>Not calculated.</h2>
         </div>
         <div class="body c2">
           <div class="stack">
-            <div class="card a-up"><div class="tag">Before</div><h3>A19: equality</h3><p><span class="mono">points = 3*won + drawn</span>. Any deduction is impossible.</p></div>
-            <div class="card a-up"><div class="tag">Before</div><h3>A20: sums points</h3><p><span class="mono">points_home + points_away = points_overall</span>. A deduction breaks it.</p></div>
+            <div class="card a-up"><div class="tag">Before · A19</div><h3>Equality</h3><p><span class="mono">points = 3*won + drawn</span>. Any deduction is impossible.</p></div>
+            <div class="card a-up"><div class="tag">Before · A20</div><h3>Points summed</h3><p><span class="mono">points_home + points_away = points_overall</span>. A deduction breaks it.</p></div>
           </div>
           <div class="stack">
-            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After</div><h3>A19: only impossible totals</h3><p>Block if <span class="mono">points &gt; 3*won + drawn</span> or below zero. A lower total is allowed.</p></div>
-            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After</div><h3>A20: games and goals only</h3><p>Played, won, drawn, lost, goals for and against still sum. Points are excluded.</p></div>
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After · A19</div><h3>Only impossible totals</h3><p>Block if <span class="mono">points &gt; 3*won + drawn</span> or below zero. A lower total is allowed.</p></div>
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After · A20</div><h3>Games and goals only</h3><p>Played, won, drawn, lost, goals for and against still sum. Points are excluded.</p></div>
           </div>
         </div>
-        <div class="small">New test: a 4-point deduction passes; a total above the maximum still blocks. The clean-table test still passes.</div>
+        <div class="small">Changed: <span class="mono">sql/002_assertions.sql</span>. Pinned by <span class="mono">tests/test_assertions.py</span>: a 4-point deduction passes; an impossible total still blocks.</div>
       </section>
 
-      <!-- 12 record -->
+      <!-- 15 record -->
       <section class="slide" data-sec="Finding 01 · the deduction"
-        data-note="Allowing a deduction is not the same as ignoring it. The audit records every adjustment with a delta. Recommendation: surface it as a WARN assertion or a small view, so an operator sees the -4 without a failed run. Silence would be the wrong fix.">
+        data-note="Allowing a deduction is not the same as ignoring it. The sweep records every adjustment with a delta. Recommendation: surface it as a WARN assertion or a small view, so an operator sees the -4 without a failed run. A WARN is the action that records without stopping the publish.">
         <div>
           <p class="kicker"><i></i>Finding 01 · what we record</p>
           <h2 class="display" style="margin-top:14px">Allow it.<br>Don't hide it.</h2>
@@ -573,7 +660,7 @@ A20  points_home + points_away = points_overall
           </div>
           <div class="stack">
             <p class="body"><b>Why record it?</b> A deduction changes a table, a ranking, and a story. It should be visible without reading the source.</p>
-            <p class="body"><b>What is missing?</b> The publish contract now accepts it silently. Recommendation: a WARN assertion, or a <span class="mono">v_points_adjustments</span> view.</p>
+            <p class="body"><b>What is missing?</b> The publish contract now accepts it silently. Recommendation: a WARN rule (recorded, not blocking), or a view named <span class="mono">v_points_adjustments</span> (a saved query that lists them).</p>
             <div class="room a-up">
               <span class="lbl">Principle</span>
               <p>Allow the fact; surface the exception. Those are different jobs.</p>
@@ -583,7 +670,7 @@ A20  points_home + points_away = points_overall
         <div class="small">Southampton's −4 is the only adjustment across the 11 accepted leagues.</div>
       </section>
 
-      <!-- 13 act break -->
+      <!-- 16 break conference -->
       <section class="slide dark" data-sec="Finding 02 · the empty feed"
         data-note="The second finding is not about a rule. It is about a competition whose page has a table and whose feed has nothing. This is the kind of gap that a single-league capture would never reveal.">
         <div>
@@ -596,7 +683,7 @@ A20  points_home + points_away = points_overall
         <div class="small">Conference League · stage 25802 · same afternoon</div>
       </section>
 
-      <!-- 14 conference -->
+      <!-- 17 conference -->
       <section class="slide" data-sec="Finding 02 · the empty feed"
         data-note="The page renders a 36-team table with two games each. The feed returns an empty teamTableStats but a valid eight-column statColumns list. The registry expected twenty-seven. Three different numbers for one stage. The feed is the one that cannot be used.">
         <div>
@@ -626,10 +713,10 @@ A20  points_home + points_away = points_overall
             <p class="body">Eight columns are declared. Zero rows are returned. The envelope is valid; the content is absent.</p>
           </div>
         </div>
-        <div class="small">Registry said 27. The page says 36. The feed says 0. Only one of those numbers can be verified, and it is not the feed.</div>
+        <div class="small">Registry said 27. The page says 36. The feed says 0. Only the page can be verified, and the feed is the one we need.</div>
       </section>
 
-      <!-- 15 no guess -->
+<!-- 18 what we did -->
       <section class="slide" data-sec="Finding 02 · the empty feed"
         data-note="We tried the obvious variations: asked for 27 rows, asked for 36, kept the stage id, dropped it. Every response was an empty list. At that point the honest move is not to invent a tournament id. Correct the registry to the page, mark the stage unavailable, and keep it out of the schedule.">
         <div>
@@ -655,10 +742,10 @@ A20  points_home + points_away = points_overall
             <div class="card a-up" style="border-top-color:#D4382A"><div class="tag">Scheduled</div><h3>Not yet</h3><p>A stage that fails every run is noise, not coverage.</p></div>
           </div>
         </div>
-        <div class="small">Do not invent a tournament id to make a dashboard green. The source has to answer.</div>
+        <div class="small">Changed: <span class="mono">config/stages.toml</span>. Do not invent a tournament id to make a dashboard green.</div>
       </section>
 
-      <!-- 16 content type -->
+      <!-- 19 content type -->
       <section class="slide" data-sec="Finding 02 · the empty feed"
         data-note="A small finding with a long tail. Every one of the 108 responses says text/html while the body is JSON. Our parser validates the body, so nothing broke. Any future client that checks the header first will reject good data.">
         <div>
@@ -676,7 +763,7 @@ content-type: <span style="color:#D4382A">text/html; charset=utf-8</span>
           </div>
           <div class="stack">
             <p class="body"><b>Why nothing broke.</b> The parser validates the envelope, not the header. It never asked the server what it had sent.</p>
-            <p class="body"><b>Why it matters.</b> A future client that trusts <span class="mono">Content-Type</span> will reject valid payloads, or worse, parse an HTML error page as if it were data.</p>
+            <p class="body"><b>Why it matters.</b> A future client that trusts <span class="mono">Content-Type</span> will reject valid payloads, or parse an HTML error page as if it were data.</p>
             <div class="room a-up">
               <span class="lbl">Rule</span>
               <p>Validate the body. The header is a claim, not a guarantee.</p>
@@ -686,9 +773,85 @@ content-type: <span style="color:#D4382A">text/html; charset=utf-8</span>
         <div class="small">Recorded so the next integration does not "fix" the feed by adding a header check.</div>
       </section>
 
-      <!-- 17 scorecard -->
+      <!-- 20 two paths -->
       <section class="slide" data-sec="What it means"
-        data-note="Be precise about the boundary. Eleven leagues publish after the fix; the contract is proven at 18 to 36 teams. What is not done: the production transport, the Conference feed, and a visible warning for deductions. The transport is the blocker for scheduled runs.">
+        data-note="This is the part the first draft of this deck assumed. The same feed URL answers differently depending on who asks. Inside the site's own page, it returns JSON. From a normal Python HTTP client, it returns a 200 with an HTML page saying the page does not exist. The sweep uses the first path; the scheduled command uses the second.">
+        <div>
+          <p class="kicker"><i></i>Why the scheduled command is not ready</p>
+          <h2 class="display" style="margin-top:14px">The same URL.<br>Two different answers.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">Path A · the sweep</div><h3>Ask from inside the page</h3><p>A browser opens the site. The nine feeds are called by the page itself. The session is the one the site just created.</p></div>
+            <div class="code">browser page  →  fetch(feed URL)  →  200 JSON
+20 teams, 8 columns  <span style="color:#2E6B4F">✓</span></div>
+          </div>
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:#D4382A"><div class="tag">Path B · dataderby run</div><h3>Ask from Python</h3><p>The command uses a normal HTTP client, like any backend job. The same URL, no browser page, no verified session.</p></div>
+            <div class="code">python HTTP  →  fetch(feed URL)  →  200 HTML
+"The page you requested does not exist"  <span style="color:#D4382A">✗</span></div>
+          </div>
+        </div>
+        <div class="small">A 200 that means "not found" is the trap. The status code is fine; the body is an error page.</div>
+      </section>
+
+      <!-- 21 issue 14 -->
+      <section class="slide dark" data-sec="What it means"
+        data-note="Issue fourteen is a numbered item in this repository's GitHub issue tracker. Its title is: Fetch feeds through the browser session; curl returns the site's 404 shell. It is open. It tracks making the two operator commands use the browser path, as the sweep does. Until that lands, no scheduled run can fetch data, even though parsing and publishing work.">
+        <div>
+          <p class="kicker"><i></i>The open item, in full</p>
+          <h2 class="display" style="margin-top:14px">What #14 is.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="small" style="text-transform:uppercase;letter-spacing:.18em">GitHub issue #14</p>
+            <p class="body"><b>Title:</b> "Fetch feeds through the browser session; curl returns the site's 404 shell."</p>
+            <p class="body"><b>What it changes:</b> the two commands an operator runs — <span class="mono">dataderby run</span> (full pipeline, used by a schedule) and <span class="mono">dataderby probe</span> (one summary feed, no writes, a smoke test) — must fetch the feeds the way the sweep does.</p>
+            <p class="body"><b>Why it is separate:</b> it changes the browser lifecycle and the request pacing, and needs its own tests. The sweep proved the data path; this issue makes it the production path.</p>
+            <p class="small"><span class="mono">github.com/Vr3n/dataderby/issues/14</span></p>
+            <p class="small">"curl" is a command-line HTTP client. Here it stands for any normal backend request, as opposed to a request made by the page.</p>
+          </div>
+          <div class="stack">
+            <div class="room">
+              <span class="lbl">Until it lands</span>
+              <p>A scheduled <span class="mono">run</span> stops at the fetch step. Parsing, validation, and publishing are proven; the fetch is not.</p>
+            </div>
+            <div class="room">
+              <span class="lbl">What is not affected</span>
+              <p>The one-off sweep still works, because it uses the browser path. That is how the evidence in this deck was produced.</p>
+            </div>
+            <p class="small">Issue numbers are just ids in the repository tracker. #14 is this one, not a priority score.</p>
+          </div>
+        </div>
+        <div class="small">This is the only item that blocks a scheduled run. The rest are quality or coverage gaps.</div>
+      </section>
+
+      <!-- 22 files -->
+      <section class="slide" data-sec="What it means"
+        data-note="For a senior engineer, the change is small and specific. Two SQL rules, one test, one config note, one operator script, one report, one deck. Nothing else in the pipeline changed. That is deliberate: the sweep found rules, not a parser bug.">
+        <div>
+          <p class="kicker"><i></i>What changed</p>
+          <h2 class="display" style="margin-top:14px">Six files.<br>One rule.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th style="width:330px">File</th><th>Change</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td><span class="mono">sql/002_assertions.sql</span></td><td>A19 blocks only impossible point totals; A20 no longer sums points across splits.</td></tr>
+              <tr class="a-row"><td><span class="mono">tests/test_assertions.py</span></td><td>New test: a 4-point deduction passes; an impossible total still blocks.</td></tr>
+              <tr class="a-row"><td><span class="mono">config/stages.toml</span></td><td>Conference League corrected from 27 to 36 teams; marked capturable but not publishable.</td></tr>
+              <tr class="a-row"><td><span class="mono">scripts/audit_all_stages.py</span></td><td>New operator sweep: all stages, nine feeds each, failures recorded and the sweep continues.</td></tr>
+              <tr class="a-row"><td><span class="mono">docs/reports/all-league-capture.md</span></td><td>The written report: table, evidence, decisions, open items.</td></tr>
+              <tr class="a-row"><td><span class="mono">docs/all-league-capture-slides.html</span></td><td>This deck.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">202 tests pass; CI runs them on Ubuntu and Windows. The parser and the database schema were not changed.</div>
+      </section>
+
+      <!-- 23 scorecard -->
+      <section class="slide" data-sec="What it means"
+        data-note="Be precise about the boundary. Eleven leagues publish after the fix; the contract is proven at 18 to 36 teams. What is not done: the scheduled fetch, the Conference feed, and a visible warning for deductions. The scheduled fetch is the blocker.">
         <div>
           <p class="kicker"><i></i>What it means</p>
           <h2 class="display" style="margin-top:14px">What works.<br>What doesn't.</h2>
@@ -705,47 +868,32 @@ content-type: <span style="color:#D4382A">text/html; charset=utf-8</span>
             <div>
               <div class="big red">4</div>
               <div class="cap">open items</div>
-              <p class="body" style="margin-top:14px">Production fetch is browser-bound (#14).</p>
+              <p class="body" style="margin-top:14px">The scheduled command cannot fetch feeds yet (#14).</p>
               <p class="body">Conference League has no feed rows.</p>
-              <p class="body">Deductions pass without a WARN.</p>
+              <p class="body">Deductions pass without a visible WARN.</p>
             </div>
           </div>
         </div>
-        <div class="small">The transport blocks every scheduled run. The rest are quality gaps, not correctness gaps.</div>
+        <div class="small">The scheduled fetch is the only blocker. The rest are quality or coverage gaps.</div>
       </section>
 
-      <!-- 18 club -->
+      <!-- 24 next -->
       <section class="slide" data-sec="What it means"
-        data-note="A club does not buy sixty columns. It buys the ability to answer a question about a number: where did it come from, when was it observed, and why did it change. The deduction is the example: a correct table looked wrong to our model.">
-        <div>
-          <p class="kicker"><i></i>A club's view</p>
-          <h2 class="display" style="margin-top:14px">Why this matters<br>on a Saturday.</h2>
-        </div>
-        <div class="body c3">
-          <div class="card a-up"><div class="tag">Freshness</div><h3>A late table is wrong</h3><p>Even when the numbers are right. The schedule is part of correctness.</p></div>
-          <div class="card a-up"><div class="tag">Corrections</div><h3>Deductions are real</h3><p>So are retroactive stat fixes. A model that cannot store them will reject the league.</p></div>
-          <div class="card a-up"><div class="tag">Trust</div><h3>One source, explained</h3><p>Every number traces to raw bytes, a fingerprint, and a run id.</p></div>
-        </div>
-        <div class="small">The value is not the 60 columns. It is being able to say which observation a number came from, and why it moved.</div>
-      </section>
-
-      <!-- 19 next -->
-      <section class="slide" data-sec="What it means"
-        data-note="Dependency order, not preference. Nothing about a scheduled run can be tested until the browser transport works. The deduction warning and the Conference feed are correctness and coverage. The schedule comes last.">
+        data-note="Dependency order, not preference. Nothing about a scheduled run can be tested until the scheduled fetch works. The deduction warning and the Conference feed are correctness and coverage. The schedule comes last.">
         <div>
           <p class="kicker"><i></i>Next</p>
           <h2 class="display" style="margin-top:14px">In order.</h2>
         </div>
         <div class="body c4">
-          <div class="card a-up"><div class="tag">1 · now</div><h3>Browser transport</h3><p>Make <span class="mono">run</span> and <span class="mono">probe</span> fetch the way the sweep does. Blocks every live run (#14).</p></div>
-          <div class="card a-up"><div class="tag">2 · next</div><h3>Surface deductions</h3><p>A WARN or a <span class="mono">v_points_adjustments</span> view. Allow the fact; show the exception.</p></div>
-          <div class="card a-up"><div class="tag">3 · next</div><h3>Conference source</h3><p>Confirm the feed's competition and stage identity, or keep the stage out of the schedule.</p></div>
-          <div class="card a-up"><div class="tag">4 · then</div><h3>Schedule</h3><p>Daily heartbeat plus post-match windows, once the transport is real.</p></div>
+          <div class="card a-up"><div class="tag">1 · now</div><h3>Make run fetch like the sweep</h3><p>Issue #14. The command used by a schedule must call the feeds from the browser page. Until then, no scheduled run.</p></div>
+          <div class="card a-up"><div class="tag">2 · next</div><h3>Show deductions</h3><p>Add a WARN rule or a <span class="mono">v_points_adjustments</span> view so an operator sees a −4 without a failed publish.</p></div>
+          <div class="card a-up"><div class="tag">3 · next</div><h3>Resolve Conference</h3><p>Confirm the feed's competition and stage identity with the source, or keep the stage out of the schedule.</p></div>
+          <div class="card a-up"><div class="tag">4 · then</div><h3>Schedule it</h3><p>Daily heartbeat plus post-match windows, once the fetch is real and the open items are closed.</p></div>
         </div>
         <div class="small">Everything else in the contract held. Do not rewrite what the sweep proved.</div>
       </section>
 
-      <!-- 20 close -->
+      <!-- 25 close -->
       <section class="slide cover" data-sec="What it means"
         data-note="Close on the distinction. The engineering held: eleven leagues, one contract, one transaction. The failure was a football rule we had not written down. That is the value of the sweep: it found the rules, not the bytes.">
         <div class="inner">
@@ -754,10 +902,11 @@ content-type: <span style="color:#D4382A">text/html; charset=utf-8</span>
             <span class="l"><span>The contract held.</span></span>
             <span class="l"><span>The football didn't.</span></span>
           </h1>
-          <p class="standfirst">Eleven leagues agreed with the model. One table showed us a rule we had never written down.</p>
+          <p class="standfirst">Eleven leagues agreed with the model. One table showed us a rule we had never written down. One command still cannot fetch the data.</p>
           <p class="byline">Report: docs/reports/all-league-capture.md · Commit 264142d · 202 tests · CI green · Open: #14</p>
         </div>
       </section>
+
     </div>
 
     <div id="nav">

@@ -227,7 +227,9 @@ ERROR IncompleteCohort: expected 36 teams, found 0
 
 - `scripts/audit_all_stages.py` - the sweep.
 - `docs/all-league-capture-slides.html` - companion deck in the paper/editorial
-  theme: 20 slides, GSAP motion, talking points on every slide.
+  theme: 25 slides, GSAP motion, talking points on every slide. It defines every
+  term in the first four pages, including what a feed, a split, an assertion, and
+  issue #14 are.
 - `docs/reports/live-capture.md` - the single-league capture and the four defects.
 - `sql/002_assertions.sql` - A19 and A20.
 - `config/stages.toml` - the Conference note.
