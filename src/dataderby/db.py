@@ -2,14 +2,39 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
 
 _SQL_DIR = Path(__file__).resolve().parents[2] / "sql"
 _THREADS = 4
+
+_LEDGER_DDL = """
+CREATE TABLE IF NOT EXISTS schema_migration (
+    version     VARCHAR PRIMARY KEY,
+    checksum    VARCHAR NOT NULL,
+    applied_at  TIMESTAMP NOT NULL
+)
+"""
+
+
+class MigrationError(RuntimeError):
+    """Raised when the migration ledger and the files on disk disagree."""
+
+
+def _checksum(path: Path) -> str:
+    """Return the SHA-256 of a migration file's bytes."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _applied(con: duckdb.DuckDBPyConnection) -> dict[str, str]:
+    """Return the applied versions and their recorded checksums."""
+    rows = con.execute("SELECT version, checksum FROM schema_migration").fetchall()
+    return {str(version): str(checksum) for version, checksum in rows}
 
 
 def connect(path: Path, *, read_only: bool = False) -> duckdb.DuckDBPyConnection:
@@ -38,18 +63,54 @@ def connect(path: Path, *, read_only: bool = False) -> duckdb.DuckDBPyConnection
 
 
 def migrate(con: duckdb.DuckDBPyConnection, sql_dir: Path = _SQL_DIR) -> None:
-    """Apply every ``*.sql`` migration in lexical order.
+    """Apply unapplied ``*.sql`` migrations in lexical order, exactly once.
 
-    The v1 schema uses ``CREATE ... IF NOT EXISTS``, so running this function
-    twice is safe. A future migration that is not idempotent must carry its own
-    guard.
+    Each file is identified by its name and recorded with the SHA-256 of its
+    bytes. A second call applies nothing. An applied file whose checksum has
+    changed is refused, because that means the history was edited after it ran.
+
+    A database created before the ledger existed is adopted: the idempotent
+    files run again and are then recorded. The directory passed here must be
+    the full history, because an applied version with no file on disk is an
+    error rather than a silent deletion.
 
     Args:
         con: Open DuckDB connection.
         sql_dir: Directory containing the migration files.
+
+    Raises:
+        MigrationError: If an applied file changed, or an applied version is
+            missing from ``sql_dir``.
+        duckdb.Error: If a migration fails; its transaction is rolled back and
+            no ledger row is written.
     """
-    for sql_path in sorted(sql_dir.glob("*.sql")):
-        con.execute(sql_path.read_text(encoding="utf-8"))
+    con.execute(_LEDGER_DDL)
+    applied = _applied(con)
+    files = sorted(sql_dir.glob("*.sql"))
+    on_disk = {path.name for path in files}
+
+    missing = sorted(set(applied) - on_disk)
+    if missing:
+        raise MigrationError(f"applied migration files are missing: {', '.join(missing)}")
+
+    for sql_path in files:
+        version = sql_path.name
+        checksum = _checksum(sql_path)
+
+        if version in applied:
+            if applied[version] != checksum:
+                raise MigrationError(
+                    f"{version} changed after it was applied "
+                    f"(recorded {applied[version][:12]}, now {checksum[:12]})"
+                )
+            continue
+
+        with transaction(con):
+            con.execute(sql_path.read_text(encoding="utf-8"))
+            con.execute(
+                "INSERT INTO schema_migration (version, checksum, applied_at) VALUES (?, ?, ?)",
+                [version, checksum, datetime.now(UTC)],
+            )
 
 
 @contextmanager

@@ -96,6 +96,7 @@ def test_schema_can_be_applied_twice(con: duckdb.DuckDBPyConnection) -> None:
         "ingestion_run",
         "pipeline_checkpoint",
         "raw_capture",
+        "schema_migration",
     ]
 
 

@@ -1,7 +1,8 @@
 # Data Derby
 
-Football competition data pipeline. This first slice ingests the 2026/27 fixture
-calendar for twelve competitions into SQLite, orchestrated by Dagster.
+Football competition data pipeline. Two independent slices: the 2026/27 fixture
+calendar for twelve competitions (SQLite, orchestrated by Dagster), and the
+WhoScored team-statistics pipeline (DuckDB, append-only snapshots).
 
 ## Sources
 
@@ -48,12 +49,36 @@ uv run python main.py next --days 7   # what is on in the next week (IST)
 .\scripts\dagster.ps1                 # Dagster UI at http://127.0.0.1:3000
 ```
 
+## WhoScored pipeline
+
+The team-statistics pipeline has its own entry point. It is separate from the
+fixture commands above, and `main.py` still belongs to the fixture CLI:
+
+```powershell
+uv run dataderby stages list
+uv run dataderby probe --stage epl-2026-2027          # one feed, no writes
+uv run dataderby run --stage epl-2026-2027 --dry-run  # validate in memory
+uv run dataderby run --stage epl-2026-2027
+uv run dataderby freshness
+uv run dataderby verify
+```
+
+Exit codes: `0` ok, `2` fetch failed, `3` blocked, `4` config, `5` locked,
+`6` internal or verification mismatch. The phase report is
+[`docs/reports/p8-cli-operations.md`](docs/reports/p8-cli-operations.md) and the
+one-page summary is [`docs/p8-summary.md`](docs/p8-summary.md).
+
+The schema is applied through a checksummed ledger (`schema_migration`), so an
+applied SQL file is never re-run and never silently edited.
+
 ## Layout
 
 ```
 config/dagster.yaml        Dagster instance config (SQLite)
 src/dataderby/fixtures/    competitions, download, parse, store, assets, CLI
-tests/                     parser, storage, service, CLI, downloader
+src/dataderby/             WhoScored pipeline: page, fetch, raw, parse, publish, cli
+sql/                       001 schema, 002 assertions, 003 views
+tests/                     parser, storage, service, CLI, downloader, pipeline
 data/                      ignored: raw CSVs, SQLite databases, Dagster history
 ```
 
@@ -111,3 +136,6 @@ uv run ruff check
 uv run mypy main.py
 uv run pytest
 ```
+
+The same four gates run in CI on Ubuntu and Windows for every push and pull
+request (`.github/workflows/ci.yml`).

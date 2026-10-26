@@ -12,6 +12,7 @@ One report per build phase, written before that phase is committed.
 | P5 | [Parse and canonicalise](p5-parse-canonical.md) | complete |
 | P6 | [Publish, validate, and reconcile](p6-publish.md) | complete |
 | P7 | [Consumer views](p7-views.md) | complete |
+| P8 | [CLI, migration ledger, and CI](p8-cli-operations.md) | complete |
 
 The reports record the commands that were run, the evidence they produced, and
 any deviation from `plans/v1-build-plan.md`.
