@@ -1,5 +1,7 @@
 # Data Derby
 
+[![gates](https://github.com/Vr3n/dataderby/actions/workflows/ci.yml/badge.svg)](https://github.com/Vr3n/dataderby/actions/workflows/ci.yml)
+
 Football competition data pipeline. Two independent slices: the 2026/27 fixture
 calendar for twelve competitions (SQLite, orchestrated by Dagster), and the
 WhoScored team-statistics pipeline (DuckDB, append-only snapshots).

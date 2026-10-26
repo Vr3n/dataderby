@@ -39,11 +39,13 @@ run on Ubuntu and Windows for every push.
 ## Evidence
 
 ```
-uv run ruff format --check   → 78 files already formatted
+uv run ruff format --check   → 82 files already formatted
 uv run ruff check            → All checks passed
 uv run mypy main.py          → Success: no issues found
 uv run pytest -q             → 189 passed
 ```
+
+CI: both `gates` legs green on `901eb7b` (Ubuntu and Windows).
 
 New tests: 7 for the ledger, 17 for the CLI. The CLI suite runs a real 20-team
 candidate through the real assertions and the real publish transaction; only the

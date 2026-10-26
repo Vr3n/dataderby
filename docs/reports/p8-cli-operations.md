@@ -263,7 +263,7 @@ with the parser.
 
 ```
 $ uv run ruff format --check
-78 files already formatted
+82 files already formatted
 
 $ uv run ruff check
 All checks passed!
@@ -274,6 +274,11 @@ Success: no issues found in 1 source file
 $ uv run pytest -q
 189 passed
 ```
+
+CI on `901eb7b`: `gates (ubuntu-latest)` and `gates (windows-latest)` both pass.
+The first attempt failed at action resolution (`astral-sh/setup-uv@v10` does not
+exist as a moving tag); the pin to `v10.3.2` is the only change between the two
+runs.
 
 Live smoke checks:
 
