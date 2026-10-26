@@ -150,13 +150,18 @@ def land_stage(
     spec: StageSpec,
     raw_root: Path,
     page: PageCapture,
-    fetcher: FeedFetcher,
+    fetcher: FeedFetcher | None = None,
     *,
+    feeds: tuple[Capture, ...] | None = None,
     run_id: str | None = None,
     log_dir: Path = Path("data/logs"),
     verbose: bool = False,
 ) -> LandingResult:
-    """Fetch nine feeds, archive the full sweep, and record its raw ledger.
+    """Archive one sweep and record its raw ledger.
+
+    Exactly one source of feeds is required: either a ``fetcher`` that performs
+    the requests, or already-fetched ``feeds`` from the browser transport. The
+    second avoids fetching twice when the page and feeds share a session.
 
     The run row is opened before the first feed request. The raw directory is
     written as a bundle and only then are the ledger rows committed. The run is
@@ -167,7 +172,8 @@ def land_stage(
         spec: Stage to land.
         raw_root: Raw root, normally ``data/raw``.
         page: An already-captured page for this stage.
-        fetcher: Feed fetcher; injectable for replay tests.
+        fetcher: Feed fetcher; injectable for tests. Ignored when ``feeds`` is set.
+        feeds: Feeds already captured in the page's session.
         run_id: Optional caller-supplied run id.
         log_dir: JSON-lines log directory.
         verbose: Also log to stderr.
@@ -176,6 +182,7 @@ def land_stage(
         The landed run and its archived file metadata.
 
     Raises:
+        ValueError: If neither ``fetcher`` nor ``feeds`` is supplied.
         FetchError: If a feed cannot be accepted.
         FileExistsError: If the target raw directory already exists.
         Exception: Any other landing failure, after marking the run as failed.
@@ -191,7 +198,10 @@ def land_stage(
     )
 
     try:
-        feeds = fetcher.fetch_all(spec, page.token)
+        if feeds is None:
+            if fetcher is None:
+                raise ValueError("land_stage needs either a fetcher or feeds")
+            feeds = fetcher.fetch_all(spec, page.token)
         observed_at = min([page.captured_at, *(capture.captured_at for capture in feeds)])
         payloads = _payloads(page, feeds)
         raw_files = write_bundle(raw_root, spec, observed_at, payloads)

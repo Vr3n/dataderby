@@ -37,10 +37,10 @@ from dataderby.canonical import fingerprint
 from dataderby.config import Settings, StageSpec, load_settings
 from dataderby.contract import SECTIONS, VIEWS, View
 from dataderby.db import MigrationError, connect, migrate
-from dataderby.fetch import Capture, FeedFetcher, FetchBlocked, FetchError, SchemaDrift
+from dataderby.fetch import Capture, FetchBlocked, FetchError, SchemaDrift
 from dataderby.landing import LandingResult, land_stage
 from dataderby.lock import LockHeld, exclusive_lock
-from dataderby.page import PageCapture, capture_page
+from dataderby.page import PageCapture, StageCapture, capture_stage
 from dataderby.parse import (
     IncompleteCohort,
     OwnershipMismatch,
@@ -80,10 +80,9 @@ class ConfigError(ValueError):
 
 @dataclass(slots=True)
 class Runtime:
-    """The two effects the CLI cannot own: the page and the feed client."""
+    """The browser effect the CLI cannot own: one page plus its feeds."""
 
-    capture: Callable[[str], PageCapture] = capture_page
-    make_fetcher: Callable[[], FeedFetcher] = FeedFetcher
+    sweep: Callable[..., StageCapture] = capture_stage
 
 
 class _Parser(argparse.ArgumentParser):
@@ -568,8 +567,9 @@ def _dry_run_one(
     runtime: Runtime,
     out: TextIO,
 ) -> Exit:
-    page = runtime.capture(spec.whoscored_page_url)
-    feeds = runtime.make_fetcher().fetch_all(spec, page.token)
+    stage = runtime.sweep(spec.whoscored_page_url, spec)
+    page = stage.page
+    feeds = stage.feeds
     observed_at = min([page.captured_at, *(capture.captured_at for capture in feeds)])
     run = LandingResult(
         run_id=f"dryrun_{uuid4().hex}",
@@ -628,13 +628,13 @@ def _run(
             reconcile(con)
             for stage_key in keys:
                 spec = settings.stages[stage_key]
-                page = runtime.capture(spec.whoscored_page_url)
+                stage = runtime.sweep(spec.whoscored_page_url, spec)
                 landed = land_stage(
                     con,
                     spec,
                     settings.raw_dir,
-                    page,
-                    runtime.make_fetcher(),
+                    stage.page,
+                    feeds=stage.feeds,
                     log_dir=settings.log_dir,
                 )
                 candidate = build_candidate(list(landed.feeds), spec)
@@ -666,8 +666,14 @@ def _probe(
 ) -> Exit:
     for stage_key in _keys(settings, key):
         spec = settings.stages[stage_key]
-        page = runtime.capture(spec.whoscored_page_url)
-        capture = runtime.make_fetcher().fetch_one(spec, "summary", "overall", page.token)
+        stage = runtime.sweep(
+            spec.whoscored_page_url,
+            spec,
+            only=(("summary", "overall"),),
+        )
+        if not stage.feeds:
+            raise FetchError(f"{spec.key}: probe returned no feed")
+        capture = stage.feeds[0]
         digest = hashlib.sha256(capture.body).hexdigest()
         rows = _probe_rows(capture)
         _say(

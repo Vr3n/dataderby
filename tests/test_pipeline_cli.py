@@ -8,16 +8,15 @@ from collections.abc import Iterator
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
-from typing import cast
 
 import pytest
 
 from dataderby.cli import Runtime, main
 from dataderby.config import Settings
 from dataderby.db import connect, migrate
-from dataderby.fetch import Capture, FeedFetcher, SchemaDrift
+from dataderby.fetch import Capture, SchemaDrift
 from dataderby.lock import exclusive_lock
-from dataderby.page import PageCapture
+from dataderby.page import PageCapture, StageCapture
 from tests.test_assertions import _page
 from tests.test_whoscored_parse import _NOW, _SPEC, _captures
 
@@ -57,32 +56,19 @@ def _settings(tmp_path: Path) -> Settings:
     return load_settings(_config(tmp_path))
 
 
-class _FakeFetcher:
-    """A feed client that returns canned captures and records nothing."""
-
-    def __init__(self, feeds: list[Capture]) -> None:
-        self.feeds = feeds
-
-    def fetch_all(self, spec: object, token: str) -> tuple[Capture, ...]:
-        return tuple(self.feeds)
-
-    def fetch_one(self, spec: object, section: str, view: str, token: str) -> Capture:
-        for capture in self.feeds:
-            if capture.section == section and capture.view == view:
-                return capture
-        raise AssertionError(f"no capture for {section}/{view}")
-
-
 def _runtime(
     *,
     page: PageCapture | None = None,
     feeds: list[Capture] | None = None,
 ) -> Runtime:
+    """A sweep that returns the page and feeds without a browser."""
     selected = feeds if feeds is not None else _captures()
-    return Runtime(
-        capture=lambda url: page or _page(),
-        make_fetcher=lambda: cast(FeedFetcher, _FakeFetcher(selected)),
-    )
+    stage = StageCapture(page=page or _page(), feeds=tuple(selected))
+
+    def sweep(url: str, spec: object, *, only: object = None) -> StageCapture:
+        return stage
+
+    return Runtime(sweep=sweep)
 
 
 @pytest.fixture
@@ -313,13 +299,9 @@ def test_a_missing_config_is_a_config_error(
 def test_schema_drift_is_blocked_rather_than_a_fetch_failure(tmp_path: Path) -> None:
     config = _config(tmp_path)
 
-    class _DriftingFetcher(_FakeFetcher):
-        def fetch_all(self, spec: object, token: str) -> tuple[Capture, ...]:
-            raise SchemaDrift("statColumns changed")
+    def drifting(url: str, spec: object, *, only: object = None) -> StageCapture:
+        raise SchemaDrift("statColumns changed")
 
-    runtime = Runtime(
-        capture=lambda url: _page(),
-        make_fetcher=lambda: cast(FeedFetcher, _DriftingFetcher([])),
-    )
+    runtime = Runtime(sweep=drifting)
 
     assert main(["run", "--config", str(config)], runtime=runtime) == 3

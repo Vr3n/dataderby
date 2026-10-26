@@ -1,13 +1,26 @@
-"""Live stage-page capture with Patchright."""
+"""Live stage capture and the browser-backed feed transport."""
 
 from __future__ import annotations
 
+import random
 import re
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from dataderby.contract import VIEWS, View
+from dataderby.config import StageSpec
+from dataderby.contract import SECTIONS, VIEWS, Section, View
+from dataderby.fetch import (
+    Capture,
+    FetchBlocked,
+    FetchError,
+    GatePage,
+    SchemaDrift,
+    feed_url,
+    parse_envelope,
+)
 from dataderby.standings import RawStandingsRow
 
 _TOKEN_RE = re.compile(r"gSiteHeaderValue\s*:\s*['\"]([^'\"]+)['\"]")
@@ -52,6 +65,24 @@ _STAGES_JS = """
   .map((option) => option.textContent.trim())
 """
 
+_FEED_JS = """
+async (args) => {
+  const response = await fetch(args.url, {
+    headers: {
+      'Model-last-Mode': args.token,
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    credentials: 'include'
+  });
+  return {
+    status: response.status,
+    type: response.headers.get('content-type'),
+    body: await response.text()
+  };
+}
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class PageCapture:
@@ -63,6 +94,14 @@ class PageCapture:
     standings: dict[View, tuple[RawStandingsRow, ...]]
     captured_at: datetime
     url: str
+
+
+@dataclass(frozen=True, slots=True)
+class StageCapture:
+    """A page and its feeds, captured in one browser session."""
+
+    page: PageCapture
+    feeds: tuple[Capture, ...]
 
 
 def _rows_from_js(items: list[dict[str, Any]]) -> tuple[RawStandingsRow, ...]:
@@ -87,8 +126,60 @@ def _token_from_html(html: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _read_page(page: Any, url: str, timeout_ms: int) -> PageCapture:
+    """Navigate a loaded browser page and read the table, token, and labels."""
+    from patchright.sync_api import TimeoutError as PlaywrightTimeoutError
+
+    page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+
+    has_table = False
+    try:
+        page.wait_for_selector("table[id^='standings-']", timeout=timeout_ms)
+        has_table = True
+    except PlaywrightTimeoutError:
+        has_table = False
+    page.wait_for_timeout(1_000)
+
+    html = page.content()
+    token = _token_from_html(html) or ""
+    if not token:
+        token_value = page.evaluate(_TOKEN_JS)
+        token = "" if token_value is None else str(token_value)
+    if not token:
+        raise RuntimeError("page did not expose gSiteHeaderValue")
+    stages = tuple(str(label) for label in page.evaluate(_STAGES_JS))
+
+    standings: dict[View, tuple[RawStandingsRow, ...]] = {}
+    if has_table:
+        for view in VIEWS:
+            # The live page uses lower-case data-source values
+            # ("overall", "home", "away"); title-casing them silently
+            # matches nothing and leaves every view identical.
+            selector = f'a.option[data-source="{view}"]'
+            toggle = page.locator(selector)
+            if toggle.count():
+                toggle.first.click()
+                page.wait_for_timeout(400)
+            items = page.evaluate(_STANDINGS_JS)
+            if not isinstance(items, list):
+                raise RuntimeError(f"standings rows were not a list for {view}")
+            standings[view] = _rows_from_js(items)
+
+    return PageCapture(
+        html=html,
+        token=token,
+        stages=stages,
+        standings=standings,
+        captured_at=datetime.now(UTC),
+        url=url,
+    )
+
+
 def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
     """Load a WhoScored stage page in a headed Chromium and read the tables.
+
+    This is the page-only path. Use :func:`capture_stage` when the feeds are
+    needed too, so the page and the feeds share one browser session.
 
     Args:
         url: The stage's ``show`` URL.
@@ -101,7 +192,6 @@ def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
     Raises:
         RuntimeError: If the browser cannot load the page or read the token.
     """
-    from patchright.sync_api import TimeoutError as PlaywrightTimeoutError
     from patchright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
@@ -111,47 +201,155 @@ def capture_page(url: str, *, timeout_ms: int = 45_000) -> PageCapture:
             page = context.new_page()
             page.route("**/*fingerprint*", lambda route: route.abort())
             page.route("**/*podname.com*", lambda route: route.abort())
-            page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+            return _read_page(page, url, timeout_ms)
+        finally:
+            browser.close()
 
-            has_table = False
+
+def _fetch_one(page: Any, url: str, token: str) -> tuple[int, bytes, str | None]:
+    """Fetch one feed from inside the page's own session."""
+    result = page.evaluate(_FEED_JS, {"url": url, "token": token})
+    if not isinstance(result, dict):
+        raise FetchError("feed fetch returned no result")
+    body = str(result.get("body", "")).encode("utf-8")
+    content_type = result.get("type")
+    return int(result.get("status", 0)), body, str(content_type) if content_type else None
+
+
+def collect_feeds(
+    spec: StageSpec,
+    token: str,
+    fetch_one: Callable[[str], tuple[int, bytes, str | None]],
+    *,
+    only: tuple[tuple[Section, View], ...] | None = None,
+    pacing: float = 1.2,
+    max_attempts: int = 3,
+    sleep: Callable[[float], None] = time.sleep,
+    jitter: Callable[[], float] = random.random,
+    now: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> tuple[Capture, ...]:
+    """Fetch and validate one stage's feeds, with pacing and retries.
+
+    The transport is injected as ``fetch_one``: in production it runs JavaScript
+    in the page; in tests it returns canned bytes. That keeps the retry,
+    pacing, and envelope rules testable without a browser.
+
+    Args:
+        spec: Stage to fetch.
+        token: ``Model-last-Mode`` token from the page.
+        fetch_one: Callable returning ``(status, body, content_type)`` for a URL.
+        only: Optional subset of ``(section, view)`` pairs. Defaults to all nine.
+        pacing: Seconds between requests.
+        max_attempts: Attempts per feed.
+        sleep: Injectable sleep, for tests.
+        jitter: Injectable jitter, for tests.
+        now: Injectable clock, for tests.
+
+    Returns:
+        Accepted captures in request order.
+
+    Raises:
+        SchemaDrift: Immediately, because a changed column list is not transient.
+        FetchError: If a feed cannot be accepted after every attempt.
+    """
+    pairs = only if only is not None else tuple((s, v) for s in SECTIONS for v in VIEWS)
+    feeds: list[Capture] = []
+    first_request = True
+
+    def pace() -> None:
+        nonlocal first_request
+        if not first_request:
+            sleep(pacing)
+        first_request = False
+
+    for section, view in pairs:
+        url = feed_url(spec, section, view)
+        last_error: FetchError | None = None
+
+        for attempt in range(1, max_attempts + 1):
+            pace()
             try:
-                page.wait_for_selector("table[id^='standings-']", timeout=timeout_ms)
-                has_table = True
-            except PlaywrightTimeoutError:
-                has_table = False
+                status, body, content_type = fetch_one(url)
+            except FetchError:
+                raise
+            except Exception as exc:
+                last_error = FetchError(f"{section}/{view}: request failed: {exc}")
+            else:
+                if status == 403:
+                    last_error = FetchBlocked(f"{section}/{view}: HTTP 403")
+                elif status != 200:
+                    last_error = FetchError(f"{section}/{view}: HTTP {status}")
+                else:
+                    try:
+                        parse_envelope(body, section, view)
+                    except SchemaDrift:
+                        raise
+                    except GatePage as exc:
+                        last_error = exc
+                    else:
+                        feeds.append(
+                            Capture(
+                                section=section,
+                                view=view,
+                                body=body,
+                                captured_at=now(),
+                                content_type=content_type,
+                                url=url,
+                                status=status,
+                                attempt=attempt,
+                            )
+                        )
+                        break
 
-            html = page.content()
-            token = _token_from_html(html) or ""
-            if not token:
-                token_value = page.evaluate(_TOKEN_JS)
-                token = "" if token_value is None else str(token_value)
-            if not token:
-                raise RuntimeError("page did not expose gSiteHeaderValue")
-            stages = tuple(str(label) for label in page.evaluate(_STAGES_JS))
+            if attempt < max_attempts:
+                sleep(2**attempt + jitter())
+        else:
+            if last_error is None:
+                raise FetchError(f"{section}/{view}: no attempt was made")
+            raise last_error
 
-            standings: dict[View, tuple[RawStandingsRow, ...]] = {}
-            if has_table:
-                for view in VIEWS:
-                    # The live page uses lower-case data-source values
-                    # ("overall", "home", "away"); title-casing them silently
-                    # matches nothing and leaves every view identical.
-                    selector = f'a.option[data-source="{view}"]'
-                    toggle = page.locator(selector)
-                    if toggle.count():
-                        toggle.first.click()
-                        page.wait_for_timeout(400)
-                    items = page.evaluate(_STANDINGS_JS)
-                    if not isinstance(items, list):
-                        raise RuntimeError(f"standings rows were not a list for {view}")
-                    standings[view] = _rows_from_js(items)
+    return tuple(feeds)
 
-            return PageCapture(
-                html=html,
-                token=token,
-                stages=stages,
-                standings=standings,
-                captured_at=datetime.now(UTC),
-                url=url,
+
+def capture_stage(
+    url: str,
+    spec: StageSpec,
+    *,
+    only: tuple[tuple[Section, View], ...] | None = None,
+    timeout_ms: int = 45_000,
+) -> StageCapture:
+    """Capture a stage page and its feeds in one browser session.
+
+    The feeds are requested by the page itself, so they carry the session the
+    site created. That is the difference between JSON and a 200 HTML error page.
+
+    Args:
+        url: The stage's ``show`` URL.
+        spec: Stage configuration, used to build the feed URLs.
+        only: Optional subset of feeds, used by ``probe``.
+        timeout_ms: Navigation and selector timeout.
+
+    Returns:
+        The page and its accepted feed captures.
+
+    Raises:
+        RuntimeError: If the page cannot be read.
+        FetchError: If a feed cannot be accepted.
+    """
+    from patchright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=False)
+        try:
+            context = browser.new_context()
+            page = context.new_page()
+            page_capture = _read_page(page, url, timeout_ms)
+            feeds = collect_feeds(
+                spec,
+                page_capture.token,
+                lambda feed: _fetch_one(page, feed, page_capture.token),
+                only=only,
             )
+            return StageCapture(page=page_capture, feeds=feeds)
         finally:
             browser.close()

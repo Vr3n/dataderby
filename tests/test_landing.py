@@ -154,6 +154,36 @@ def test_landing_writes_page_standings_and_feeds_then_ledger(
     assert len(standings["rows"]) == 2
 
 
+def test_pre_fetched_feeds_skip_the_fetcher(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:
+    fetcher = _FakeFetcher(error=AssertionError("fetcher must not be called"))
+
+    result = land_stage(
+        con,
+        _SPEC,
+        tmp_path / "raw",
+        _page(),
+        cast(FeedFetcher, fetcher),
+        feeds=_feeds(),
+        run_id="run_prefetched",
+        log_dir=tmp_path / "logs",
+    )
+
+    assert len(result.raw_files) == 13
+    assert fetcher.calls == []
+
+
+def test_landing_requires_a_feed_source(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="fetcher or feeds"):
+        land_stage(
+            con,
+            _SPEC,
+            tmp_path / "raw",
+            _page(),
+            run_id="run_missing",
+            log_dir=tmp_path / "logs",
+        )
+
+
 def test_raw_ledger_insert_is_idempotent(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:
     result = land_stage(
         con,
