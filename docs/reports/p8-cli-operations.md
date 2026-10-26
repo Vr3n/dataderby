@@ -303,8 +303,9 @@ error, not a crash.
 - **`migrate()` still executes a whole file in one `execute()`.** A future migration
   that cannot share a transaction needs a different runner. Recorded in
   `docs/reports/p3-schema.md` and still true.
-- **CI has not run yet.** The workflow is committed but the first run happens on
-  push. If `setup-uv@v10` or `checkout@v7` change their inputs, the workflow is the
+- **CI is pinned to `setup-uv@v10.3.2`.** The repository publishes release tags but
+  no moving `v10` tag; the first run failed at action resolution. Pinning the exact
+  tag is also the safer default. If the action's inputs change, the workflow is the
   thing to fix, not the code.
 - **`tests/test_schema.py` changed by one line.** Adding a real table to the schema
   makes the closed table list wrong; the list now includes `schema_migration`. No
