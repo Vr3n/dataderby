@@ -17,7 +17,7 @@ _LEDGER_DDL = """
 CREATE TABLE IF NOT EXISTS schema_migration (
     version     VARCHAR PRIMARY KEY,
     checksum    VARCHAR NOT NULL,
-    applied_at  TIMESTAMP NOT NULL
+    applied_at  TIMESTAMP WITH TIME ZONE NOT NULL
 )
 """
 
@@ -40,11 +40,11 @@ def _applied(con: duckdb.DuckDBPyConnection) -> dict[str, str]:
 def connect(path: Path, *, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     """Open a DuckDB connection with the v1 settings.
 
-    The session timezone is pinned to UTC because every timestamp the pipeline
-    writes is a timezone-aware UTC ``datetime``. DuckDB binds those into
-    ``TIMESTAMP`` columns using the session timezone, so a local session would
-    silently store local wall time and make ``TIMESTAMP`` ordering depend on
-    the machine that happened to write the row.
+    Every pipeline timestamp is stored as ``TIMESTAMP WITH TIME ZONE``, so the
+    instant is unambiguous regardless of who reads it. The session timezone is
+    still pinned to UTC: naive inputs and rendered values then mean UTC by
+    default, and ``current_timestamp`` comparisons do not depend on the host.
+    The pin is a convenience now, not the correctness mechanism.
 
     Args:
         path: Database file. Its parent is created for a writable connection.

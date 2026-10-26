@@ -108,6 +108,15 @@ The calendar tables:
 fixturedownload.com times are fetched as **UTC** and converted to **Asia/Kolkata** with `zoneinfo`.
 Both are stored: `kickoff_utc` for ordering and joining, `kickoff_ist` for display.
 
+The WhoScored snapshot tables take a different approach, decided in
+[`docs/adr/0008-timestamptz.md`](docs/adr/0008-timestamptz.md): every timestamp is
+`TIMESTAMP WITH TIME ZONE`, so one column holds one instant. Local time is rendered
+at read time by [`v_snapshot_clock`](sql/003_views.sql), which shows UTC and IST side
+by side. There is no stored `observed_at_ist` column, and a different zone is a
+query-level expression rather than a schema change.
+
+The fixture table keeps its two columns. Migrating it is not part of v1.
+
 The source also offers an `IndiaStandardTime` export, but it is not used. Measured on
 19 Oct 2026: it is missing for five of twelve competitions, and where present it is wrong
 for 56 of 380 Premier League rows (match 46, 20/09 13:00 UTC, exported as 19/09 19:30).

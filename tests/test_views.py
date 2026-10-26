@@ -179,7 +179,7 @@ def _insert_run(
     )
 
 
-def test_migrate_creates_all_six_consumer_views(
+def test_migrate_creates_all_seven_consumer_views(
     con: duckdb.DuckDBPyConnection,
 ) -> None:
     views = con.execute(
@@ -192,6 +192,7 @@ def test_migrate_creates_all_six_consumer_views(
         "v_latest_team_state",
         "v_latest_team_with_standings",
         "v_pipeline_freshness",
+        "v_snapshot_clock",
         "v_snapshot_delta",
         "v_standings_history",
     ]
@@ -372,8 +373,8 @@ def test_standings_history_returns_one_series_row_per_snapshot(
     ).fetchall()
 
     assert rows == [
-        (_NOW.replace(tzinfo=None), 2, 10, "wwd"),
-        ((_NOW + timedelta(days=1)).replace(tzinfo=None), 1, 13, "wwdw"),
+        (_NOW, 2, 10, "wwd"),
+        (_NOW + timedelta(days=1), 1, 13, "wwdw"),
     ]
 
 
@@ -443,3 +444,26 @@ def test_pipeline_freshness_age_is_null_before_the_first_success(
     row = con.execute("SELECT last_success_at, age_seconds FROM v_pipeline_freshness").fetchone()
 
     assert row == (None, None)
+
+
+def test_snapshot_clock_renders_one_instant_in_utc_and_ist(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    observed = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
+    _insert_snapshot(con, "snap_clock", observed_at=observed)
+
+    row = con.execute(
+        """
+        SELECT observed_at_utc, observed_at_ist, accepted_at_utc, accepted_at_ist
+        FROM v_snapshot_clock
+        WHERE snapshot_id = 'snap_clock'
+        """
+    ).fetchone()
+
+    assert row is not None
+    assert row[0] == observed
+    assert row[0].tzinfo is not None
+    assert row[1] == datetime(2026, 10, 21, 15, 30)
+    assert row[1].tzinfo is None
+    assert row[2] == observed
+    assert row[3] == datetime(2026, 10, 21, 15, 30)

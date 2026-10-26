@@ -272,7 +272,7 @@ $ uv run mypy main.py
 Success: no issues found in 1 source file
 
 $ uv run pytest -q
-189 passed
+192 passed   # 189 at P8 close; ADR 0008 added three timestamp tests
 ```
 
 CI on `901eb7b`: `gates (ubuntu-latest)` and `gates (windows-latest)` both pass.
@@ -299,9 +299,10 @@ error, not a crash.
 
 ## Deviations and open items
 
-- **Issue #4 (timestamp type) is not in this change.** It touches the schema and
-  the assertion staging columns; it deserves its own commit and test sweep. It is
-  still open and still cheaper before the first real capture.
+- **Issue #4 (timestamp type) landed after this report** in ADR `0008`: every
+  pipeline timestamp is now `TIMESTAMPTZ`, and `v_snapshot_clock` renders UTC and
+  IST at read time. The schema edit is safe only because there is no data yet; after
+  the first capture, a type change needs a real migration.
 - **No real capture was parsed.** Every payload in these tests is synthetic. Issue
   #5 remains the gate on that claim.
 - **No 429/`Retry-After` handling.** The fetch policy is unchanged; issue #6 owns it.

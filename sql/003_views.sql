@@ -1,8 +1,9 @@
 -- P7 consumer views. The latest views choose one snapshot per stage before
 -- joining facts, so a team missing from the newest snapshot cannot leak in
 -- from an older one. History views never use accepted_at as the ordering clock.
--- Timestamps are stored as UTC wall time (the connection pins TimeZone=UTC), so
--- age_seconds compares last_success_at with the UTC clock, not the host clock.
+-- Timestamps are TIMESTAMP WITH TIME ZONE: one instant, stored in UTC. The
+-- session still defaults to UTC, but the type carries the guarantee. Local
+-- renderings are presentation only; v_snapshot_clock at the end shows both.
 
 CREATE OR REPLACE VIEW v_latest_team_state AS
 WITH latest AS (
@@ -226,7 +227,7 @@ SELECT
             date_diff(
                 'second',
                 c.last_success_at,
-                current_timestamp AT TIME ZONE 'UTC'
+                current_timestamp
             )
         )
     END AS age_seconds,
@@ -249,3 +250,20 @@ ORDER BY
     s.whoscored_tournament_id,
     s.whoscored_season_id,
     s.whoscored_stage_id;
+
+-- Presentation only: one row per snapshot, the instant rendered in UTC and in
+-- the operator's local zone. Storage stays TIMESTAMPTZ; this view is a lens,
+-- not a second copy. A different zone is a one-line change here, or an
+-- expression in the consumer's query (observed_at AT TIME ZONE 'Europe/London').
+CREATE OR REPLACE VIEW v_snapshot_clock AS
+SELECT
+    snapshot_id,
+    whoscored_tournament_id,
+    whoscored_season_id,
+    whoscored_stage_id,
+    observed_at                             AS observed_at_utc,
+    observed_at AT TIME ZONE 'Asia/Kolkata' AS observed_at_ist,
+    accepted_at                             AS accepted_at_utc,
+    accepted_at AT TIME ZONE 'Asia/Kolkata' AS accepted_at_ist
+FROM competition_snapshot
+ORDER BY observed_at DESC, accepted_at DESC, snapshot_id DESC;

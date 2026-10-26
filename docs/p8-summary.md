@@ -42,7 +42,7 @@ run on Ubuntu and Windows for every push.
 uv run ruff format --check   → 82 files already formatted
 uv run ruff check            → All checks passed
 uv run mypy main.py          → Success: no issues found
-uv run pytest -q             → 189 passed
+uv run pytest -q             → 192 passed
 ```
 
 CI: both `gates` legs green on `901eb7b` (Ubuntu and Windows).
@@ -54,12 +54,16 @@ page capture and the feed client are injected.
 ## What this does not claim
 
 - No real WhoScored capture has been parsed. Issue #5 is still the gate on that.
-- The timestamp type is still naive `TIMESTAMP` (issue #4). The UTC session pin is
-  still load-bearing.
 - The fetch policy is unchanged: no 429/`Retry-After` branch yet (issue #6).
 - Nothing is scheduled and nothing alerts (issue #7).
 
 ## Next
 
-In order: the timestamp decision (#4), one real capture (#5), the fetch policy
-(#6), then the schedule (#7) and the v1 gate (#9).
+In order: one real capture (#5), the fetch policy (#6), then the schedule (#7) and
+the v1 gate (#9).
+
+## Since this summary
+
+ADR `0008` moved every pipeline timestamp to `TIMESTAMP WITH TIME ZONE` (issue #4)
+and added `v_snapshot_clock`. Local time is now a read-time rendering, not a stored
+column. See `docs/adr/0008-timestamptz.md`.

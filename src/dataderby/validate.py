@@ -168,7 +168,7 @@ def _stage_rows(
         """
         CREATE TEMP TABLE _assert_run (
             run_id VARCHAR,
-            observed_at TIMESTAMP,
+            observed_at TIMESTAMP WITH TIME ZONE,
             capture_span_seconds DOUBLE,
             whoscored_page_url VARCHAR,
             whoscored_tournament_id INTEGER,
@@ -187,7 +187,7 @@ def _stage_rows(
             section VARCHAR,
             view VARCHAR,
             url VARCHAR,
-            captured_at TIMESTAMP
+            captured_at TIMESTAMP WITH TIME ZONE
         )
         """
     )

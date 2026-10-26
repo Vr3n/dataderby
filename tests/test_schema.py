@@ -70,16 +70,58 @@ def test_connection_pins_the_session_timezone_to_utc(
     assert con.execute("SELECT current_setting('TimeZone')").fetchone()[0] == "UTC"
 
 
-def test_aware_utc_timestamps_are_stored_as_utc(
+def test_timestamps_store_an_instant_not_a_wall_clock(
     con: duckdb.DuckDBPyConnection,
 ) -> None:
-    con.execute("CREATE TABLE stamp_probe (ts TIMESTAMP)")
+    con.execute("CREATE TABLE stamp_probe (ts TIMESTAMP WITH TIME ZONE)")
     value = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
     con.execute("INSERT INTO stamp_probe VALUES (?)", [value])
 
     stored = con.execute("SELECT ts FROM stamp_probe").fetchone()[0]
 
-    assert stored == value.replace(tzinfo=None)
+    assert stored == value
+    assert stored.tzinfo is not None
+
+
+def test_a_non_utc_session_reads_the_same_instant(tmp_path: Path) -> None:
+    path = tmp_path / "zones.duckdb"
+    value = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
+
+    writer = connect(path)
+    try:
+        writer.execute("CREATE TABLE stamp_probe (ts TIMESTAMP WITH TIME ZONE)")
+        writer.execute("INSERT INTO stamp_probe VALUES (?)", [value])
+    finally:
+        writer.close()
+
+    reader = duckdb.connect(str(path))
+    try:
+        reader.execute("SET TimeZone='Asia/Kolkata'")
+        stored = reader.execute("SELECT ts FROM stamp_probe").fetchone()[0]
+    finally:
+        reader.close()
+
+    assert stored == value
+    assert (stored.hour, stored.minute) == (15, 30)
+
+
+def test_pipeline_timestamp_columns_carry_a_timezone(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    rows = con.execute(
+        """
+        SELECT table_name, column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = 'main'
+          AND column_name IN (
+              'started_at', 'finished_at', 'observed_at', 'captured_at',
+              'accepted_at', 'last_probe_at', 'last_success_at', 'applied_at'
+          )
+        """
+    ).fetchall()
+
+    assert rows
+    assert {row[2] for row in rows} == {"TIMESTAMP WITH TIME ZONE"}
 
 
 def test_schema_can_be_applied_twice(con: duckdb.DuckDBPyConnection) -> None:
