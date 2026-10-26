@@ -27,6 +27,7 @@ Reports for a single change that is not a build phase.
 | Live capture | [One real capture, and what it broke](live-capture.md) | complete |
 | Live capture (deck) | [Companion slides](../live-capture-slides.html) | complete |
 | All-league capture | [All-league capture](all-league-capture.md) | complete |
+| All-league capture (deck) | [Companion slides](../all-league-capture-slides.html) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.

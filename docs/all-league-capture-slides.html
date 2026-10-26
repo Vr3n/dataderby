@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twelve leagues, one afternoon - dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EDE3; --paper2:#E8E1D2; --paper3:#DFD7C6;
+    --ink:#14161A; --navy:#0E1A31; --navy2:#16243F;
+    --red:#D4382A; --green:#2E6B4F; --amber:#C98A2E;
+    --muted:#6E695E; --line:#D3CBBA;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0A0C10}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#0A0C10}
+  #stage{
+    position:relative;width:1600px;height:900px;background:var(--paper);
+    transform-origin:center center;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);
+  }
+  #grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none;transition:opacity .3s}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+  #mast{
+    position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);
+  }
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:var(--line);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink)}
+  body.dark #mast,body.dark #foot{border-color:rgba(242,237,227,.16)}
+  body.dark .brand b,body.dark #pageNum{color:var(--paper)}
+  body.dark .brand span,body.dark #secLabel,body.dark .mast-right,body.dark #foot .l{color:#9D9789}
+  body.dark #clockTrack{background:rgba(242,237,227,.2)}
+
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:112px 84px 86px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;
+    opacity:0;visibility:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.dark{background:var(--navy);color:var(--paper)}
+  .slide.dark::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(242,237,227,.10) 1px,transparent 1px);
+    background-size:12px 12px;opacity:.5;
+  }
+  .slide.dark > *{position:relative;z-index:1}
+
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  .dark .kicker{color:#9D9789}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.94;font-size:104px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1;font-size:50px;max-width:34ch}
+  h3{font-family:var(--serif);font-weight:500;font-size:25px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:23px;line-height:1.45;color:#3B3B39;max-width:46ch}
+  .dark .standfirst{color:#CFC8B8}
+  .body{font-size:16px;line-height:1.6;color:#3C3B37;max-width:62ch}
+  div.body{max-width:none}
+  .dark .body{color:#CFC8B8}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .dark .small{color:#9D9789}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .red{color:var(--red)} .green{color:var(--green)} .navy{color:var(--navy)}
+  .dark .red{color:#F06A5A} .dark .green{color:#6FC69A}
+
+  .body{min-height:0}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .stack{display:grid;gap:16px;align-content:start}
+  .between{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+
+  .card{border-top:3px solid var(--navy);background:rgba(255,255,255,.42);padding:20px 22px 22px}
+  .dark .card{border-top-color:var(--paper);background:rgba(242,237,227,.05)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .dark .card .tag{color:#9D9789}
+  .card h3{margin:8px 0 10px}
+  .card p{font-size:14px;line-height:1.55;color:#4A4842}
+  .dark .card p{color:#C6BFAF}
+
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--ink);
+  }
+  .dark .tbl th{color:#9D9789;border-bottom-color:rgba(242,237,227,.35)}
+  .tbl td{padding:10px;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:middle}
+  .dark .tbl td{border-bottom-color:rgba(242,237,227,.14);color:#DCD5C5}
+  .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .tbl th.n{text-align:right}
+  .tbl tr.hi td{background:rgba(212,56,42,.06)}
+  .dark .tbl tr.hi td{background:rgba(240,106,90,.10)}
+  .tbl td.ok{color:var(--green);font-family:var(--mono);font-size:13px}
+  .tbl td.no{color:var(--red);font-family:var(--mono);font-size:13px}
+  .dark .tbl td.ok{color:#6FC69A} .dark .tbl td.no{color:#F06A5A}
+  .tbl.compact td{padding:6px 8px;font-size:12.5px}
+  .tbl.compact th{padding:7px 8px;font-size:10px}
+
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .stat .k{color:#9D9789}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+
+  .rule{height:1px;background:var(--line);width:100%}
+  .dark .rule{background:rgba(242,237,227,.18)}
+
+  .pull{font-family:var(--serif);font-size:38px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+
+  .room{
+    background:var(--paper2);border-left:3px solid var(--red);
+    padding:12px 16px;display:flex;gap:14px;align-items:baseline;
+  }
+  .dark .room{background:rgba(242,237,227,.06)}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .dark .room .lbl{color:#F06A5A}
+  .room p{font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .room p{color:#CFC8B8}
+
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 7px;border:1px solid currentColor;letter-spacing:.04em}
+
+  .cover{padding:0 96px}
+  .cover .inner{align-self:center;display:grid;gap:26px;max-width:900px}
+  .cover h1{font-size:112px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:52px;border-top:1px solid var(--line);padding-top:18px}
+  .pitch{position:absolute;right:-120px;top:120px;width:760px;height:760px;opacity:.10;z-index:0}
+  .pitch path,.pitch circle,.pitch rect{fill:none;stroke:var(--ink);stroke-width:1.6}
+
+  .chain{display:flex;align-items:center;gap:0}
+  .node{
+    width:150px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--paper);
+    font-family:var(--mono);font-size:11px;line-height:1.5;
+  }
+  .node b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .node span{color:var(--muted)}
+  .node.hot{border-color:var(--red);background:rgba(212,56,42,.07)}
+  .link{width:54px;height:2px;background:var(--ink);position:relative;flex:none}
+  .link::after{
+    content:"";position:absolute;right:-1px;top:-5px;width:0;height:0;
+    border-left:10px solid var(--ink);border-top:6px solid transparent;border-bottom:6px solid transparent;
+  }
+  .dark .link{background:var(--paper)} .dark .link::after{border-left-color:var(--paper)}
+
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--ink)}
+  .dark .verdict{border-color:rgba(242,237,227,.35)}
+  .verdict>div{padding:22px 24px}
+  .verdict>div+div{border-left:1.5px solid var(--ink)}
+  .dark .verdict>div+div{border-left-color:rgba(242,237,227,.35)}
+  .verdict .big{font-family:var(--mono);font-size:56px;line-height:1;letter-spacing:-.05em}
+  .verdict .cap{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .verdict .cap{color:#9D9789}
+
+  .code{
+    font-family:var(--mono);font-size:11.5px;line-height:1.6;
+    background:rgba(20,22,26,.05);border-left:2px solid var(--red);
+    padding:12px 14px;white-space:pre-wrap;color:#2E2E2B;
+  }
+  .dark .code{background:rgba(242,237,227,.06);color:#CFC8B8;border-left-color:#F06A5A}
+
+  /* purpose-built pieces */
+  .arith{display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:34px;letter-spacing:-.03em}
+  .arith .op{color:var(--muted);font-size:22px}
+  .arith .res{color:var(--red)}
+  .stamp{
+    display:inline-block;font-family:var(--mono);font-weight:600;font-size:34px;color:var(--red);
+    border:2px solid var(--red);padding:4px 12px;transform-origin:center;
+  }
+  .empty{font-family:var(--mono);font-size:13px;color:var(--red);background:rgba(212,56,42,.07);border-left:2px solid var(--red);padding:10px 12px}
+  .a-row{will-change:transform,opacity}
+
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s;
+  }
+  #nav button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  body.dark #nav button{border-color:rgba(242,237,227,.25);color:#CFC8B8}
+  body.dark #nav button:hover{background:var(--paper);color:var(--navy)}
+
+  #mast,#foot{transition:border-color .32s ease}
+  .brand b,#pageNum,#secLabel,.mast-right,#foot .l{transition:color .32s ease}
+  #clockTrack{transition:background-color .32s ease}
+
+  #notes{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0A0C10;color:var(--paper);
+    border-top:2px solid var(--red);padding:18px 28px 20px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex;gap:24px;align-items:baseline;
+  }
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .body > .room{align-self:start}
+  .c2,.c3,.c4{align-content:start}
+  .cover{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 96px}
+  .cover .inner{flex:none;align-self:flex-start}
+  .cover-stats{width:100%;margin-top:36px}
+  #foot{padding-right:150px}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="grain"></div>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>Data desk · all-league sweep</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; The sweep</div>
+        <div class="mast-right">Measured · 26 Oct 2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">WhoScored · twelve competitions, one contract</div>
+        <div id="clock">
+          <span class="l">Sweep</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 20</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="The sweep" data-chrome="off"
+        data-note="Open with the result, not the method: ten leagues published on the first pass, one exposed a rule we had wrong. The audience is a senior data engineer, so lead with the fact that the contract generalised and the failure was about football, not parsing.">
+        <svg class="pitch" viewBox="0 0 760 760" aria-hidden="true">
+          <rect x="40" y="40" width="680" height="680"/>
+          <line x1="380" y1="40" x2="380" y2="720"/>
+          <circle cx="380" cy="380" r="92"/>
+          <circle cx="380" cy="380" r="4"/>
+          <rect x="40" y="230" width="112" height="300"/>
+          <rect x="608" y="230" width="112" height="300"/>
+          <rect x="40" y="310" width="48" height="140"/>
+          <rect x="672" y="310" width="48" height="140"/>
+        </svg>
+        <div class="inner">
+          <p class="kicker"><i></i>All-league sweep &nbsp;·&nbsp; 26 October 2026</p>
+          <h1 class="display">
+            <span class="l"><span>Twelve leagues.</span></span>
+            <span class="l"><span>One afternoon.</span></span>
+            <span class="l"><span>Two surprises.</span></span>
+          </h1>
+          <p class="standfirst">We stopped testing one row and captured every competition.
+            Ten published on the first pass. One exposed a rule we had wrong about football.</p>
+          <p class="byline">Data engineering · 108 live feed calls · measured, not estimated</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="12">0</div><div class="k">competitions</div></div>
+          <div class="stat"><div class="v" data-count="108">0</div><div class="k">feed calls</div></div>
+          <div class="stat"><div class="v" data-count="10">0</div><div class="k">first-pass publishes</div></div>
+          <div class="stat"><div class="v" data-count="1">0</div><div class="k">contract fix</div></div>
+        </div>
+      </section>
+
+      <!-- 02 why -->
+      <section class="slide" data-sec="The sweep"
+        data-note="The first capture followed Manchester City in one league. It proved real bytes parse. It could not prove the contract holds for an 18-team league, a 36-team league, or a club with a points deduction. That distinction is the reason for this sweep.">
+        <div>
+          <p class="kicker"><i></i>Why another sweep</p>
+          <h2 class="display" style="margin-top:14px">One row proved<br>the parser. Not the rules.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body">The first live capture followed one team in one league. It answered a narrow question: do real bytes parse? Yes.</p>
+            <p class="body">It left the important question open. Does the contract still hold when the league has 18 teams, or 36? When a club has a points deduction? When a competition publishes no data at all?</p>
+            <div class="room a-up">
+              <span class="lbl">So what</span>
+              <p>A green suite on one row is a claim about that row. Twelve leagues is a claim about the model.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">First pass</div><h3>One stage, one team</h3><p>Real bytes, four defects, one fixture.</p></div>
+            <div class="card a-up"><div class="tag">This pass</div><h3>All twelve, all nine feeds</h3><p>Same parser, same assertions, one scratch database.</p></div>
+            <div class="card a-up"><div class="tag">The point</div><h3>Find the rules, not the bytes</h3><p>Parsing was never the risk. The rules about football were.</p></div>
+          </div>
+        </div>
+        <div class="small">Method first, then the one failure that mattered.</div>
+      </section>
+
+      <!-- 03 method -->
+      <section class="slide" data-sec="The sweep"
+        data-note="One browser session per stage: read the token and the league table, then nine feeds at 1.2 seconds apart. One transaction per stage into a scratch database. A failure is recorded and the sweep continues, so one bad league cannot hide eleven good ones.">
+        <div>
+          <p class="kicker"><i></i>The method</p>
+          <h2 class="display" style="margin-top:14px">Same pipeline.<br>Every league.</h2>
+        </div>
+        <div class="body">
+          <div class="chain">
+            <div class="node"><b>Page</b><span>token + table</span></div>
+            <div class="link"></div>
+            <div class="node"><b>9 feeds</b><span>1.2 s apart</span></div>
+            <div class="link"></div>
+            <div class="node"><b>Parse</b><span>60 measures</span></div>
+            <div class="link"></div>
+            <div class="node"><b>Validate</b><span>A1–A21</span></div>
+            <div class="link"></div>
+            <div class="node hot"><b>Publish</b><span>one transaction</span></div>
+          </div>
+          <div class="c3" style="margin-top:36px">
+            <div class="card a-up"><div class="tag">One browser</div><h3>Per stage, not per feed</h3><p>The page mints the token and holds the session. The feeds are called from inside it.</p></div>
+            <div class="card a-up"><div class="tag">One database</div><h3>Scratch, disposable</h3><p>Every stage publishes for real against the real schema. Nothing is committed to a production file.</p></div>
+            <div class="card a-up"><div class="tag">No fail-fast</div><h3>Record, then continue</h3><p>A blocked league is evidence. Stopping at the first one would hide the other eleven.</p></div>
+          </div>
+        </div>
+        <div class="small">108 feed requests, 1.1 MB, 295 seconds. The sweep is an operator tool, not a CI test: CI cannot reach the source.</div>
+      </section>
+
+      <!-- 04 numbers -->
+      <section class="slide" data-sec="The sweep"
+        data-note="Ten published on the first pass. The eleventh was blocked by a contract rule, not by a parse error. The twelfth had no feed data at all. Those two are the rest of the deck.">
+        <div>
+          <p class="kicker"><i></i>The sweep in numbers</p>
+          <h2 class="display" style="margin-top:14px">One afternoon,<br>measured.</h2>
+        </div>
+        <div class="body">
+          <div class="c4">
+            <div class="stat a-up"><div class="v" data-count="12">0</div><div class="k">stages</div><div class="s">every configured competition</div></div>
+            <div class="stat a-up"><div class="v" data-count="108">0</div><div class="k">feed calls</div><div class="s">nine per stage</div></div>
+            <div class="stat a-up"><div class="v" data-count="1.1" data-dec="1">0</div><div class="k">megabytes</div><div class="s">validated, not sampled</div></div>
+            <div class="stat a-up"><div class="v" data-count="295">0</div><div class="k">seconds</div><div class="s">pacing included</div></div>
+          </div>
+          <div class="verdict a-up" style="margin-top:38px">
+            <div>
+              <div class="big green">10</div>
+              <div class="cap">published on the first pass</div>
+            </div>
+            <div>
+              <div class="big red">2</div>
+              <div class="cap">one blocked · one with no feed data</div>
+            </div>
+          </div>
+        </div>
+        <div class="small">Eleven publish after the fix on page 11. The twelfth is a source problem, not a code problem.</div>
+      </section>
+
+      <!-- 05 table -->
+      <section class="slide" data-sec="The sweep"
+        data-note="Read the outcome column, not the team counts. Ten green, one blocked, one with no data. The blocked row is the interesting one: the numbers parsed perfectly and the database refused them. The Conference row is different: the page has a table, the feed has nothing.">
+        <div>
+          <p class="kicker"><i></i>Coverage</p>
+          <h2 class="display" style="margin-top:14px">Ten published.<br>Two did not.</h2>
+        </div>
+        <div class="body">
+          <table class="tbl compact">
+            <thead><tr><th>Competition</th><th class="n">Teams</th><th class="n">Expected</th><th>First pass</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td>Bundesliga</td><td class="n">18</td><td class="n">18</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Champions League</td><td class="n">36</td><td class="n">36</td><td class="ok">published</td></tr>
+              <tr class="a-row hi"><td>Championship</td><td class="n">24</td><td class="n">24</td><td class="no">blocked · A19/A20</td></tr>
+              <tr class="a-row hi"><td>Conference League</td><td class="n">0</td><td class="n">36</td><td class="no">no feed data</td></tr>
+              <tr class="a-row"><td>EFL League One</td><td class="n">24</td><td class="n">24</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>EFL League Two</td><td class="n">24</td><td class="n">24</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Premier League</td><td class="n">20</td><td class="n">20</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Eredivisie</td><td class="n">18</td><td class="n">18</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Europa League</td><td class="n">36</td><td class="n">36</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>La Liga</td><td class="n">20</td><td class="n">20</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Ligue 1</td><td class="n">18</td><td class="n">18</td><td class="ok">published</td></tr>
+              <tr class="a-row"><td>Serie A</td><td class="n">20</td><td class="n">20</td><td class="ok">published</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">Championship is fixed on page 11. The table shows the first pass, before the contract changed.</div>
+      </section>
+
+      <!-- 06 what held -->
+      <section class="slide" data-sec="The sweep"
+        data-note="The positive result is easy to skip. Eleven leagues, four team counts, 108 payloads: no null measures, no name mismatches, no schema drift. The contract is not Premier-League-shaped. The failures were about rules, not reading.">
+        <div>
+          <p class="kicker"><i></i>What held</p>
+          <h2 class="display" style="margin-top:14px">The shape held<br>across all of them.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="stat a-up"><div class="v" data-count="0">0</div><div class="k">null measures</div><div class="s">across 11 accepted leagues</div></div>
+            <div class="rule"></div>
+            <div class="stat a-up"><div class="v" data-count="0">0</div><div class="k">name mismatches</div><div class="s">feed vs league table</div></div>
+            <div class="rule"></div>
+            <div class="stat a-up"><div class="v" data-count="0">0</div><div class="k">schema drift</div><div class="s">statColumns identical</div></div>
+          </div>
+          <div class="stack">
+            <p class="body"><b>18, 20, 24, 36.</b> Four different league sizes, one 60-measure contract, one set of assertions.</p>
+            <p class="body">That is the useful result. The parser is not tuned to the Premier League, and the cohort checks work at every size.</p>
+            <div class="room a-up">
+              <span class="lbl">Read it carefully</span>
+              <p>The two failures were not parsing failures. They were rules about football that we had written badly.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">No missing numbers, no renamed clubs, no changed column lists. The boring result is the good one.</div>
+      </section>
+
+      <!-- 07 act break -->
+      <section class="slide dark" data-sec="Finding 01 · the deduction"
+        data-note="Pause here. Everything worked, and then a routine table was refused. The reason was not a bug in the reader. It was an assumption in our contract: that points can be calculated from wins and draws. Football does not always work that way.">
+        <div>
+          <p class="kicker"><i></i>Finding 01</p>
+          <h2 class="display" style="margin-top:14px">Then the table<br>disagreed with itself.</h2>
+        </div>
+        <div class="body">
+          <p class="pull">Southampton won <b>24 points</b>.<br>The table shows <b>20</b>.</p>
+        </div>
+        <div class="small">Championship · stage 25588 · 26 October 2026</div>
+      </section>
+
+      <!-- 08 southampton -->
+      <section class="slide" data-sec="Finding 01 · the deduction"
+        data-note="Put the arithmetic on the screen. Seven wins and three draws is twenty-four points. The table says twenty. Home and away add up to twenty-four, so the missing four are not a split problem. This is what a deduction looks like in the data.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · the numbers</p>
+          <h2 class="display" style="margin-top:14px">24 points won.<br>20 points shown.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl">
+              <thead><tr><th>Split</th><th class="n">P</th><th class="n">W</th><th class="n">D</th><th class="n">L</th><th class="n">Pts</th><th class="n">3W+D</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>Overall</td><td class="n">12</td><td class="n">7</td><td class="n">3</td><td class="n">2</td><td class="n red"><b>20</b></td><td class="n">24</td></tr>
+                <tr class="a-row"><td>Home</td><td class="n">6</td><td class="n">5</td><td class="n">1</td><td class="n">0</td><td class="n">16</td><td class="n">16</td></tr>
+                <tr class="a-row"><td>Away</td><td class="n">6</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">8</td><td class="n">8</td></tr>
+              </tbody>
+            </table>
+            <p class="small" style="margin-top:10px">Home + away = 24. The overall total is 20. The gap is exactly 4.</p>
+          </div>
+          <div class="stack" style="justify-content:center">
+            <div class="arith a-up">7 <span class="op">×</span> 3 <span class="op">+</span> 3 <span class="op">=</span> 24</div>
+            <div class="arith a-up">reported <span class="op">=</span> <span class="res">20</span></div>
+            <div class="a-up"><span class="stamp">−4</span></div>
+            <p class="small">One number is missing. It is not a rounding error, and it is not a parse error.</p>
+          </div>
+        </div>
+        <div class="small">Championship · Southampton · stage 25588 · 26 October 2026</div>
+      </section>
+
+      <!-- 09 refused -->
+      <section class="slide" data-sec="Finding 01 · the deduction"
+        data-note="Two assertions fired. A19 said points must equal three wins plus draws. A20 said points home plus points away must equal points overall. Both are reasonable-looking rules. Both assume points are derived. The publish was refused before anything reached the warehouse.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · what the pipeline did</p>
+          <h2 class="display" style="margin-top:14px">It refused<br>to publish.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">A19  points = 3 * won + drawn
+     20     = 24            <span style="color:#D4382A">fail</span>
+
+A20  points_home + points_away = points_overall
+     16 + 8                = 20   <span style="color:#D4382A">fail</span></div>
+            <div class="room a-up">
+              <span class="lbl">The good part</span>
+              <p>Nothing was written. The bad table never became history. The assertions did their job.</p>
+            </div>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Blocking was correct behaviour</b> given the rule. The rule was the problem.</p>
+            <p class="body">We had written that points are a function of wins and draws. That is true for most rows, and false for a club with a deduction.</p>
+            <p class="body">A model that calls a real league table "incoherent" is not strict. It is wrong.</p>
+          </div>
+        </div>
+        <div class="small">A19 BLOCK and A20 RETRY. The retry would not help: the deduction is permanent until it is rescinded.</div>
+      </section>
+
+      <!-- 10 why wrong -->
+      <section class="slide dark" data-sec="Finding 01 · the deduction"
+        data-note="This is the conceptual slide. Points deductions are a real mechanism in English football. They apply to the overall total, not to the home and away tables. Once you see points as reported rather than derived, A19 and A20 stop being checks and become assumptions.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · why the rule was wrong</p>
+          <h2 class="display" style="margin-top:14px">A deduction is<br>not a mistake.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="body">Clubs can be docked points. The league table reports the result. The wins and draws stay the same; the total moves down.</p>
+            <p class="body">The deduction applies to the <b>overall</b> total. Home and away keep their own points, because the deduction is not a match result.</p>
+            <div class="room">
+              <span class="lbl">The distinction</span>
+              <p>Points are <b>reported</b>, like goals. They are not <b>derived</b>, like goal difference.</p>
+            </div>
+          </div>
+          <div class="stack" style="justify-content:center">
+            <div class="verdict">
+              <div>
+                <div class="big">24</div>
+                <div class="cap">calculated from 7W 3D</div>
+              </div>
+              <div>
+                <div class="big" style="color:#F06A5A">20</div>
+                <div class="cap">reported by the table</div>
+              </div>
+            </div>
+            <p class="small">The −4 is the fact. The arithmetic is the model's opinion.</p>
+          </div>
+        </div>
+        <div class="small">A deduction is rare, permanent, and invisible to an arithmetic check. Rare is not the same as impossible.</div>
+      </section>
+
+      <!-- 11 fix -->
+      <section class="slide" data-sec="Finding 01 · the deduction"
+        data-note="The fix is smaller than the explanation. A19 only blocks a total above the maximum, or below zero. A20 stops checking points and keeps checking games and goals. A new test pins it: a four-point deduction passes, an impossible total still blocks.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · the fix</p>
+          <h2 class="display" style="margin-top:14px">Points are reported.<br>Not calculated.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Before</div><h3>A19: equality</h3><p><span class="mono">points = 3*won + drawn</span>. Any deduction is impossible.</p></div>
+            <div class="card a-up"><div class="tag">Before</div><h3>A20: sums points</h3><p><span class="mono">points_home + points_away = points_overall</span>. A deduction breaks it.</p></div>
+          </div>
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After</div><h3>A19: only impossible totals</h3><p>Block if <span class="mono">points &gt; 3*won + drawn</span> or below zero. A lower total is allowed.</p></div>
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">After</div><h3>A20: games and goals only</h3><p>Played, won, drawn, lost, goals for and against still sum. Points are excluded.</p></div>
+          </div>
+        </div>
+        <div class="small">New test: a 4-point deduction passes; a total above the maximum still blocks. The clean-table test still passes.</div>
+      </section>
+
+      <!-- 12 record -->
+      <section class="slide" data-sec="Finding 01 · the deduction"
+        data-note="Allowing a deduction is not the same as ignoring it. The audit records every adjustment with a delta. Recommendation: surface it as a WARN assertion or a small view, so an operator sees the -4 without a failed run. Silence would be the wrong fix.">
+        <div>
+          <p class="kicker"><i></i>Finding 01 · what we record</p>
+          <h2 class="display" style="margin-top:14px">Allow it.<br>Don't hide it.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">{
+  "team_id": 18,
+  "name": "Southampton",
+  "points": 20,
+  "calculated": 24,
+  "delta": -4
+}</div>
+            <p class="small">Recorded by the sweep, next to the stage result.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Why record it?</b> A deduction changes a table, a ranking, and a story. It should be visible without reading the source.</p>
+            <p class="body"><b>What is missing?</b> The publish contract now accepts it silently. Recommendation: a WARN assertion, or a <span class="mono">v_points_adjustments</span> view.</p>
+            <div class="room a-up">
+              <span class="lbl">Principle</span>
+              <p>Allow the fact; surface the exception. Those are different jobs.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Southampton's −4 is the only adjustment across the 11 accepted leagues.</div>
+      </section>
+
+      <!-- 13 act break -->
+      <section class="slide dark" data-sec="Finding 02 · the empty feed"
+        data-note="The second finding is not about a rule. It is about a competition whose page has a table and whose feed has nothing. This is the kind of gap that a single-league capture would never reveal.">
+        <div>
+          <p class="kicker"><i></i>Finding 02</p>
+          <h2 class="display" style="margin-top:14px">Then a league<br>had no data.</h2>
+        </div>
+        <div class="body">
+          <p class="pull">36 teams on the page.<br><b>0 teams in the feed.</b></p>
+        </div>
+        <div class="small">Conference League · stage 25802 · same afternoon</div>
+      </section>
+
+      <!-- 14 conference -->
+      <section class="slide" data-sec="Finding 02 · the empty feed"
+        data-note="The page renders a 36-team table with two games each. The feed returns an empty teamTableStats but a valid eight-column statColumns list. The registry expected twenty-seven. Three different numbers for one stage. The feed is the one that cannot be used.">
+        <div>
+          <p class="kicker"><i></i>Finding 02 · the evidence</p>
+          <h2 class="display" style="margin-top:14px">The page says 36.<br>The feed says nothing.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="small" style="text-transform:uppercase;letter-spacing:.18em">The page</p>
+            <table class="tbl compact">
+              <thead><tr><th>#</th><th>Team</th><th class="n">P</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>1</td><td>Panathinaikos</td><td class="n">2</td></tr>
+                <tr class="a-row"><td>2</td><td>FC Lugano</td><td class="n">2</td></tr>
+                <tr class="a-row"><td>3</td><td>Trabzonspor</td><td class="n">2</td></tr>
+                <tr class="a-row"><td colspan="2" class="small">… 33 more teams</td><td class="n">36</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <p class="small" style="text-transform:uppercase;letter-spacing:.18em">The feed</p>
+            <div class="code">{
+  "teamTableStats": [],        <span style="color:#D4382A">← empty</span>
+  "statColumns": [ …, 8 names ],
+  "paging": { "currentPage": 1, "total": 0 }
+}</div>
+            <p class="body">Eight columns are declared. Zero rows are returned. The envelope is valid; the content is absent.</p>
+          </div>
+        </div>
+        <div class="small">Registry said 27. The page says 36. The feed says 0. Only one of those numbers can be verified, and it is not the feed.</div>
+      </section>
+
+      <!-- 15 no guess -->
+      <section class="slide" data-sec="Finding 02 · the empty feed"
+        data-note="We tried the obvious variations: asked for 27 rows, asked for 36, kept the stage id, dropped it. Every response was an empty list. At that point the honest move is not to invent a tournament id. Correct the registry to the page, mark the stage unavailable, and keep it out of the schedule.">
+        <div>
+          <p class="kicker"><i></i>Finding 02 · what we did</p>
+          <h2 class="display" style="margin-top:14px">We did not<br>guess the id.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <p class="small" style="text-transform:uppercase;letter-spacing:.18em">Variants tried</p>
+            <table class="tbl compact">
+              <thead><tr><th>Request</th><th>Rows</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td><span class="mono">27 requested, stage 25802</span></td><td class="no">0</td></tr>
+                <tr class="a-row"><td><span class="mono">36 requested, stage 25802</span></td><td class="no">0</td></tr>
+                <tr class="a-row"><td><span class="mono">global, tournament 715</span></td><td class="no">0</td></tr>
+              </tbody>
+            </table>
+            <p class="small">Same envelope, same eight columns, no rows.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">Corrected</div><h3>36 teams</h3><p>The page is the evidence. The registry now matches it.</p></div>
+            <div class="card a-up" style="border-top-color:#C98A2E"><div class="tag">Marked</div><h3>Capturable, not publishable</h3><p>The page can be read. The feed cannot fill the fact.</p></div>
+            <div class="card a-up" style="border-top-color:#D4382A"><div class="tag">Scheduled</div><h3>Not yet</h3><p>A stage that fails every run is noise, not coverage.</p></div>
+          </div>
+        </div>
+        <div class="small">Do not invent a tournament id to make a dashboard green. The source has to answer.</div>
+      </section>
+
+      <!-- 16 content type -->
+      <section class="slide" data-sec="Finding 02 · the empty feed"
+        data-note="A small finding with a long tail. Every one of the 108 responses says text/html while the body is JSON. Our parser validates the body, so nothing broke. Any future client that checks the header first will reject good data.">
+        <div>
+          <p class="kicker"><i></i>Finding 03 · a trap for the next client</p>
+          <h2 class="display" style="margin-top:14px">Every feed<br>says HTML.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code">HTTP/1.1 200 OK
+content-type: <span style="color:#D4382A">text/html; charset=utf-8</span>
+
+{ "teamTableStats": [ … 20 teams … ],
+  "statColumns": [ … 8 names … ] }</div>
+            <p class="small">108 of 108 responses. The body is always JSON.</p>
+          </div>
+          <div class="stack">
+            <p class="body"><b>Why nothing broke.</b> The parser validates the envelope, not the header. It never asked the server what it had sent.</p>
+            <p class="body"><b>Why it matters.</b> A future client that trusts <span class="mono">Content-Type</span> will reject valid payloads, or worse, parse an HTML error page as if it were data.</p>
+            <div class="room a-up">
+              <span class="lbl">Rule</span>
+              <p>Validate the body. The header is a claim, not a guarantee.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Recorded so the next integration does not "fix" the feed by adding a header check.</div>
+      </section>
+
+      <!-- 17 scorecard -->
+      <section class="slide" data-sec="What it means"
+        data-note="Be precise about the boundary. Eleven leagues publish after the fix; the contract is proven at 18 to 36 teams. What is not done: the production transport, the Conference feed, and a visible warning for deductions. The transport is the blocker for scheduled runs.">
+        <div>
+          <p class="kicker"><i></i>What it means</p>
+          <h2 class="display" style="margin-top:14px">What works.<br>What doesn't.</h2>
+        </div>
+        <div class="body">
+          <div class="verdict">
+            <div>
+              <div class="big green">11</div>
+              <div class="cap">leagues publish</div>
+              <p class="body" style="margin-top:14px">18–36 teams; 60 measures parse.</p>
+              <p class="body">A1–A21 pass; a deduction is handled.</p>
+              <p class="body">108 feeds, no schema drift.</p>
+            </div>
+            <div>
+              <div class="big red">4</div>
+              <div class="cap">open items</div>
+              <p class="body" style="margin-top:14px">Production fetch is browser-bound (#14).</p>
+              <p class="body">Conference League has no feed rows.</p>
+              <p class="body">Deductions pass without a WARN.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">The transport blocks every scheduled run. The rest are quality gaps, not correctness gaps.</div>
+      </section>
+
+      <!-- 18 club -->
+      <section class="slide" data-sec="What it means"
+        data-note="A club does not buy sixty columns. It buys the ability to answer a question about a number: where did it come from, when was it observed, and why did it change. The deduction is the example: a correct table looked wrong to our model.">
+        <div>
+          <p class="kicker"><i></i>A club's view</p>
+          <h2 class="display" style="margin-top:14px">Why this matters<br>on a Saturday.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">Freshness</div><h3>A late table is wrong</h3><p>Even when the numbers are right. The schedule is part of correctness.</p></div>
+          <div class="card a-up"><div class="tag">Corrections</div><h3>Deductions are real</h3><p>So are retroactive stat fixes. A model that cannot store them will reject the league.</p></div>
+          <div class="card a-up"><div class="tag">Trust</div><h3>One source, explained</h3><p>Every number traces to raw bytes, a fingerprint, and a run id.</p></div>
+        </div>
+        <div class="small">The value is not the 60 columns. It is being able to say which observation a number came from, and why it moved.</div>
+      </section>
+
+      <!-- 19 next -->
+      <section class="slide" data-sec="What it means"
+        data-note="Dependency order, not preference. Nothing about a scheduled run can be tested until the browser transport works. The deduction warning and the Conference feed are correctness and coverage. The schedule comes last.">
+        <div>
+          <p class="kicker"><i></i>Next</p>
+          <h2 class="display" style="margin-top:14px">In order.</h2>
+        </div>
+        <div class="body c4">
+          <div class="card a-up"><div class="tag">1 · now</div><h3>Browser transport</h3><p>Make <span class="mono">run</span> and <span class="mono">probe</span> fetch the way the sweep does. Blocks every live run (#14).</p></div>
+          <div class="card a-up"><div class="tag">2 · next</div><h3>Surface deductions</h3><p>A WARN or a <span class="mono">v_points_adjustments</span> view. Allow the fact; show the exception.</p></div>
+          <div class="card a-up"><div class="tag">3 · next</div><h3>Conference source</h3><p>Confirm the feed's competition and stage identity, or keep the stage out of the schedule.</p></div>
+          <div class="card a-up"><div class="tag">4 · then</div><h3>Schedule</h3><p>Daily heartbeat plus post-match windows, once the transport is real.</p></div>
+        </div>
+        <div class="small">Everything else in the contract held. Do not rewrite what the sweep proved.</div>
+      </section>
+
+      <!-- 20 close -->
+      <section class="slide cover" data-sec="What it means"
+        data-note="Close on the distinction. The engineering held: eleven leagues, one contract, one transaction. The failure was a football rule we had not written down. That is the value of the sweep: it found the rules, not the bytes.">
+        <div class="inner">
+          <p class="kicker"><i></i>Close</p>
+          <h1 class="display">
+            <span class="l"><span>The contract held.</span></span>
+            <span class="l"><span>The football didn't.</span></span>
+          </h1>
+          <p class="standfirst">Eleven leagues agreed with the model. One table showed us a rule we had never written down.</p>
+          <p class="byline">Report: docs/reports/all-league-capture.md · Commit 264142d · 202 tests · CI green · Open: #14</p>
+        </div>
+      </section>
+    </div>
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">←</button>
+      <button id="next" aria-label="Next">→</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) { return dec ? v.toFixed(+dec) : String(Math.round(v)); }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade,.a-row,.stamp').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const nodes = slide.querySelectorAll('.chain .node');
+    if (nodes.length) {
+      gsap.set(nodes, { opacity: 0, y: 12 });
+      tl.to(nodes, { opacity: 1, y: 0, duration: .45, stagger: .08, ease: 'power2.out' }, .1);
+    }
+    const links = slide.querySelectorAll('.chain .link');
+    if (links.length) {
+      gsap.set(links, { scaleX: 0, transformOrigin: 'left center' });
+      tl.to(links, { scaleX: 1, duration: .45, stagger: .08, ease: 'power2.out' }, .18);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const rows = slide.querySelectorAll('.a-row');
+    if (rows.length) {
+      gsap.set(rows, { opacity: 0, y: 8 });
+      tl.to(rows, { opacity: 1, y: 0, duration: .35, stagger: .035, ease: 'power1.out' }, .2);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    const stamps = slide.querySelectorAll('.stamp');
+    if (stamps.length) {
+      gsap.set(stamps, { opacity: 0, scale: 1.5 });
+      tl.to(stamps, { opacity: 1, scale: 1, duration: .55, ease: 'back.out(2)' }, .55);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+
+    const paths = slide.querySelectorAll('.pitch path,.pitch circle,.pitch rect');
+    if (paths.length) {
+      paths.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(paths, { strokeDashoffset: 0, duration: 1.6, stagger: .03, ease: 'power2.out' }, .1);
+    }
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    document.body.classList.toggle('dark', slide.classList.contains('dark'));
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) { show(i, true); busy = false; return; }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>
