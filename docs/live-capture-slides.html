@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>dataderby — one real capture, four broken assumptions</title>
+<title>dataderby — one row, from a website to a warehouse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -21,116 +21,107 @@
   body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
     font-size:clamp(17px,1.2vw,20px);line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased}
   .deck{position:fixed;inset:0}
-  .slide{position:absolute;inset:0;display:none;padding:clamp(48px,8vh,96px) var(--pad) 120px;overflow:auto}
+  .slide{position:absolute;inset:0;display:none;padding:clamp(40px,6vh,72px) var(--pad) 108px;overflow:auto}
   .slide.is-active{display:flex;flex-direction:column;justify-content:center}
-  .inner{max-width:1180px;width:100%;margin:0 auto}
+  .inner{max-width:1140px;width:100%;margin:0 auto}
 
-  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow);margin-bottom:22px}
-  .eyebrow.c{color:var(--cyan)} .eyebrow.r{color:var(--red)} .eyebrow.g{color:var(--green)}
-  h1,h2{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1.05;margin:0}
-  h1{font-size:clamp(40px,6.2vw,88px)}
-  h2{font-size:clamp(32px,4.4vw,60px)}
-  .lede{font-size:clamp(20px,1.9vw,28px);line-height:1.4;color:#D6D6D0;max-width:34ch;margin:26px 0 0}
-  .small{font-size:15px;color:var(--dim);margin-top:22px;max-width:70ch}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--yellow);margin-bottom:20px}
+  .eyebrow.c{color:var(--cyan)} .eyebrow.r{color:var(--red)} .eyebrow.g{color:var(--green)} .eyebrow.d{color:var(--dim)}
+  h1,h2{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1.06;margin:0}
+  h1{font-size:clamp(38px,5.6vw,78px)}
+  h2{font-size:clamp(30px,4.1vw,54px)}
+  .lede{font-size:clamp(19px,1.7vw,25px);line-height:1.42;color:#D6D6D0;max-width:38ch;margin:22px 0 0}
+  .lede.wide{max-width:58ch}
+  .small{font-size:15px;color:var(--dim);margin-top:20px;max-width:72ch;line-height:1.55}
   .k{color:var(--yellow);font-family:var(--mono);font-weight:600}
   .kc{color:var(--cyan);font-family:var(--mono);font-weight:600}
   .kr{color:var(--red);font-family:var(--mono);font-weight:600}
   .kg{color:var(--green);font-family:var(--mono);font-weight:600}
 
-  /* big numbers */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;margin-top:44px}
-  .stat b{display:block;font-family:var(--mono);font-size:clamp(48px,6vw,84px);color:var(--yellow);line-height:1}
-  .stat span{display:block;margin-top:10px;color:var(--dim);font-size:16px}
+  .stats{display:flex;flex-wrap:wrap;gap:clamp(24px,4vw,64px);margin-top:38px}
+  .stat b{display:block;font-family:var(--mono);font-size:clamp(44px,5.2vw,72px);color:var(--yellow);line-height:1}
+  .stat span{display:block;margin-top:8px;color:var(--dim);font-size:15px;max-width:16ch}
 
-  /* cards and frames */
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:40px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:22px 24px}
-  .card .tag{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
-  .card h3{font-family:var(--mono);font-size:clamp(18px,1.6vw,22px);margin:10px 0 8px;letter-spacing:-.01em}
-  .card p{margin:0;color:#C9C9C3;font-size:16px}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:32px}
+  .compare > div{border:1px solid var(--line);border-radius:4px;background:var(--card);padding:22px 24px}
+  .compare .lbl{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+  .compare .lbl.bad{color:var(--red)} .compare .lbl.good{color:var(--green)}
+  .compare p{margin:0;color:#D6D6D0;font-size:17px}
+  .compare b{font-family:var(--mono);color:var(--fg)}
+
+  .journey{display:flex;flex-wrap:wrap;gap:6px;margin-top:34px}
+  .journey span{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:7px 11px;border:1px solid var(--line);border-radius:3px;color:var(--dim2)}
+  .journey span.now{border-color:var(--yellow);color:var(--yellow)}
+
+  table{width:100%;border-collapse:collapse;margin-top:30px;font-size:16px}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;padding:9px 10px;border-bottom:1px solid var(--line);font-weight:500}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:11px 10px;border-bottom:1px solid #1A1F26;text-align:right;font-family:var(--mono);font-size:15px;color:#D6D6D0}
+  td:first-child{font-family:var(--sans);color:var(--fg)}
+  td.big{color:var(--yellow);font-weight:700}
+
+  pre{font-family:var(--mono);font-size:clamp(13px,1vw,16px);line-height:1.6;background:#0D0F13;border:1px solid var(--line);
+    border-left:3px solid var(--cyan);padding:18px 22px;border-radius:4px;margin:26px 0 0;color:#D6D6D0;white-space:pre-wrap}
+  pre .c{color:var(--dim2)} pre .y{color:var(--yellow)} pre .g{color:var(--green)} pre .r{color:var(--red)} pre .d{color:var(--dim)}
+
+  .bar{display:flex;height:58px;border-radius:4px;overflow:hidden;margin-top:30px;border:1px solid var(--line)}
+  .bar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:var(--bg);font-weight:700}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;font-size:14px;color:var(--dim)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:7px;vertical-align:-1px}
+
+  .runs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+  .run{border:1px solid var(--line);border-radius:4px;padding:22px;background:var(--card)}
+  .run h3{font-family:var(--mono);margin:0 0 10px;font-size:18px}
+  .run p{margin:5px 0;color:#C9C9C3;font-size:16px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:30px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .card h3{font-family:var(--mono);font-size:clamp(16px,1.35vw,19px);margin:8px 0 6px;letter-spacing:-.01em}
+  .card p{margin:0;color:#C9C9C3;font-size:15px;line-height:1.45}
   .card.y{border-color:#5A4A12} .card.c{border-color:#1E4A4D} .card.r{border-color:#54231E} .card.g{border-color:#234A2C}
 
-  /* flow */
-  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:44px}
-  .node{font-family:var(--mono);font-size:14px;border:1px solid var(--line);background:var(--card);padding:12px 16px;border-radius:4px}
-  .node small{display:block;color:var(--dim);font-size:11px;letter-spacing:.08em;margin-top:4px}
-  .arrow{color:var(--dim2);font-family:var(--mono)}
+  .bigline{font-family:var(--mono);font-size:clamp(24px,2.8vw,36px);line-height:1.25;margin:26px 0 0;color:var(--fg)}
 
-  /* grids and bars */
-  .grid3{display:grid;grid-template-columns:110px repeat(3,1fr);gap:10px;margin-top:40px;align-items:stretch}
-  .grid3 .hd{font-family:var(--mono);font-size:12px;color:var(--dim);text-align:center;letter-spacing:.12em;text-transform:uppercase;padding:6px}
-  .grid3 .rh{font-family:var(--mono);font-size:13px;color:var(--fg);display:flex;align-items:center}
-  .cell{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:18px;text-align:center}
-  .cell b{display:block;font-family:var(--mono);font-size:40px;color:var(--yellow)}
-  .cell span{font-size:13px;color:var(--dim)}
-  .bar{display:flex;height:64px;border-radius:4px;overflow:hidden;margin-top:44px;border:1px solid var(--line)}
-  .bar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;color:var(--bg);font-weight:700}
-  .legend{display:flex;flex-wrap:wrap;gap:22px;margin-top:18px;font-size:15px;color:var(--dim)}
-  .legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:8px;vertical-align:-1px}
-
-  /* tables */
-  table{width:100%;border-collapse:collapse;margin-top:36px;font-size:17px}
-  th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;padding:10px 12px;border-bottom:1px solid var(--line);font-weight:500}
-  th:first-child,td:first-child{text-align:left}
-  td{padding:12px;border-bottom:1px solid #1A1F26;text-align:right;font-family:var(--mono);font-size:16px;color:#D6D6D0}
-  td:first-child{font-family:var(--sans);color:var(--fg)}
-
-  /* code */
-  pre{font-family:var(--mono);font-size:clamp(14px,1.1vw,17px);line-height:1.6;background:#0D0F13;border:1px solid var(--line);
-    border-left:3px solid var(--cyan);padding:22px 26px;border-radius:4px;margin:36px 0 0;color:#D6D6D0;overflow-x:auto}
-  pre .c{color:var(--dim2)} pre .y{color:var(--yellow)} pre .g{color:var(--green)} pre .r{color:var(--red)}
-
-  /* timeline for two runs */
-  .runs{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px}
-  .run{border:1px solid var(--line);border-radius:4px;padding:26px;background:var(--card)}
-  .run h3{font-family:var(--mono);margin:0 0 12px;font-size:20px}
-  .run p{margin:6px 0;color:#C9C9C3}
-
-  /* fragments: revealed one step at a time with the right arrow */
-  .frag{opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .45s ease}
+  .frag{opacity:0;transform:translateY(10px);transition:opacity .4s ease,transform .4s ease}
   .frag.on{opacity:1;transform:none}
 
-  /* chrome */
-  .chrome{position:fixed;left:0;right:0;bottom:0;height:64px;z-index:20;display:flex;align-items:center;gap:18px;
-    padding:0 var(--pad);border-top:1px solid var(--line);background:rgba(11,12,14,.92);backdrop-filter:blur(6px);font-family:var(--mono);font-size:11px}
-  .chrome .brand{color:var(--dim2);letter-spacing:.18em}
-  .chrome .pg{color:var(--yellow);font-weight:700;min-width:70px}
+  .chrome{position:fixed;left:0;right:0;bottom:0;height:60px;z-index:20;display:flex;align-items:center;gap:16px;
+    padding:0 var(--pad);border-top:1px solid var(--line);background:rgba(11,12,14,.93);backdrop-filter:blur(6px);font-family:var(--mono);font-size:10px}
+  .chrome .brand{color:var(--dim2);letter-spacing:.2em}
+  .chrome .pg{color:var(--yellow);font-weight:700;min-width:66px}
   .ledger{display:flex;gap:2px;flex:1;min-width:0}
-  .ledger button{flex:1;height:8px;border:0;padding:0;background:#1A1F26;border-radius:1px;cursor:pointer;min-width:3px}
-  .ledger button.on{background:var(--cyan);opacity:.55}
+  .ledger button{flex:1;height:7px;border:0;padding:0;background:#1A1F26;border-radius:1px;cursor:pointer;min-width:2px}
+  .ledger button.on{background:var(--cyan);opacity:.5}
   .ledger button.cur{background:var(--yellow);opacity:1}
   .chrome .hint{color:var(--dim2);white-space:nowrap}
-  .chrome button.nav{font-family:var(--mono);color:var(--fg);background:#161A20;border:1px solid var(--line);border-radius:2px;padding:4px 10px;cursor:pointer}
+  .chrome button.nav{font-family:var(--mono);color:var(--fg);background:#161A20;border:1px solid var(--line);border-radius:2px;padding:4px 9px;cursor:pointer}
   .progress{position:fixed;top:0;left:0;height:2px;background:var(--yellow);width:0;z-index:21}
 
-  /* notes drawer */
-  .notes{position:fixed;right:0;top:0;bottom:64px;width:min(420px,90vw);background:#0E1014;border-left:1px solid var(--line);
-    padding:34px 30px;overflow:auto;transform:translateX(105%);transition:transform .35s ease;z-index:22;font-size:16px;color:#C9C9C3}
+  .notes{position:fixed;right:0;top:0;bottom:60px;width:min(430px,92vw);background:#0E1014;border-left:1px solid var(--line);
+    padding:32px 28px;overflow:auto;transform:translateX(105%);transition:transform .35s ease;z-index:22;font-size:15px;color:#C9C9C3}
   .notes.open{transform:none}
-  .notes h4{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase;margin:0 0 16px}
-  .notes p{margin:0 0 14px}
+  .notes h4{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase;margin:0 0 14px}
+  .notes p{margin:0 0 12px}
 
-  /* overview and help */
-  .overlay{position:fixed;inset:0;z-index:30;background:rgba(8,9,11,.97);display:none;overflow:auto;padding:56px var(--pad) 100px}
+  .overlay{position:fixed;inset:0;z-index:30;background:rgba(8,9,11,.98);display:none;overflow:auto;padding:48px var(--pad) 90px}
   .overlay.open{display:block}
-  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:28px}
-  .ov-item{text-align:left;background:var(--card);border:1px solid var(--line);color:var(--fg);padding:12px 14px;border-radius:3px;cursor:pointer;font-family:var(--sans);font-size:15px}
+  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:22px}
+  .ov-item{text-align:left;background:var(--card);border:1px solid var(--line);color:var(--fg);padding:11px 13px;border-radius:3px;cursor:pointer;font-family:var(--sans);font-size:14px}
   .ov-item:hover{border-color:var(--yellow)}
-  .ov-item b{font-family:var(--mono);color:var(--yellow);margin-right:10px}
-  kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--dim2);border-bottom-width:2px;padding:2px 7px;border-radius:3px;color:var(--fg);background:#15181D}
-  .help-rows{display:grid;grid-template-columns:auto 1fr;gap:12px 22px;margin-top:26px;align-items:baseline}
+  .ov-item b{font-family:var(--mono);color:var(--yellow);margin-right:9px}
+  kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--dim2);border-bottom-width:2px;padding:2px 6px;border-radius:3px;color:var(--fg);background:#15181D}
+  .help-rows{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin-top:22px;align-items:baseline}
 
-  /* print: every slide, no chrome */
   @media print{
     body{overflow:visible;background:#fff;color:#111}
     .chrome,.progress,.notes,.overlay{display:none!important}
     .deck{position:static}
-    .slide{display:flex!important;position:static;height:100vh;page-break-after:always;padding:40px 0}
+    .slide{display:flex!important;position:static;height:100vh;page-break-after:always;padding:36px 0}
     .frag{opacity:1!important;transform:none!important}
-    .stat b,.cell b,.eyebrow,.k,.kc,.kr,.kg{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-  @media (max-width:760px){.grid3{grid-template-columns:80px repeat(3,1fr)}.runs{grid-template-columns:1fr}.chrome .hint{display:none}}
+  @media (max-width:820px){.compare{grid-template-columns:1fr}.runs{grid-template-columns:1fr}.chrome .hint{display:none}}
 </style>
 </head>
 <body>
@@ -142,82 +133,131 @@
 <!-- 01 -->
 <section class="slide" aria-label="Title">
   <div class="inner">
-    <div class="eyebrow">Live capture · 26 Oct 2026 · issue #5</div>
-    <h1>One real match.<br><span class="k">Four broken assumptions.</span></h1>
-    <p class="lede">We captured one live Premier League table from WhoScored, fed it through the parser and the publisher, and learned where our picture of the source was wrong.</p>
+    <div class="eyebrow">A live capture · 26 October 2026</div>
+    <h1>One row.<br>From a website<br><span class="k">to a warehouse.</span></h1>
+    <p class="lede wide">We had 201 passing tests and zero real matches. This is what happened when we followed Manchester City's row through the pipeline.</p>
+    <p class="small">Use <span class="k">→</span> to move. <span class="k">n</span> opens the reasoning behind each slide.</p>
   </div>
 </section>
 
 <!-- 02 -->
-<section class="slide" aria-label="The question">
+<section class="slide" aria-label="The green light">
   <div class="inner">
-    <div class="eyebrow">The question</div>
-    <h2>Does it work<br>on real bytes?</h2>
-    <p class="lede frag">Every test so far used payloads we wrote ourselves. They proved the code agrees with our fixtures, not that our fixtures agree with WhoScored.</p>
-    <p class="lede frag" style="margin-top:18px">This slide is the answer: <span class="k">no, not entirely</span>, and here is exactly where.</p>
-    <aside class="notes-src" hidden>The why: a green test suite on synthetic data is a claim about our own consistency. Only a live capture tests the claim that matters.</aside>
+    <div class="eyebrow d">Act I · The green light</div>
+    <h2>201 tests.<br>Zero real bytes.</h2>
+    <div class="stats">
+      <div class="stat frag"><b>201</b><span>tests, all green</span></div>
+      <div class="stat frag"><b>0</b><span>live captures</span></div>
+      <div class="stat frag"><b>60</b><span>warehouse measures</span></div>
+      <div class="stat frag"><b>1</b><span>database, never touched by real data</span></div>
+    </div>
+    <p class="small frag">The first number is why we felt ready. The second is why we were not.</p>
+    <aside class="notes-src" hidden>201 tests is a real achievement, and it is not the point. Every one of those tests used a payload we wrote ourselves. A green suite proves the code is consistent with the fixtures. It cannot prove the fixtures are consistent with WhoScored.</aside>
   </div>
 </section>
 
 <!-- 03 -->
-<section class="slide" aria-label="What we captured">
+<section class="slide" aria-label="What green proved">
   <div class="inner">
-    <div class="eyebrow">What we captured</div>
-    <h2>One stage. One moment.</h2>
-    <div class="stats">
-      <div class="stat frag"><b>20</b><span>teams in the table</span></div>
-      <div class="stat frag"><b>9</b><span>feed payloads</span></div>
-      <div class="stat frag"><b>3</b><span>standings splits</span></div>
-      <div class="stat frag"><b>13</b><span>files, 97 KB</span></div>
-    </div>
-    <p class="small frag">Premier League 2026/27, stage 25544. Captured 26 Oct 2026 at 07:39 UTC. Fixture committed to <span class="k">tests/fixtures/whoscored/epl-2026-2027-25544</span>.</p>
+    <div class="eyebrow d">Act I · What green proved</div>
+    <h2>Our code agreed<br>with our fixtures.</h2>
+    <p class="lede">A test with a payload we wrote proves the parser behaves as we described. It does not prove the source behaves as we described.</p>
+    <p class="bigline frag">Consistency is not contact.</p>
+    <p class="small frag">So we did the only thing that answers the question: one live capture, the same code, no special cases.</p>
+    <aside class="notes-src" hidden>The distinction matters because it is the difference between "the tests pass" and "the system works". Every assumption in the parser was ours. The capture is how we checked them against someone else's reality.</aside>
   </div>
 </section>
 
 <!-- 04 -->
-<section class="slide" aria-label="How a capture works">
+<section class="slide" aria-label="The plan">
   <div class="inner">
-    <div class="eyebrow c">How a capture works</div>
-    <h2>Browser in,<br>bytes out.</h2>
-    <div class="flow">
-      <div class="node frag">stage page<small>token + standings</small></div>
-      <span class="arrow frag">→</span>
-      <div class="node frag">statistics page<small>same session</small></div>
-      <span class="arrow frag">→</span>
-      <div class="node frag">9 feeds<small>fetched in-page</small></div>
-      <span class="arrow frag">→</span>
-      <div class="node frag">validate<small>statColumns contract</small></div>
-      <span class="arrow frag">→</span>
-      <div class="node frag">raw + parse<small>60 + 30 measures</small></div>
-      <span class="arrow frag">→</span>
-      <div class="node frag">publish<small>A1–A21, one transaction</small></div>
+    <div class="eyebrow">Act I · The plan</div>
+    <h2>Follow one row.</h2>
+    <p class="lede wide">Manchester City. 26 October. 8 played, 7 won, 21 points. We would find that row on the website, in the feeds, and in the database.</p>
+    <div class="journey">
+      <span class="now">page</span><span>feeds</span><span>parse</span><span>validate</span><span>publish</span><span>re-run</span>
     </div>
-    <p class="small frag">We do not use plain HTTP for the feeds. The reason is on slide 14.</p>
-    <aside class="notes-src" hidden>Why a browser at all: the feeds are bound to the verified session that the site's own page creates. We open one headed browser, read the page for the token and standings, then call the nine feeds from the statistics page inside that same session. Pacing and validation happen in our code.</aside>
+    <p class="small">If the same numbers appear at every step, the pipeline is telling the truth. If they diverge, we have found a bug.</p>
+    <aside class="notes-src" hidden>One row is easier to follow than a whole table. City is a good choice: it is first, it has a clean record, and its numbers are small enough to check by eye.</aside>
   </div>
 </section>
 
 <!-- 05 -->
-<section class="slide" aria-label="Data shape: nine feeds">
+<section class="slide" aria-label="Step 1 the page">
   <div class="inner">
-    <div class="eyebrow">Data shape · 1 of 3</div>
-    <h2>Nine feeds.<br>Three sections, three splits.</h2>
-    <div class="grid3" style="margin-top:24px">
-      <div></div><div class="hd">Overall</div><div class="hd">Home</div><div class="hd">Away</div>
-      <div class="rh">summary</div><div class="cell frag"><b>8</b><span>stat columns</span></div><div class="cell frag"><b>8</b><span>stat columns</span></div><div class="cell frag"><b>8</b><span>stat columns</span></div>
-      <div class="rh">defensive</div><div class="cell frag"><b>6</b><span>stat columns</span></div><div class="cell frag"><b>6</b><span>stat columns</span></div><div class="cell frag"><b>6</b><span>stat columns</span></div>
-      <div class="rh">offensive</div><div class="cell frag"><b>5</b><span>stat columns</span></div><div class="cell frag"><b>5</b><span>stat columns</span></div><div class="cell frag"><b>5</b><span>stat columns</span></div>
-    </div>
-    <aside class="notes-src" hidden>Why the counts differ by section: summary has eight columns, defensive six, offensive five. The contract stores the expected column names per section and split; a changed list is schema drift and blocks the run instead of being silently mapped.</aside>
-    <p class="small frag">Each feed returns one JSON envelope: <span class="k">teamTableStats</span> (one object per team) and <span class="k">statColumns</span> (the names we validate against).</p>
+    <div class="eyebrow c">Act II · The capture · Step 1</div>
+    <h2>Open the page<br>like a fan.</h2>
+    <p class="lede">The stage page renders the league table in the browser. Twenty teams. Manchester City first.</p>
+    <table class="frag">
+      <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Pts</th></tr></thead>
+      <tbody><tr><td>1</td><td>Manchester City</td><td>8</td><td>7</td><td>0</td><td>1</td><td>20</td><td>9</td><td class="big">21</td></tr></tbody>
+    </table>
+    <p class="small frag">This is the row we will chase. So far it exists only in a browser.</p>
+    <aside class="notes-src" hidden>This is the source of truth for standings: the page's own table, rendered by the site. We read it in the browser because the rows are created by JavaScript, not present in the HTML a plain request returns.</aside>
   </div>
 </section>
 
 <!-- 06 -->
-<section class="slide" aria-label="Data shape: sixty measures">
+<section class="slide" aria-label="Step 2 the key">
   <div class="inner">
-    <div class="eyebrow c">Data shape · 2 of 3</div>
-    <h2>Sixty measures<br>in the warehouse.</h2>
+    <div class="eyebrow c">Act II · Step 2 · The key</div>
+    <h2>The key had<br>moved.</h2>
+    <p class="lede wide">The feeds need a token that the page mints. We used to read it from <span class="k">require</span>. On the live page, <span class="kr">require is undefined</span>.</p>
+    <pre class="frag"><span class="c">// what the code asked for</span>
+require.config.params.site.gSiteHeaderValue   <span class="r">→ undefined</span>
+
+<span class="c">// what the page actually contains</span>
+gSiteHeaderValue: <span class="y">'4K1Xf6rVYC7Z9qBwY5esrzATONajPhiKjDUt7gInY5U='</span></pre>
+    <p class="small frag">First crack. The capture had not fetched a single feed yet.</p>
+    <aside class="notes-src" hidden>The token authenticates the feed request. The site moved from an AMD module global to an inline bootstrap. We now read the HTML first and fall back to the old lookup. A test covers both quote styles and the missing case.</aside>
+  </div>
+</section>
+
+<!-- 07 -->
+<section class="slide" aria-label="Step 3 the feeds">
+  <div class="inner">
+    <div class="eyebrow c">Act II · Step 3 · The feeds</div>
+    <h2>Nine envelopes.<br>Twenty rows each.</h2>
+    <p class="lede wide">Each feed is JSON. <span class="k">statColumns</span> names the numbers. <span class="k">teamTableStats</span> holds one object per team.</p>
+    <pre class="frag">{
+  <span class="y">"statColumns"</span>: [<span class="g">"apps","goal","shotsPerGame","yellowCard",
+                  "redCard","possession","passSuccess","aerialWonPerGame"</span>],
+  <span class="y">"teamTableStats"</span>: [
+    { <span class="d">"name"</span>: <span class="g">"Man City"</span>, <span class="d">"teamName"</span>: <span class="g">"Manchester City"</span>,
+      <span class="d">"teamId"</span>: 167, <span class="d">"apps"</span>: 8, <span class="d">"goal"</span>: 20, <span class="d">"rating"</span>: 7.4,
+      <span class="d">"ranking"</span>: 1, <span class="d">"isOpta"</span>: true },
+    <span class="c">… 19 more teams</span>
+  ]
+}</pre>
+    <p class="small frag">Summary carries 8 columns. Defensive 6. Offensive 5. Three splits each: nine requests.</p>
+    <aside class="notes-src" hidden>This is the shape the parser consumes. The column list is the contract: if the source renames or drops a column, the parser refuses the payload instead of silently storing nulls. City's row is the same one we saw in the table, now in machine form.</aside>
+  </div>
+</section>
+
+<!-- 08 -->
+<section class="slide" aria-label="Step 4 standings">
+  <div class="inner">
+    <div class="eyebrow c">Act II · Step 4 · The table</div>
+    <h2>Ten fields.<br>Three splits.</h2>
+    <p class="lede wide">Standings are not in the feeds. They are read from the page. Each team gets one row per split: overall, home, away.</p>
+    <table class="frag">
+      <thead><tr><th>Split</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Pts</th></tr></thead>
+      <tbody>
+        <tr><td>Overall</td><td>8</td><td>7</td><td>0</td><td>1</td><td>20</td><td>9</td><td class="big">21</td></tr>
+        <tr><td>Home</td><td>4</td><td>4</td><td>0</td><td>0</td><td>11</td><td>6</td><td>12</td></tr>
+        <tr><td>Away</td><td>4</td><td>3</td><td>0</td><td>1</td><td>9</td><td>3</td><td>9</td></tr>
+      </tbody>
+    </table>
+    <p class="small frag">Notice the identity: home + away = overall, in every column. It will matter in Act III.</p>
+    <aside class="notes-src" hidden>This identity is the reason the league table is checkable. A team cannot play four home matches and four away matches and somehow have played eight. When the three tables are copies of each other, this identity fails loudly.</aside>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="slide" aria-label="Step 5 the shape">
+  <div class="inner">
+    <div class="eyebrow c">Act II · Step 5 · The shape</div>
+    <h2>Nine feeds<br>become sixty measures.</h2>
     <div class="bar frag">
       <div style="flex:18;background:var(--yellow)">18</div>
       <div style="flex:15;background:var(--cyan)">15</div>
@@ -226,187 +266,244 @@
       <div style="flex:9;background:var(--red)">9</div>
     </div>
     <div class="legend frag">
-      <span><i style="background:var(--yellow)"></i>summary, exclusive</span>
+      <span><i style="background:var(--yellow)"></i>summary</span>
       <span><i style="background:var(--cyan)"></i>defensive</span>
       <span><i style="background:var(--green)"></i>offensive</span>
       <span><i style="background:var(--amber)"></i>shared: apps, shots, rating</span>
-      <span><i style="background:var(--red)"></i>ranking per section and split</span>
+      <span><i style="background:var(--red)"></i>ranking</span>
     </div>
-    <aside class="notes-src" hidden>Why sixty and not fifty-seven: the feeds carry 57 stat columns. Nine ranking columns come from the per-row ranking field, one per section and split. Shared measures (apps, shots per game, rating) appear in more than one split, so the warehouse stores them per split but the owner is recorded once. Ownership rules prevent two sections from disagreeing about the same number.</aside>
-    <p class="small frag">The 9 shared columns come from the summary feed but are stored once per split, so they are not double-counted. Source of truth: <span class="k">src/dataderby/contract.py</span>.</p>
-  </div>
-</section>
-
-<!-- 07 -->
-<section class="slide" aria-label="Data shape: standings">
-  <div class="inner">
-    <div class="eyebrow c">Data shape · 3 of 3</div>
-    <h2>Standings come from the page,<br>not the feeds.</h2>
-    <p class="lede frag">Ten fields times three splits gives <span class="k">30</span> standings measures. They are rendered in the page table, so we read them in the browser.</p>
-    <div class="cards">
-      <div class="card frag"><span class="tag">fields</span><h3>rank · played · won · drawn · lost</h3><p>goals for · goals against · goal difference · points · form</p></div>
-      <div class="card frag"><span class="tag">splits</span><h3>overall · home · away</h3><p>each team has one row per split, 20 teams each</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- 08 -->
-<section class="slide" aria-label="One team, end to end">
-  <div class="inner">
-    <div class="eyebrow">One team, all splits</div>
-    <h2>Manchester City,<br>26 October.</h2>
-    <table class="frag">
-      <thead><tr><th>Split</th><th>Played</th><th>Won</th><th>Drawn</th><th>Lost</th><th>GF</th><th>GA</th><th>Points</th></tr></thead>
-      <tbody>
-        <tr><td>Overall</td><td>8</td><td>7</td><td>0</td><td>1</td><td>20</td><td>9</td><td>21</td></tr>
-        <tr><td>Home</td><td>4</td><td>4</td><td>0</td><td>0</td><td>11</td><td>6</td><td>12</td></tr>
-        <tr><td>Away</td><td>4</td><td>3</td><td>0</td><td>1</td><td>9</td><td>3</td><td>9</td></tr>
-      </tbody>
-    </table>
-    <aside class="notes-src" hidden>Why this table: it is the smallest real example that exercises every layer. The same numbers appear in the standings page, the summary feed, and the database. The check that home plus away equals overall is what caught the toggle bug: when every split was a copy of Overall, the sums doubled and the publish was refused.</aside>
-    <p class="small frag">Home + away = overall for every column. That identity is assertion A20, and it is the check that caught our first bug (slide 13).</p>
-  </div>
-</section>
-
-<!-- 09 -->
-<section class="slide" aria-label="Storage">
-  <div class="inner">
-    <div class="eyebrow">Storage · what lands in DuckDB</div>
-    <h2>One header.<br>Forty facts.</h2>
-    <div class="stats">
-      <div class="stat frag"><b>1</b><span>snapshot header</span></div>
-      <div class="stat frag"><b>20</b><span>team facts, 60 measures each</span></div>
-      <div class="stat frag"><b>20</b><span>standings facts, 30 measures each</span></div>
-    </div>
-    <aside class="notes-src" hidden>Why one transaction: a half-written snapshot is worse than none, because a chart would read a partial table as the truth. Facts and header commit together, or the database does not change. The fingerprint is a SHA-256 over the canonical content, so the same content always produces the same identity.</aside>
-    <p class="small frag">All of it commits in one transaction. A reader sees the full table or nothing. The header carries a 64-character SHA-256 content fingerprint.</p>
+    <p class="small frag">One naming rule keeps them apart: <span class="k">section + split + measure</span>. <span class="kc">apps</span> becomes <span class="kc">apps_overall</span>, <span class="kc">apps_home</span>, <span class="kc">apps_away</span>. <span class="kc">goal</span> becomes <span class="kc">summary_overall_goal</span>.</p>
+    <aside class="notes-src" hidden>The prefix is not decoration. Two sections can both report a number called "goals"; without the section in the name one would overwrite the other. Shared measures are owned once and stored per split, so a disagreement between sections is an error, not a silent overwrite.</aside>
   </div>
 </section>
 
 <!-- 10 -->
-<section class="slide" aria-label="Behaviour on a second run">
+<section class="slide" aria-label="Step 6 the write">
   <div class="inner">
-    <div class="eyebrow g">Behaviour</div>
-    <h2>Run it twice.<br>Write once.</h2>
-    <div class="runs">
-      <div class="run frag"><h3>Run 1 · accepted</h3><p>fingerprint not seen before</p><p>1 header, 20 + 20 facts written</p><p>checkpoint: <span class="kg">accepted</span></p></div>
-      <div class="run frag"><h3>Run 2 · no_change</h3><p>same content, new capture time</p><p>0 rows written</p><p>checkpoint: <span class="kg">no_change</span>, attempts +1</p></div>
-    </div>
-    <aside class="notes-src" hidden>Why the fingerprint ignores capture time: the source has no revision id. If we hashed the capture time, every retry would look like new data and the history would fill with duplicates. We hash content only, so an unchanged table is recognised as unchanged, however many times we look.</aside>
-    <p class="small frag">We measured it: the second publish returned <span class="k">no_change</span> and the table still held one snapshot. The fingerprint ignores capture time, so retries are free.</p>
+    <div class="eyebrow c">Act II · Step 6 · The write</div>
+    <h2>One header.<br>Forty facts.</h2>
+    <p class="lede wide">The snapshot header is the parent. The 20 team rows and the 20 standings rows point at it by foreign key.</p>
+    <table class="frag">
+      <thead><tr><th>Table</th><th>Rows</th><th>Grain</th></tr></thead>
+      <tbody>
+        <tr><td>competition_snapshot</td><td>1</td><td>one observation of the stage</td></tr>
+        <tr><td>fact_team_snapshot</td><td>20</td><td>one team, 60 measures</td></tr>
+        <tr><td>fact_standings_snapshot</td><td>20</td><td>one team, 30 measures</td></tr>
+      </tbody>
+    </table>
+    <p class="small frag">One transaction. Either all of it lands, or the database does not change at all.</p>
+    <aside class="notes-src" hidden>A half-written snapshot is worse than no snapshot: a chart would read a partial table as the truth. The header and the facts commit together. The header also carries the observed time, the source flag, and a 64-character content fingerprint.</aside>
   </div>
 </section>
 
 <!-- 11 -->
-<section class="slide" aria-label="Two clocks">
+<section class="slide" aria-label="Step 7 second run">
   <div class="inner">
-    <div class="eyebrow c">Time · ADR 0008</div>
-    <h2>One instant.<br>Two honest readings.</h2>
-    <table class="frag">
-      <thead><tr><th>Column</th><th>Stored (UTC)</th><th>Rendered IST</th></tr></thead>
-      <tbody><tr><td>observed_at</td><td>2026-10-26 07:39:18 UTC</td><td>13:09:18</td></tr></tbody>
-    </table>
-    <p class="small frag">Stored as <span class="k">TIMESTAMP WITH TIME ZONE</span>. IST exists only in the <span class="k">v_snapshot_clock</span> view, never as a stored column.</p>
+    <div class="eyebrow c">Act II · Step 7 · Look again</div>
+    <h2>Run it twice.<br>Write once.</h2>
+    <p class="lede wide">A second capture returns the same content. The fingerprint matches, so the publisher writes nothing.</p>
+    <div class="runs">
+      <div class="run frag"><h3>Run 1 · accepted</h3><p>new fingerprint</p><p>1 header, 20 + 20 facts</p><p>checkpoint: <span class="kg">accepted</span></p></div>
+      <div class="run frag"><h3>Run 2 · no_change</h3><p>same fingerprint</p><p>0 rows written</p><p>checkpoint: <span class="kg">no_change</span></p></div>
+    </div>
+    <p class="small frag">We measured it. The table still held one snapshot after the second run.</p>
+    <aside class="notes-src" hidden>The fingerprint is over content, not capture time. If it included the time, every retry would look like new data and the history would fill with duplicates. Content-only identity is what makes a retry free and a correction visible.</aside>
   </div>
 </section>
 
 <!-- 12 -->
-<section class="slide" aria-label="First run findings">
+<section class="slide" aria-label="Act III transition">
   <div class="inner">
-    <div class="eyebrow r">First run · what broke</div>
-    <h2>Four assumptions.<br>Four fixes.</h2>
-    <div class="cards">
-      <div class="card r frag"><span class="tag">1 · token</span><h3>Not on require</h3><p>The page now carries the token in its inline bootstrap.</p></div>
-      <div class="card r frag"><span class="tag">2 · toggles</span><h3>Silent copies</h3><p>Selectors were title-cased; they matched nothing and every split read Overall.</p></div>
-      <div class="card r frag"><span class="tag">3 · form</span><h3>WWWWWL</h3><p>The page sends upper case; the validator only accepted lower case.</p></div>
-      <div class="card r frag"><span class="tag">4 · names</span><h3>Man City ≠ Manchester City</h3><p>Two labels for one team. teamName is canonical.</p></div>
-    </div>
-    <aside class="notes-src" hidden>Why these four: each one was an assumption we had written into the code or the fixtures without evidence. Each produced a visible symptom only on real data, and each fix has a test that pins the corrected behaviour. None of them would have been found by the synthetic suite.</aside>
-    <p class="small frag">A fifth finding blocks everything else: the feed endpoint only answers inside the browser session. Slide 14.</p>
+    <div class="eyebrow r">Act III · What broke</div>
+    <h2>That is the story<br>we expected.</h2>
+    <p class="lede wide">The first run did not follow it. Four assumptions failed. One of them failed silently, and only the database noticed.</p>
+    <p class="bigline frag">The next seven slides take them one at a time.</p>
+    <aside class="notes-src" hidden>Each problem follows the same shape: what I expected, what happened, why nothing stopped it, how we found it, and the proof that it is fixed. The order is the order we hit them.</aside>
   </div>
 </section>
 
 <!-- 13 -->
-<section class="slide" aria-label="The silent bug">
+<section class="slide" aria-label="Problem 1 expected vs happened">
   <div class="inner">
-    <div class="eyebrow r">Defect 2 · the silent bug</div>
-    <h2>Three tables.<br>One table.</h2>
-    <p class="lede frag">The selector asked for <span class="kr">data-source="Home"</span>. The page has <span class="kg">data-source="home"</span>. No match, no click, no error.</p>
-    <p class="lede frag" style="margin-top:18px">The first capture read Overall three times. Manchester City showed 8 played in every split. <span class="k">A20 blocked the publish</span>, which is why we trust it.</p>
+    <div class="eyebrow r">Act III · Problem 1 · The tab</div>
+    <h2>Home looked<br>exactly like Overall.</h2>
+    <div class="compare">
+      <div class="frag"><span class="lbl">I expected</span><p>Three different tables. City plays <b>4 at home</b>, <b>4 away</b>, <b>8 overall</b>.</p></div>
+      <div class="frag"><span class="lbl bad">What happened</span><p>Three identical tables. City shows <b>8 played</b> in all three.</p></div>
+    </div>
+    <p class="small frag">No error. No warning. The capture looked successful.</p>
+    <aside class="notes-src" hidden>This is the most dangerous kind of bug: the run completes, files are written, and the data looks plausible. Nothing in the capture path compares the three views, so the duplication survives until validation.</aside>
   </div>
 </section>
 
 <!-- 14 -->
-<section class="slide" aria-label="The transport problem">
+<section class="slide" aria-label="Problem 1 why silent">
   <div class="inner">
-    <div class="eyebrow r">Blocker · issue #14</div>
-    <h2>A 200 that means 404.</h2>
-    <aside class="notes-src" hidden>Why this matters most: a 200 that means "not found" fools every status-code check. Our retry policy only sees 403 and non-200 codes, so this response is accepted as a body and then rejected as a gate page. The status code alone cannot be trusted; the body must be validated.</aside>
-    <p class="lede frag">Plain HTTP to the feed returns status 200 with a short HTML page: <span class="kr">"The page you requested does not exist."</span></p>
-    <p class="lede frag" style="margin-top:18px">The same URL returns JSON when the site's own page calls it. Copying cookies out of the browser does not help. The verified session is the transport.</p>
-    <p class="small frag">Consequence: <span class="k">dataderby run</span> cannot fetch live feeds yet. The capture script works because it fetches inside the page.</p>
+    <div class="eyebrow r">Act III · Problem 1 · Why</div>
+    <h2>The click<br>never happened.</h2>
+    <p class="lede wide">The selector asked for <span class="kr">data-source="Home"</span>. The page uses <span class="kg">data-source="home"</span>. Zero matches.</p>
+    <pre class="frag"><span class="c"># the code, before</span>
+selector = <span class="y">f'a.option[data-source="{view.title()}"]'</span>
+toggle = page.locator(selector)
+<span class="y">if toggle.count():</span>          <span class="c"># 0 matches for "Home"</span>
+    toggle.first.click()       <span class="c"># so this line never ran</span>
+items = page.evaluate(STANDINGS_JS)   <span class="c"># read Overall again</span></pre>
+    <p class="small frag">A guard that protects an action also hides the absence of the action.</p>
+    <aside class="notes-src" hidden>The `if` was there to handle stages without a table. It did its job: no exception. But it also turned "the selector is wrong" into "nothing to do". A missing match should have been a failure for a stage that declares a league table.</aside>
   </div>
 </section>
 
 <!-- 15 -->
-<section class="slide" aria-label="Fixture">
+<section class="slide" aria-label="Problem 1 caught">
   <div class="inner">
-    <div class="eyebrow">The fixture</div>
-    <h2>Redacted. Checksummed.<br>Honest about its limits.</h2>
-    <div class="cards">
-      <div class="card g frag"><span class="tag">contains</span><h3>Feed bodies + standings</h3><p>The exact bytes the parser consumes, plus a SHA-256 per file.</p></div>
-      <div class="card g frag"><span class="tag">excludes</span><h3>Tokens, cookies, headers</h3><p>The capture tool refuses to write them. The test checks again.</p></div>
-      <div class="card y frag"><span class="tag">limit</span><h3>One timestamp for nine feeds</h3><p>capture_span_seconds is 0.0. We cannot measure sweep duration yet.</p></div>
-    </div>
+    <div class="eyebrow r">Act III · Problem 1 · The catch</div>
+    <h2>The database<br>said no.</h2>
+    <p class="lede wide">A20 says home plus away must equal overall. With three copies of Overall, City had <span class="kr">16 played</span> instead of 8.</p>
+    <table class="frag">
+      <thead><tr><th>Split</th><th>Played</th><th>Won</th><th>Points</th></tr></thead>
+      <tbody>
+        <tr><td>Overall (copied)</td><td>8</td><td>7</td><td>21</td></tr>
+        <tr><td>Home (copied)</td><td>8</td><td>7</td><td>21</td></tr>
+        <tr><td>Away (copied)</td><td>8</td><td>7</td><td>21</td></tr>
+        <tr><td><span class="kr">home + away</span></td><td class="big">16</td><td class="big">14</td><td class="big">42</td></tr>
+      </tbody>
+    </table>
+    <p class="small frag">The assertion did not prevent the bug. It prevented the bug from becoming history.</p>
+    <aside class="notes-src" hidden>This is the moment the assertions earned their keep. The capture had no idea it was wrong. The publish transaction ran A1-A21, A20 compared the splits, and the write was refused. The bad data never reached the warehouse.</aside>
   </div>
 </section>
 
 <!-- 16 -->
-<section class="slide" aria-label="Criticisms">
+<section class="slide" aria-label="Problem 1 fix">
   <div class="inner">
-    <div class="eyebrow y">Honest criticism</div>
-    <h2>What I would<br>change first.</h2>
-    <div class="cards">
-      <div class="card y frag"><span class="tag">timing</span><h3>Fixed sleeps</h3><p>400 ms after a click. It worked twice. It is not synchronisation. Wait for the table to change.</p></div>
-      <div class="card y frag"><span class="tag">coverage</span><h3>One stage</h3><p>A league table with no knockouts. Every other stage is unproven.</p></div>
-      <div class="card y frag"><span class="tag">docs</span><h3>Wrong capture time</h3><p>Two docs said 07:34:46. The committed manifest says 07:39:18. The fingerprint is content-only, so it is unaffected. We fix the docs.</p></div>
-    </div>
+    <div class="eyebrow g">Act III · Problem 1 · The fix</div>
+    <h2>Lower case.<br>Then wait for the change.</h2>
+    <p class="lede wide">The selector now matches the page. The capture waits for the table to update before reading it.</p>
+    <table class="frag">
+      <thead><tr><th>Split</th><th>P</th><th>W</th><th>GF</th><th>GA</th><th>Pts</th></tr></thead>
+      <tbody>
+        <tr><td>Overall</td><td>8</td><td>7</td><td>20</td><td>9</td><td class="big">21</td></tr>
+        <tr><td>Home</td><td>4</td><td>4</td><td>11</td><td>6</td><td>12</td></tr>
+        <tr><td>Away</td><td>4</td><td>3</td><td>9</td><td>3</td><td>9</td></tr>
+      </tbody>
+    </table>
+    <p class="small frag">Proof: home + away = overall, and A20 passes on the real capture.</p>
+    <aside class="notes-src" hidden>The fix is two lines: the selector uses the page's own value, and the read waits long enough for the table to re-render. The proof is not "it looks different"; it is the same identity that caught the bug now holding on live data.</aside>
   </div>
 </section>
 
 <!-- 17 -->
-<section class="slide" aria-label="Senior data engineer view">
+<section class="slide" aria-label="Problem 2 names">
   <div class="inner">
-    <div class="eyebrow g">A football club's view</div>
-    <h2>Accuracy when it matters.<br>Trust the rest.</h2>
-    <div class="cards">
-      <div class="card frag"><span class="tag">matchday</span><h3>Fresh within the hour</h3><p>Scheduled runs around kickoff windows, not a fixed clock.</p></div>
-      <div class="card frag"><span class="tag">corrections</span><h3>Late data changes</h3><p>Stat corrections arrive after matches. Snapshots keep the history instead of overwriting it.</p></div>
-      <div class="card frag"><span class="tag">one truth</span><h3>One source, explained</h3><p>Every number traces to raw bytes, a fingerprint, and a run ID.</p></div>
+    <div class="eyebrow r">Act III · Problem 2 · Identity</div>
+    <h2>Two names.<br>One team.</h2>
+    <p class="lede wide">The feed sends <span class="k">name: "Man City"</span> and <span class="k">teamName: "Manchester City"</span>. The parser refused the row because they differed.</p>
+    <div class="compare">
+      <div class="frag"><span class="lbl">The feed</span><p><b>Man City</b> — short label</p><p><b>Manchester City</b> — full name</p></div>
+      <div class="frag"><span class="lbl good">The standings</span><p><b>Manchester City</b> — the same full name</p><p>So the full name is the key.</p></div>
     </div>
+    <p class="small frag">We store <span class="kc">teamName</span> and ignore the label. The row is the same team, not a conflict.</p>
+    <aside class="notes-src" hidden>The old check was well intentioned: two names for one team usually means a data problem. Here the source is telling us one is a display label and one is the identity. The standings table agrees with the full name, so that is the one the warehouse keeps.</aside>
   </div>
 </section>
 
 <!-- 18 -->
-<section class="slide" aria-label="Recommendations">
+<section class="slide" aria-label="Problem 3 form">
   <div class="inner">
-    <div class="eyebrow">Recommendations</div>
-    <h2>Next, in order.</h2>
-    <div class="cards">
-      <div class="card frag"><span class="tag">1 · now</span><h3>Browser transport</h3><p>Make run and probe work against the live page (#14).</p></div>
-      <div class="card frag"><span class="tag">2 · next</span><h3>Per-feed timestamps</h3><p>Measure sweep duration instead of storing one time for nine feeds.</p></div>
-      <div class="card frag"><span class="tag">3 · next</span><h3>Wait for change</h3><p>Replace sleeps with waits on table contents.</p></div>
-      <div class="card frag"><span class="tag">4 · decide</span><h3>Source-use reading</h3><p>Confirm that a redacted fixture is allowed under ADR 0006.</p></div>
-    </div>
+    <div class="eyebrow r">Act III · Problem 3 · Validation</div>
+    <h2>The page shouts.<br>The database whispers.</h2>
+    <p class="lede wide">Form arrives as <span class="kr">WWWWWL</span>. The validator only accepted lower-case <span class="kg">wdl</span>, so it rejected a perfectly good row.</p>
+    <pre class="frag"><span class="c"># before</span>
+form = raw.form.strip()        <span class="r">→ "WWWWWL"</span>
+if char not in "wdl": reject   <span class="r">→ rejected</span>
+
+<span class="c"># after</span>
+form = raw.form.strip().lower()  <span class="g">→ "wwwwl"</span></pre>
+    <p class="small frag">One normalisation at the boundary; everything downstream stays in one case.</p>
+    <aside class="notes-src" hidden>The data was correct. Our expectation about its case was wrong. The fix is at the boundary, not in the validator: the validator stays strict, and the parser hands it the canonical form.</aside>
   </div>
 </section>
 
 <!-- 19 -->
+<section class="slide" aria-label="Problem 4 the 404">
+  <div class="inner">
+    <div class="eyebrow r">Act III · Problem 4 · The transport</div>
+    <h2>A 200<br>that means 404.</h2>
+    <p class="lede wide">Plain HTTP to the feed returns <span class="kr">status 200</span> and an HTML page: <span class="kr">"The page you requested does not exist."</span></p>
+    <pre class="frag">HTTP/1.1 <span class="y">200 OK</span>
+content-type: <span class="r">text/html</span>
+oc-orchestrator-trace: {<span class="r">"FINGERPRINT":true</span>, ...}
+<span class="d">&lt;!DOCTYPE HTML ... "The page you requested does not exist in WhoScored.com" ...</span></pre>
+    <p class="small frag">Every status-code check passes. The body is the lie.</p>
+    <aside class="notes-src" hidden>This is the scariest finding. A 200 that means "not found" defeats the retry policy, which only classifies 403 and non-200 codes. The response is accepted as a body and then rejected later as a gate page. The status code alone cannot be trusted; the body must be validated.</aside>
+  </div>
+</section>
+
+<!-- 20 -->
+<section class="slide" aria-label="Problem 4 the session">
+  <div class="inner">
+    <div class="eyebrow r">Act III · Problem 4 · Why</div>
+    <h2>The session<br>is the key.</h2>
+    <p class="lede wide">The same URL returns JSON when the site's own page calls it. Copying the browser's cookies into curl did not help.</p>
+    <div class="compare">
+      <div class="frag"><span class="lbl bad">Plain HTTP</span><p>200, HTML shell, no data</p></div>
+      <div class="frag"><span class="lbl good">In the page</span><p>200, JSON, 20 teams</p></div>
+    </div>
+    <p class="small frag">The verified browser session is the transport, not just the credential. That is why <span class="k">dataderby run</span> cannot fetch live feeds yet. Tracked as <span class="kc">#14</span>.</p>
+    <aside class="notes-src" hidden>We tried the obvious workaround first: export the cookie jar and the user agent, then call the endpoint with curl. Same shell. The site ties the feed to a session that only its own page can create. The capture script works because it fetches inside that page. Production needs the same transport, which is a deliberate change with browser lifecycle and pacing to solve.</aside>
+  </div>
+</section>
+
+<!-- 21 -->
+<section class="slide" aria-label="Scorecard">
+  <div class="inner">
+    <div class="eyebrow g">Act IV · What we know now</div>
+    <h2>What works.<br>What does not.</h2>
+    <div class="compare">
+      <div class="frag"><span class="lbl good">Proven on real bytes</span><p>20 teams parse into 60 measures.</p><p>A1–A21 pass. One snapshot, 20 + 20 facts.</p><p>A second run returns <b>no_change</b>.</p></div>
+      <div class="frag"><span class="lbl bad">Still open</span><p>Production fetch is browser-bound (#14).</p><p>One stage, no knockouts.</p><p>One timestamp for nine feeds; sweep duration unmeasured.</p></div>
+    </div>
+    <aside class="notes-src" hidden>The left column is the fixture test, reproduced in CI. The right column is the honest gap list. The gap that matters most is the transport: without it the pipeline can parse real bytes but cannot fetch them on a schedule.</aside>
+  </div>
+</section>
+
+<!-- 22 -->
+<section class="slide" aria-label="Next">
+  <div class="inner">
+    <div class="eyebrow">Act IV · Next</div>
+    <h2>In order.</h2>
+    <div class="cards">
+      <div class="card frag"><span class="tag">1 · now</span><h3>Browser transport</h3><p>Make run and probe fetch the feeds the way the capture script does. Blocks every live run (#14).</p></div>
+      <div class="card frag"><span class="tag">2 · next</span><h3>Per-feed timestamps</h3><p>Measure the sweep instead of storing one time for nine feeds.</p></div>
+      <div class="card frag"><span class="tag">3 · next</span><h3>Wait for change</h3><p>Replace fixed sleeps with waits on the table contents.</p></div>
+      <div class="card frag"><span class="tag">4 · decide</span><h3>Source-use reading</h3><p>Confirm a redacted fixture is allowed under ADR 0006.</p></div>
+    </div>
+    <aside class="notes-src" hidden>The order is dependency order, not preference. Nothing else about live operation can be tested until the transport works. The timestamp and wait issues are quality fixes that make the next capture trustworthy rather than lucky.</aside>
+  </div>
+</section>
+
+<!-- 23 -->
+<section class="slide" aria-label="A club's view">
+  <div class="inner">
+    <div class="eyebrow g">Act IV · A club's view</div>
+    <h2>Why this matters<br>on a Saturday.</h2>
+    <div class="cards">
+      <div class="card frag"><span class="tag">matchday</span><h3>Fresh within the hour</h3><p>A table that is late is wrong, even when its numbers are right.</p></div>
+      <div class="card frag"><span class="tag">corrections</span><h3>Late data changes</h3><p>Corrections arrive after matches. Snapshots keep the history instead of overwriting it.</p></div>
+      <div class="card frag"><span class="tag">trust</span><h3>One source, explained</h3><p>Every number traces to raw bytes, a fingerprint, and a run ID.</p></div>
+    </div>
+    <aside class="notes-src" hidden>A club does not need a perfect pipeline; it needs one it can argue with. When a number looks wrong, the analyst should be able to say which observation it came from, when it was captured, and whether it was corrected. That is what the snapshot and the raw bundle buy.</aside>
+  </div>
+</section>
+
+<!-- 24 -->
 <section class="slide" aria-label="Close">
   <div class="inner">
     <div class="eyebrow">Close</div>
-    <h1>It remembers.<br><span class="k">Now it has seen the real thing.</span></h1>
-    <p class="lede frag">Report: <span class="kc">docs/reports/live-capture.md</span> · Commit <span class="kc">1d58d52</span> · 201 tests · CI green · Open: <span class="kc">#14</span></p>
+    <h1>The data was right.<br><span class="k">Our map of it was wrong.</span></h1>
+    <p class="lede wide frag">Green tests proved consistency. One real capture proved contact.</p>
+    <p class="small frag">Report <span class="kc">docs/reports/live-capture.md</span> · Commit <span class="kc">1d58d52</span> · 201 tests · Open <span class="kc">#14</span></p>
+    <aside class="notes-src" hidden>That is the lesson to keep. The tests were not wasted; they made the failures cheap and visible. But they could not tell us what the source looked like. Only contact with the source could.</aside>
   </div>
 </section>
 
@@ -415,26 +512,26 @@
 <div class="notes" id="notes" aria-live="polite"><h4>Presenter notes</h4><div id="notes-body"></div></div>
 
 <div class="overlay" id="overview" role="dialog" aria-label="Overview">
-  <h2 style="font-size:28px">Overview</h2>
+  <h2 style="font-size:26px">Overview</h2>
   <div class="ov-grid" id="ov-grid"></div>
 </div>
 
 <div class="overlay" id="help" role="dialog" aria-label="Keys">
-  <h2 style="font-size:28px">Keys</h2>
+  <h2 style="font-size:26px">Keys</h2>
   <div class="help-rows">
-    <div><kbd>→</kbd> <kbd>space</kbd></div><div>reveal next step, then next slide</div>
+    <div><kbd>→</kbd> <kbd>space</kbd></div><div>reveal the next step, then the next slide</div>
     <div><kbd>←</kbd></div><div>previous slide</div>
     <div><kbd>n</kbd></div><div>presenter notes</div>
     <div><kbd>o</kbd></div><div>overview</div>
     <div><kbd>?</kbd></div><div>this panel</div>
     <div><kbd>Esc</kbd></div><div>close a panel</div>
   </div>
-  <p class="small">Deep links work: add <code>#5</code> to the URL. Print (Ctrl+P) shows every slide.</p>
+  <p class="small">Deep links work: add <code>#13</code> to the URL. Print (Ctrl+P) shows every slide.</p>
 </div>
 
 <div class="chrome">
   <span class="brand">DATADERBY</span>
-  <span class="pg" id="pg">01 / 19</span>
+  <span class="pg" id="pg">01 / 24</span>
   <div class="ledger" id="ledger"></div>
   <span class="hint">→ reveal · n notes · o overview · ? keys</span>
   <button class="nav" id="prev" aria-label="Previous">←</button>
@@ -471,7 +568,6 @@
   });
 
   function pad(n) { return String(n).padStart(2, "0"); }
-
   function frags(slide) { return slide.querySelectorAll(".frag"); }
 
   function show(i, s, animate) {
@@ -481,9 +577,7 @@
     });
     var fr = frags(slides[i]);
     fr.forEach(function (f) { f.classList.remove("on"); });
-    for (var k = 0; k < Math.min(s, fr.length); k++) {
-      fr[k].classList.add("on");
-    }
+    for (var k = 0; k < Math.min(s, fr.length); k++) { fr[k].classList.add("on"); }
     pg.textContent = pad(i + 1) + " / " + pad(total);
     progress.style.width = ((i + 1) / total * 100) + "%";
     Array.prototype.forEach.call(ledger.children, function (b, k) {
@@ -494,15 +588,11 @@
     notesBody.innerHTML = notes ? "<p>" + notes.textContent.trim() + "</p>" : "<p>No notes for this slide.</p>";
     history.replaceState(null, "", "#" + (i + 1));
     if (animate && !reduce) {
-      slides[i].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: "ease-out" });
+      slides[i].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: "ease-out" });
     }
   }
 
-  function goTo(i) {
-    idx = Math.min(Math.max(i, 0), total - 1);
-    step = 0;
-    show(idx, step, true);
-  }
+  function goTo(i) { idx = Math.min(Math.max(i, 0), total - 1); step = 0; show(idx, step, true); }
 
   function next() {
     var fr = frags(slides[idx]);
@@ -512,17 +602,10 @@
 
   function prev() {
     if (step > 0) { step--; show(idx, step, false); return; }
-    if (idx > 0) {
-      idx--;
-      step = frags(slides[idx]).length;
-      show(idx, step, true);
-    }
+    if (idx > 0) { idx--; step = frags(slides[idx]).length; show(idx, step, true); }
   }
 
-  function closeAll() {
-    overview.classList.remove("open");
-    help.classList.remove("open");
-  }
+  function closeAll() { overview.classList.remove("open"); help.classList.remove("open"); }
 
   document.getElementById("next").addEventListener("click", next);
   document.getElementById("prev").addEventListener("click", prev);
