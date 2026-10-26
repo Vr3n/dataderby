@@ -80,6 +80,33 @@ A report is written for a co-worker who was not in the room, and must contain:
 Start from [`docs/reports/TEMPLATE.md`](docs/reports/TEMPLATE.md). A change
 without a report is not done.
 
+## Slide decks
+
+When asked for a slide deck, follow [`docs/slides/RULES.md`](docs/slides/RULES.md).
+The non-negotiables:
+
+- **Story before slides.** Write the one-sentence argument and the acts first.
+  A deck is an argument with evidence, not a list of findings.
+- **Define every term on first use.** A reader outside the repo must not guess
+  what `#14`, `run`, `A19`, `feed`, or `snapshot` means. Add a glossary page when
+  the deck uses more than three domain terms.
+- **No page cross-references.** "See page 11" breaks when a slide is inserted.
+  Name the section instead.
+- **One idea per slide.** Give a hard problem three to six slides: expected,
+  happened, why, caught, fix, proof.
+- **Show, don't assert.** A table, a diff, a diagram, or a command beats a
+  paragraph. Every claim carries a number or an artefact.
+- **Match an existing theme.** Reuse a deck already in `docs/` rather than
+  inventing a palette. Keep the 1600×900 stage and scale to fit.
+- **Motion explains hierarchy.** Use GSAP to reveal lines, rows, and diagrams in
+  reading order, with a reduced-motion and no-CDN fallback.
+- **Notes carry the reasoning.** Every slide gets a presenter note that explains
+  the "why" in plain words.
+- **Verify by rendering.** Check tag balance and JS syntax, then render every
+  slide at the reference size and look for clipped content.
+- **Link both ways.** A deck that explains a report links to it, and the report
+  links back.
+
 ## Quality Gates
 
 A task is done only when all of these pass:
