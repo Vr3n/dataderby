@@ -16,3 +16,11 @@ One report per build phase, written before that phase is committed.
 
 The reports record the commands that were run, the evidence they produced, and
 any deviation from `plans/v1-build-plan.md`.
+
+## Change reports
+
+Reports for a single change that is not a build phase.
+
+| Change | Report | Status |
+|---|---|---|
+| Timestamps | [TIMESTAMPTZ migration](timestamptz-migration.md) | complete |
