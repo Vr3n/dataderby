@@ -31,6 +31,7 @@ Reports for a single change that is not a build phase.
 | Repository structure | [Repository reorganisation](repo-reorganization.md) | complete |
 | Browser transport | [Browser feed transport](browser-transport.md) | complete |
 | Fetch policy | [Fetch policy](fetch-policy.md) | complete |
+| SQL and schema (deck) | [Companion slides](../slides/sql-schema-slides.html) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.
