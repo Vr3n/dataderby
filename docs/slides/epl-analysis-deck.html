@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The analyst's cut - eighteen seasons, nine questions - dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#0B1210; --board2:#101915; --chalk:#F2EDE3; --muted:#9D9789;
+    --red:#E04B3A; --green:#57B47C; --amber:#E8C547; --line:rgba(242,237,227,.16);
+    --serif:"Newsreader",Georgia,serif; --sans:"Inter",system-ui,sans-serif;
+    --cond:"Barlow Condensed",sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#050807}
+  body{font-family:var(--sans);color:var(--chalk);-webkit-font-smoothing:antialiased}
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#050807}
+  #stage{position:relative;width:1600px;height:900px;background:var(--board);transform-origin:center center;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.7)}
+  #stage::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:radial-gradient(rgba(242,237,227,.07) 1px,transparent 1px);background-size:14px 14px}
+  #pitch{position:absolute;right:-140px;top:60px;width:820px;height:820px;opacity:.07;z-index:0}
+  #pitch path,#pitch circle,#pitch rect{fill:none;stroke:var(--chalk);stroke-width:1.6}
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--red)}
+  #mast{position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk)}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 150px 0 84px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line)}
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:rgba(242,237,227,.2);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--chalk)}
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{position:absolute;inset:0;padding:112px 84px 86px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;opacity:0;visibility:hidden}
+  .slide.on{opacity:1;visibility:visible}
+  .slide>*{position:relative;z-index:1}
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.96;font-size:86px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.02;font-size:47px;max-width:36ch}
+  h2.display em{font-style:italic;color:var(--amber)}
+  h3{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:22px;line-height:1.45;color:#CFC8B8;max-width:48ch}
+  .body{font-size:16px;line-height:1.6;color:#CFC8B8;max-width:62ch}
+  div.body{max-width:none}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .body{min-height:0}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .c2,.c3,.c4{align-content:start}
+  .stack{display:grid;gap:16px;align-content:start}
+  .card{border-top:3px solid var(--chalk);background:rgba(242,237,227,.05);padding:20px 22px 22px}
+  .card.hot{border-top-color:var(--red)}
+  .card.gold{border-top-color:var(--amber)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .card h3{margin:8px 0 10px;color:var(--chalk)}
+  .card p{font-size:14px;line-height:1.55;color:#C6BFAF}
+  .card .big{font-family:var(--mono);font-size:38px;color:var(--chalk);margin-top:6px}
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid rgba(242,237,227,.35)}
+  .tbl td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:14.5px;color:#DCD5C5;vertical-align:middle}
+  .tbl td.n,.tbl th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .tbl tr.hi td{background:rgba(224,75,58,.10)}
+  .tbl.compact td{padding:8px 9px;font-size:13px}
+  .tbl.compact th{padding:8px 9px;font-size:10px}
+  .room{background:rgba(242,237,227,.06);border-left:3px solid var(--red);padding:12px 16px;display:flex;gap:14px;align-items:baseline}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  .room p{font-size:13.5px;line-height:1.5;color:#CFC8B8}
+  .stamp{display:inline-block;font-family:var(--mono);font-weight:600;font-size:30px;color:var(--red);border:2px solid var(--red);padding:3px 11px}
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.04em;color:var(--chalk);font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+  .pull{font-family:var(--serif);font-size:36px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+  .cht text{font-family:var(--mono);fill:var(--muted)}
+  .cht text.n{fill:var(--chalk)}
+  .cht .bar{fill:rgba(242,237,227,.75);transform-box:fill-box;transform-origin:left center}
+  .cht .bar.hot{fill:var(--red)}
+  .cht .brow text{font-size:13px}
+  .cht .axis{stroke:rgba(242,237,227,.25);stroke-width:1}
+  .cht .grid{stroke:rgba(242,237,227,.08);stroke-width:1;stroke-dasharray:3 5}
+  .cht .line-path{fill:none;stroke:var(--chalk);stroke-width:2.5}
+  .cht .line-path.red{stroke:var(--red)}
+  .cht .dot{fill:var(--board);stroke:var(--chalk);stroke-width:2.5}
+  .cht .dot.hot{fill:var(--red);stroke:var(--red)}
+  .ann{font-family:var(--mono);font-size:11px;fill:var(--amber)}
+  .cover{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 96px}
+  .cover .inner{flex:none;align-self:flex-start;display:grid;gap:24px;max-width:1060px}
+  .cover h1{font-size:84px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:56px;border-top:1px solid var(--line);padding-top:18px;width:100%;margin-top:32px}
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{width:30px;height:30px;border:1px solid rgba(242,237,227,.25);background:transparent;color:#CFC8B8;font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s}
+  #nav button:hover{background:var(--chalk);color:#0B1210}
+  #notes{position:fixed;left:0;right:0;bottom:0;z-index:90;background:#050807;color:var(--chalk);border-top:2px solid var(--red);padding:18px 28px 20px;transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);display:flex;gap:24px;align-items:baseline}
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .a-row{will-change:transform,opacity}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <svg id="pitch" viewBox="0 0 760 760" aria-hidden="true">
+      <rect x="40" y="40" width="680" height="680"/>
+      <line x1="380" y1="40" x2="380" y2="720"/>
+      <circle cx="380" cy="380" r="92"/>
+      <circle cx="380" cy="380" r="4"/>
+      <rect x="40" y="230" width="112" height="300"/>
+      <rect x="608" y="230" width="112" height="300"/>
+    </svg>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>The analyst's cut</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; The questions</div>
+        <div class="mast-right">27 Oct 2026 &middot; EPL 2009&ndash;2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">Nine questions, one warehouse, zero page loads</div>
+        <div id="clock">
+          <span class="l">Progress</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 14</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="The questions" data-chrome="off"
+        data-note="Open with the payoff, not the method. Eighteen seasons of one league now answer in single queries. The four numbers are the ones this deck earns: seasons, snapshots, facts, and the deductions the rules caught rather than smoothed over.">
+        <div class="inner">
+          <p class="kicker"><i></i>The analyst's cut &nbsp;&middot;&nbsp; 27 October 2026</p>
+          <h1 class="display">
+            <span class="l"><span>Eighteen seasons.</span></span>
+            <span class="l"><span>Nine questions.</span></span>
+            <span class="l"><span>Zero page loads.</span></span>
+          </h1>
+          <p class="standfirst">What the warehouse actually says about seventeen years of English football, and whether the schema that holds it deserves your trust.</p>
+          <p class="byline">For anyone who has ever rebuilt a season from eighteen open tabs</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="18">0</div><div class="k">EPL seasons</div><div class="s">2009/10&ndash;2026/27</div></div>
+          <div class="stat"><div class="v" data-count="135">0</div><div class="k">snapshots, all leagues</div><div class="s">one observation each</div></div>
+          <div class="stat"><div class="v" data-count="3023">0</div><div class="k">team facts</div><div class="s">performance + table</div></div>
+          <div class="stat"><div class="v" data-count="8">0</div><div class="k">deductions surfaced</div><div class="s">stored, not smoothed</div></div>
+        </div>
+      </section>
+
+      <!-- 02 the brief -->
+      <section class="slide" data-sec="The questions"
+        data-note="Set the contract with the room. Three acts, nine questions, each answered by one query the deck shows. The takeaway is stated up front: the schema held, and the moments it resisted are part of the evidence.">
+        <div>
+          <p class="kicker"><i></i>The brief</p>
+          <h2 class="display" style="margin-top:14px">I asked the questions analysts<br>actually ask. <em>Every answer is one query.</em></h2>
+        </div>
+        <div class="body stack">
+          <div class="c3">
+            <div class="card a-up"><div class="tag">Act one &middot; the league</div><h3>Who won, by how much, and where?</h3><p>Margins, dominance, home advantage. The shape of competition across seventeen seasons.</p></div>
+            <div class="card a-up"><div class="tag">Act two &middot; the game</div><h3>How is football itself changing?</h3><p>Goals, ratings versus titles, and the points that were taken away. The sport, not the table.</p></div>
+            <div class="card a-up"><div class="tag">Act three &middot; the tool</div><h3>Can eleven leagues live in one contract?</h3><p>Cross-league comparison, this week's form, and an honest verdict on the schema that made it possible.</p></div>
+          </div>
+          <div class="room a-up">
+            <span class="lbl">The takeaway</span>
+            <p>Every chart here is one query against versioned snapshots. Where the warehouse refused to answer, that refusal is shown too.</p>
+          </div>
+        </div>
+        <div class="small">All figures from data/dataderby.duckdb on 27 Oct 2026. 2026/27 is eight games old; treat it as weather, not climate.</div>
+      </section>
+
+      <!-- 03 margins -->
+      <section class="slide" data-sec="The league"
+        data-note="Read the extremes first: the two walkovers and the three one-point seasons, then let the eye find the middle. Point out that 2011/12 reads zero because the title was decided on goal difference, which the warehouse stores rather than resolves.">
+        <div>
+          <p class="kicker"><i></i>Act one &middot; the league &nbsp;&middot;&nbsp; winning margins, points</p>
+          <h2 class="display" style="margin-top:14px">Usually close.<br>Twice, not close at all.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <svg class="cht" viewBox="0 0 660 560" role="img" aria-label="Bar chart of title-winning margins per season">
+              <g class="brow a-row"><text x="0" y="25">09/10</text><rect class="bar hot" x="70" y="14" width="25" height="16" rx="2"/><text class="n" x="103" y="26">1</text></g>
+              <g class="brow a-row"><text x="0" y="57">10/11</text><rect class="bar" x="70" y="46" width="223" height="16" rx="2"/><text class="n" x="301" y="58">9</text></g>
+              <g class="brow a-row"><text x="0" y="89">11/12</text><rect class="bar hot" x="70" y="78" width="3" height="16" rx="2"/><text class="n" x="81" y="90">0</text></g>
+              <g class="brow a-row"><text x="0" y="121">12/13</text><rect class="bar" x="70" y="110" width="272" height="16" rx="2"/><text class="n" x="350" y="122">11</text></g>
+              <g class="brow a-row"><text x="0" y="153">13/14</text><rect class="bar" x="70" y="142" width="49" height="16" rx="2"/><text class="n" x="127" y="154">2</text></g>
+              <g class="brow a-row"><text x="0" y="185">14/15</text><rect class="bar" x="70" y="174" width="198" height="16" rx="2"/><text class="n" x="276" y="186">8</text></g>
+              <g class="brow a-row"><text x="0" y="217">15/16</text><rect class="bar" x="70" y="206" width="247" height="16" rx="2"/><text class="n" x="325" y="218">10</text></g>
+              <g class="brow a-row"><text x="0" y="249">16/17</text><rect class="bar" x="70" y="238" width="173" height="16" rx="2"/><text class="n" x="251" y="250">7</text></g>
+              <g class="brow a-row"><text x="0" y="281">17/18</text><rect class="bar hot" x="70" y="270" width="470" height="16" rx="2"/><text class="n" x="548" y="282">19</text></g>
+              <g class="brow a-row"><text x="0" y="313">18/19</text><rect class="bar hot" x="70" y="302" width="25" height="16" rx="2"/><text class="n" x="103" y="314">1</text></g>
+              <g class="brow a-row"><text x="0" y="345">19/20</text><rect class="bar hot" x="70" y="334" width="445" height="16" rx="2"/><text class="n" x="523" y="346">18</text></g>
+              <g class="brow a-row"><text x="0" y="377">20/21</text><rect class="bar" x="70" y="366" width="297" height="16" rx="2"/><text class="n" x="375" y="378">12</text></g>
+              <g class="brow a-row"><text x="0" y="409">21/22</text><rect class="bar hot" x="70" y="398" width="25" height="16" rx="2"/><text class="n" x="103" y="410">1</text></g>
+              <g class="brow a-row"><text x="0" y="441">22/23</text><rect class="bar" x="70" y="430" width="124" height="16" rx="2"/><text class="n" x="202" y="442">5</text></g>
+              <g class="brow a-row"><text x="0" y="473">23/24</text><rect class="bar" x="70" y="462" width="49" height="16" rx="2"/><text class="n" x="127" y="474">2</text></g>
+              <g class="brow a-row"><text x="0" y="505">24/25</text><rect class="bar" x="70" y="494" width="247" height="16" rx="2"/><text class="n" x="325" y="506">10</text></g>
+              <g class="brow a-row"><text x="0" y="537">25/26</text><rect class="bar" x="70" y="526" width="173" height="16" rx="2"/><text class="n" x="251" y="538">7</text></g>
+            </svg>
+          </div>
+          <div class="stack">
+            <p class="body">Eleven of seventeen margins sit at seven points or fewer. Then there is City 2017/18 at plus nineteen and Liverpool 2019/20 at plus eighteen, and three seasons decided by a single point.</p>
+            <div class="card hot a-up"><div class="tag">The footnote that matters</div><h3>2011/12 reads zero</h3><p>City and United finished level on 89. The title went on goal difference, which the warehouse stores as reported rather than resolving. Zero here is honest, not missing.</p></div>
+            <div class="room a-up">
+              <span class="lbl">One query</span>
+              <p>Rank one versus rank two per season, from v_standings_history. No per-season code, no spreadsheet.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">2026/27 excluded: eight games played. Margins in points.</div>
+      </section>
+
+      <!-- 04 dominance -->
+      <section class="slide" data-sec="The league"
+        data-note="Slow down here. Liverpool 97 is the second-best line on the page and it won nothing, which is the entire argument for keeping runner-up rows queryable rather than celebrating only champions.">
+        <div>
+          <p class="kicker"><i></i>Act one &middot; the league &nbsp;&middot;&nbsp; dominance</p>
+          <h2 class="display" style="margin-top:14px">Ninety-seven points.<br><em>Second place.</em></h2>
+        </div>
+        <div class="body stack">
+          <div class="c4">
+            <div class="card hot a-up"><div class="tag">2017/18 &middot; champions</div><h3>Man City</h3><div class="big num">100</div><p>32 wins, plus 79. The century.</p></div>
+            <div class="card a-up"><div class="tag">2019/20 &middot; champions</div><h3>Liverpool</h3><div class="big num">99</div><p>32 wins, plus 52. Won by 18.</p></div>
+            <div class="card a-up"><div class="tag">2018/19 &middot; runners-up</div><h3>Liverpool</h3><div class="big num">97</div><p>30 wins, plus 67. Won nothing.</p></div>
+            <div class="card a-up"><div class="tag">2021/22 &middot; top two</div><h3>93 &amp; 92</h3><div class="big num">1</div><p>One point between City and Liverpool. Again.</p></div>
+          </div>
+          <div class="room a-up">
+            <span class="lbl">Why it matters</span>
+            <p>Greatness is relative to the field, not the trophy. Because every team in every season is a row, the best runner-up is as easy to find as the best champion.</p>
+          </div>
+        </div>
+        <div class="small">Points, wins and goal difference from fact_standings_snapshot, ordered, no filter on finishing position.</div>
+      </section>
+
+      <!-- 05 home advantage -->
+      <section class="slide" data-sec="The league"
+        data-note="Trace the line left to right and stop at the hole. The 2020/21 dip to 48.7 percent is empty stadiums, visible without any annotation table. The partial recovery afterwards is the honest part: home advantage came back weaker.">
+        <div>
+          <p class="kicker"><i></i>Act one &middot; the league &nbsp;&middot;&nbsp; home advantage</p>
+          <h2 class="display" style="margin-top:14px">Home advantage fell off a cliff,<br>then remembered itself. <em>Mostly.</em></h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <svg class="cht" viewBox="0 0 660 360" role="img" aria-label="Line chart of home points share by season">
+              <line class="grid" x1="44" y1="82" x2="626" y2="82"/>
+              <line class="grid" x1="44" y1="178" x2="626" y2="178"/>
+              <line class="grid" x1="44" y1="280" x2="626" y2="280"/>
+              <line class="axis" x1="44" y1="330" x2="626" y2="330"/>
+              <text x="44" y="348">09/10</text><text x="408" y="348">19/20</text><text x="590" y="348">25/26</text>
+              <polyline class="line-path red" points="44,82 80,103 117,166 153,156 190,166 226,162 262,190 299,126 335,147 371,172 408,165 444,280 480,204 517,131 553,172 590,223 626,178"/>
+              <g class="a-row"><circle class="dot hot" cx="44" cy="82" r="5"/><text class="n" x="44" y="70">64.7</text></g>
+              <circle class="dot a-row" cx="80" cy="103" r="3.5"/>
+              <circle class="dot a-row" cx="117" cy="166" r="3.5"/>
+              <circle class="dot a-row" cx="153" cy="156" r="3.5"/>
+              <circle class="dot a-row" cx="190" cy="166" r="3.5"/>
+              <circle class="dot a-row" cx="226" cy="162" r="3.5"/>
+              <circle class="dot a-row" cx="262" cy="190" r="3.5"/>
+              <circle class="dot a-row" cx="299" cy="126" r="3.5"/>
+              <circle class="dot a-row" cx="335" cy="147" r="3.5"/>
+              <circle class="dot a-row" cx="371" cy="172" r="3.5"/>
+              <circle class="dot a-row" cx="408" cy="165" r="3.5"/>
+              <g class="a-row"><circle class="dot hot" cx="444" cy="280" r="5"/><text class="n" x="444" y="268">48.7</text></g>
+              <circle class="dot a-row" cx="480" cy="204" r="3.5"/>
+              <circle class="dot a-row" cx="517" cy="131" r="3.5"/>
+              <circle class="dot a-row" cx="553" cy="172" r="3.5"/>
+              <circle class="dot a-row" cx="590" cy="223" r="3.5"/>
+              <g class="a-row"><circle class="dot" cx="626" cy="178" r="5"/><text class="n" x="626" y="166">56.9</text></g>
+              <text class="ann" x="452" y="300">empty stadiums</text>
+            </svg>
+          </div>
+          <div class="stack">
+            <p class="body">Home sides took 64.7 percent of points in 2009/10. A decade of slow erosion, then 2020/21 at 48.7: home teams took <i>fewer</i> points than visitors for the only time on record.</p>
+            <div class="card a-up"><div class="tag">The control group</div><h3>No annotation table needed</h3><p>The dip lines up with the behind-closed-doors season exactly. The warehouse never heard of COVID; the shape of the line knows anyway.</p></div>
+            <div class="room a-up">
+              <span class="lbl">One query</span>
+              <p>Home points over total points per season, from the overall/home/away splits nobody had to pivot.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Share of all points won at home, per team per season aggregated. 2026/27 omitted: eight games.</div>
+      </section>
+      <!-- 06 goals -->
+      <section class="slide" data-sec="The game"
+        data-note="Let the flat decade sit for a moment, then point at the spike. 2023/24 at 1.64 per team per game is 3.28 per match and 1,246 goals, and it towers over sixteen flat seasons. Ask the room whether that was entertainment or defending, then move on without answering.">
+        <div>
+          <p class="kicker"><i></i>Act two &middot; the game &nbsp;&middot;&nbsp; goals</p>
+          <h2 class="display" style="margin-top:14px">A decade of 1.4.<br>Then <em>2023/24 happened.</em></h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <svg class="cht" viewBox="0 0 660 360" role="img" aria-label="Line chart of goals per team per game by season">
+              <line class="grid" x1="44" y1="82" x2="626" y2="82"/>
+              <line class="grid" x1="44" y1="178" x2="626" y2="178"/>
+              <line class="grid" x1="44" y1="276" x2="626" y2="276"/>
+              <line class="axis" x1="44" y1="330" x2="626" y2="330"/>
+              <text x="44" y="348">09/10</text><text x="408" y="348">19/20</text><text x="590" y="348">25/26</text>
+              <polyline class="line-path" points="44,208 80,202 117,202 153,202 190,214 226,276 262,233 299,202 335,239 371,196 408,227 444,233 480,196 517,183 553,53 590,159 626,214"/>
+              <g class="a-row"><circle class="dot" cx="44" cy="208" r="5"/><text class="n" x="44" y="196">1.39</text></g>
+              <circle class="dot a-row" cx="80" cy="202" r="3.5"/>
+              <circle class="dot a-row" cx="117" cy="202" r="3.5"/>
+              <circle class="dot a-row" cx="153" cy="202" r="3.5"/>
+              <circle class="dot a-row" cx="190" cy="214" r="3.5"/>
+              <circle class="dot a-row" cx="226" cy="276" r="3.5"/>
+              <circle class="dot a-row" cx="262" cy="233" r="3.5"/>
+              <circle class="dot a-row" cx="299" cy="202" r="3.5"/>
+              <circle class="dot a-row" cx="335" cy="239" r="3.5"/>
+              <circle class="dot a-row" cx="371" cy="196" r="3.5"/>
+              <circle class="dot a-row" cx="408" cy="227" r="3.5"/>
+              <g class="a-row"><circle class="dot" cx="444" cy="233" r="5"/><text class="n" x="444" y="221">1.35</text></g>
+              <circle class="dot a-row" cx="480" cy="196" r="3.5"/>
+              <circle class="dot a-row" cx="517" cy="183" r="3.5"/>
+              <g class="a-row"><circle class="dot hot" cx="553" cy="53" r="5"/><text class="n" x="553" y="41">1.64</text></g>
+              <circle class="dot a-row" cx="590" cy="159" r="3.5"/>
+              <g class="a-row"><circle class="dot" cx="626" cy="214" r="5"/><text class="n" x="626" y="202">1.38</text></g>
+              <text class="ann" x="500" y="70">1,246 goals</text>
+            </svg>
+          </div>
+          <div class="stack">
+            <p class="body">Team goals per game sat between 1.28 and 1.43 for fourteen seasons. Then 2023/24 scored 3.28 per match, the highest in the dataset by distance, and the line came straight back down.</p>
+            <div class="card hot a-up"><div class="tag">City 96, and still second-best story</div><h3>Attack peaked with the scoring wave</h3><p>Manchester City's 96 in 2023/24 is the third-highest team total ever recorded here, behind only the 102 of 2019/20 and the 99 of 2021/22. Same club, all three.</p></div>
+            <div class="room a-up">
+              <span class="lbl">One query</span>
+              <p>Total goals over total played per season. The warehouse never stores a league total; every total is derived the same way, every time.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Per-team goals per game; double it for per-match. City 102 (19/20) remains the highest team total.</div>
+      </section>
+
+      <!-- 07 ratings -->
+      <section class="slide" data-sec="The game"
+        data-note="Eleven of seventeen is the honest headline: ratings usually point at the champion and the misses are the story. Walk the misses quickly, Leicester longest. The point for engineers is the join: performance facts and table facts share a grain, so this comparison is a join, not a merge.">
+        <div>
+          <p class="kicker"><i></i>Act two &middot; the game &nbsp;&middot;&nbsp; ratings vs titles</p>
+          <h2 class="display" style="margin-top:14px">The best team usually wins.<br><em>Usually.</em></h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Season</th><th>Top rated</th><th>Champion</th><th class="n">Match?</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>10/11</td><td>Chelsea 7.05</td><td>Man Utd</td><td class="n">no</td></tr>
+                <tr class="a-row"><td>11/12</td><td>Man Utd 7.15</td><td>Man City</td><td class="n">no</td></tr>
+                <tr class="a-row"><td>13/14</td><td>Liverpool 7.18</td><td>Man City</td><td class="n">no</td></tr>
+                <tr class="a-row hi"><td><b>15/16</b></td><td><b>Arsenal 7.08</b></td><td><b>Leicester</b></td><td class="n"><b>no</b></td></tr>
+                <tr class="a-row"><td>19/20</td><td>Man City 7.05</td><td>Liverpool</td><td class="n">no</td></tr>
+                <tr class="a-row"><td>25/26</td><td>Man City 6.89</td><td>Arsenal</td><td class="n">no</td></tr>
+              </tbody>
+            </table>
+            <p class="small" style="margin-top:10px">Eleven of seventeen seasons match, including every City title and both Liverpool titles. Six do not.</p>
+          </div>
+          <div class="stack">
+            <p class="body">The misses are the analysis. Leicester won a league they were not the best team in by any rating. Liverpool 13/14 outplayed the champions and finished second. Arsenal out-rated two champions in three years and lifted neither trophy.</p>
+            <div class="card a-up"><div class="tag">Why it is one query</div><h3>Same grain, one join</h3><p>Performance facts and table facts share (snapshot, team). Best rating versus champion is a join across that key, not a spreadsheet merge.</p></div>
+            <div class="room a-up">
+              <span class="lbl">The caveat</span>
+              <p>Ratings describe how a team played; points describe what it won. The schema keeps both and refuses to confuse them.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Top average rating per season from fact_team_snapshot against champions from the standings.</div>
+      </section>
+
+      <!-- 08 deductions -->
+      <section class="slide" data-sec="The game"
+        data-note="This is the schema's favourite page. Every row here is a club the auditors refused to smooth over: the reported total stands, the arithmetic gap sits beside it, and the rule changed once because a real deduction proved the old rule wrong. End on Vitesse minus eighteen.">
+        <div>
+          <p class="kicker"><i></i>Act two &middot; the game &nbsp;&middot;&nbsp; deductions</p>
+          <h2 class="display" style="margin-top:14px">Debts you can<br>see in the table.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Season</th><th>Club</th><th class="n">Reported</th><th class="n">3W+D</th><th class="n">Gap</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>EPL 09/10</td><td>Portsmouth</td><td class="n">19</td><td class="n">28</td><td class="n">-9</td></tr>
+                <tr class="a-row"><td>Serie A 18/19</td><td>Chievo</td><td class="n">17</td><td class="n">20</td><td class="n">-3</td></tr>
+                <tr class="a-row"><td>Serie A 22/23</td><td>Juventus</td><td class="n">62</td><td class="n">72</td><td class="n">-10</td></tr>
+                <tr class="a-row"><td>EPL 23/24</td><td>Everton</td><td class="n">40</td><td class="n">48</td><td class="n">-8</td></tr>
+                <tr class="a-row"><td>EPL 23/24</td><td>Nott'm Forest</td><td class="n">32</td><td class="n">36</td><td class="n">-4</td></tr>
+                <tr class="a-row"><td>Champ 25/26</td><td>Leicester</td><td class="n">46</td><td class="n">52</td><td class="n">-6</td></tr>
+                <tr class="a-row"><td>EPL 26/27</td><td>Southampton</td><td class="n">20</td><td class="n">24</td><td class="n">-4</td></tr>
+                <tr class="a-row hi"><td><b>Eredivisie 23/24</b></td><td><b>Vitesse</b></td><td class="n"><b>6</b></td><td class="n"><b>24</b></td><td class="n"><b>-18</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <div class="between"><h3>Eight findings, zero blocks</h3><span class="stamp">&minus;18</span></div>
+            <p class="body">Every row is stored exactly as reported and flagged by the audit. The old rule blocked any total below the maximum; Southampton proved that wrong, and the rule now blocks only the impossible.</p>
+            <div class="room a-up">
+              <span class="lbl">The design point</span>
+              <p>Points are a reported measure, never derived. A deduction is data, and the audit carries the arithmetic beside it instead of rewriting history.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">From v_points_adjustments: reported totals short of three points per win plus one per draw.</div>
+      </section>
+
+      <!-- 09 cross league -->
+      <section class="slide" data-sec="The tool"
+        data-note="The deck's quiet flex: eleven leagues, one contract, one query. Read the top two bars first. The Champions League outlier comes with a warning attached: thirty-six teams and a small sample, so treat it as a question, not a ranking.">
+        <div>
+          <p class="kicker"><i></i>Act three &middot; the tool &nbsp;&middot;&nbsp; eleven leagues, one contract</p>
+          <h2 class="display" style="margin-top:14px">Same columns.<br>Eleven leagues. <em>One query.</em></h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <svg class="cht" viewBox="0 0 660 400" role="img" aria-label="Bar chart of goals per team per game by competition">
+              <g class="brow a-row"><text x="0" y="22">Eredivisie</text><rect class="bar" x="130" y="10" width="332" height="18" rx="2"/><text class="n" x="470" y="23">1.62</text></g>
+              <g class="brow a-row"><text x="0" y="56">Bundesliga</text><rect class="bar" x="130" y="44" width="312" height="18" rx="2"/><text class="n" x="450" y="57">1.52</text></g>
+              <g class="brow a-row"><text x="0" y="90">UEL</text><rect class="bar" x="130" y="78" width="304" height="18" rx="2"/><text class="n" x="442" y="91">1.48</text></g>
+              <g class="brow a-row"><text x="0" y="124">Ligue 1</text><rect class="bar" x="130" y="112" width="294" height="18" rx="2"/><text class="n" x="432" y="125">1.43</text></g>
+              <g class="brow a-row"><text x="0" y="158">EPL</text><rect class="bar" x="130" y="146" width="287" height="18" rx="2"/><text class="n" x="425" y="159">1.40</text></g>
+              <g class="brow a-row"><text x="0" y="192">Serie A</text><rect class="bar" x="130" y="180" width="283" height="18" rx="2"/><text class="n" x="421" y="193">1.38</text></g>
+              <g class="brow a-row"><text x="0" y="226">League One</text><rect class="bar" x="130" y="214" width="279" height="18" rx="2"/><text class="n" x="417" y="227">1.36</text></g>
+              <g class="brow a-row"><text x="0" y="260">LaLiga</text><rect class="bar" x="130" y="248" width="277" height="18" rx="2"/><text class="n" x="415" y="261">1.35</text></g>
+              <g class="brow a-row"><text x="0" y="294">Championship</text><rect class="bar" x="130" y="282" width="275" height="18" rx="2"/><text class="n" x="413" y="295">1.34</text></g>
+              <g class="brow a-row"><text x="0" y="328">League Two</text><rect class="bar" x="130" y="316" width="262" height="18" rx="2"/><text class="n" x="400" y="329">1.28</text></g>
+              <g class="brow a-row"><text x="0" y="362">UCL *</text><rect class="bar hot" x="130" y="350" width="420" height="18" rx="2"/><text class="n" x="558" y="363">2.05</text></g>
+            </svg>
+            <p class="small">* UCL: 36-team format, small sample. A question, not a ranking.</p>
+          </div>
+          <div class="stack">
+            <p class="body">The spread is narrow: 1.28 to 1.62 across ten leagues, with one outlier. That compression is the story. Eleven competitions feed one contract, so comparing them is a GROUP BY, not a project.</p>
+            <div class="card a-up"><div class="tag">Why it works</div><h3>The columns never change</h3><p>Sixty performance measures and thirty table measures, same names, same order, tested against the database. A new league is rows, not a rewrite.</p></div>
+            <div class="room a-up">
+              <span class="lbl">Caveat, stated</span>
+              <p>Ratings compress too (6.62 to 6.76 everywhere). Either every league defends the same, or the rating scale does. I would not bet either way on this sample.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">2026/27 latest snapshots, per-team goals per game. UCL excluded from the ranking claim.</div>
+      </section>
+
+      <!-- 10 right now -->
+      <section class="slide" data-sec="The tool"
+        data-note="End the analysis on the present, with the honest sample-size warning first. United seven places below their rating is the headline; Villa seven above is the counter. Both will move, which is exactly why the query is worth keeping, not why it is worth believing today.">
+        <div>
+          <p class="kicker"><i></i>Act three &middot; the tool &nbsp;&middot;&nbsp; this week, with caveats</p>
+          <h2 class="display" style="margin-top:14px">United flatter to deceive.<br>Villa refuse to.</h2>
+        </div>
+        <div class="body c2">
+          <div>
+            <table class="tbl compact">
+              <thead><tr><th>Club</th><th class="n">Rated</th><th class="n">Sitting</th><th class="n">Gap</th></tr></thead>
+              <tbody>
+                <tr class="a-row hi"><td><b>Man Utd</b></td><td class="n">9th</td><td class="n">16th</td><td class="n">-7</td></tr>
+                <tr class="a-row"><td>Newcastle</td><td class="n">14th</td><td class="n">8th</td><td class="n">+6</td></tr>
+                <tr class="a-row"><td>Ipswich</td><td class="n">17th</td><td class="n">12th</td><td class="n">+5</td></tr>
+                <tr class="a-row"><td>Fulham</td><td class="n">11th</td><td class="n">15th</td><td class="n">-4</td></tr>
+                <tr class="a-row hi"><td><b>Aston Villa</b></td><td class="n">16th</td><td class="n">9th</td><td class="n">+7</td></tr>
+              </tbody>
+            </table>
+            <p class="small" style="margin-top:10px">Performance rank versus league rank, Premier League, eight games played. Noise included at no extra charge.</p>
+          </div>
+          <div class="stack">
+            <p class="body">Eight games is weather, not climate. But the query is the point: performance rank against table rank, refreshed every snapshot, with the same grain it has always had.</p>
+            <div class="card gold a-up"><div class="tag">Tifo's question</div><h3>Are they good, or are they lucky?</h3><p>A plus-seven like Villa's usually means finishing over performance, a minus-seven like United's usually means under it. The table will collect. Check back in May.</p></div>
+          </div>
+        </div>
+        <div class="small">Snapshot snap_d90c, October 2026. Gaps this early move fast; the method does not.</div>
+      </section>
+      <!-- 11 verdict -->
+      <section class="slide" data-sec="The verdict"
+        data-note="Make the case plainly. Three mechanisms did all the work: one query per question because the grain never changes, history you can order because one column owns time, and gaps you can see because missing data is null and deductions are stored, not smoothed. No new concepts, just the three the deck opened with.">
+        <div>
+          <p class="kicker"><i></i>Act three &middot; the tool &nbsp;&middot;&nbsp; the verdict</p>
+          <h2 class="display" style="margin-top:14px">The schema held.<br>Here is the receipt.</h2>
+        </div>
+        <div class="body stack">
+          <div class="c3">
+            <div class="card a-up"><div class="tag">Mechanism 1</div><h3>One grain, one query</h3><p>One team in one snapshot, everywhere. Nine analyst questions, nine queries, zero staging tables, zero merges.</p></div>
+            <div class="card a-up"><div class="tag">Mechanism 2</div><h3>One clock, honest history</h3><p>observed_at orders everything; accepted_at audits it. Backfills slot into history without rewriting it.</p></div>
+            <div class="card a-up"><div class="tag">Mechanism 3</div><h3>Gaps stay visible</h3><p>A missing measure is NULL. A deduction is stored with its delta. A missing season is a documented row, not a silent hole.</p></div>
+          </div>
+          <div class="room a-up">
+            <span class="lbl">The test</span>
+            <p>Nothing in this deck required a second source, a notebook join, or trusting the loader. That is the whole product.</p>
+          </div>
+        </div>
+        <div class="small">Three mechanisms, already named on page two: what, when, and whether it is the same observation.</div>
+      </section>
+
+      <!-- 12 friction -->
+      <section class="slide" data-sec="The verdict"
+        data-note="Be honest about the splinters; a verdict without them reads like marketing. The narrow view cost one query rewrite, the goals confusion cost one careful paragraph, and the playoff trap changed how discovery works. Each one made the analysis better, which is why they are on the slide.">
+        <div>
+          <p class="kicker"><i></i>Act three &middot; the tool &nbsp;&middot;&nbsp; the friction log</p>
+          <h2 class="display" style="margin-top:14px">Three things<br>that bit me.</h2>
+        </div>
+        <div class="body c3">
+          <div class="card a-up"><div class="tag">Bite 1 &middot; the narrow view</div><h3>History hides the columns</h3><p>v_standings_history carries rank, points and form only. I needed goal difference, so I dropped one level to the fact table. Lesson: views are shortcuts, facts are the contract.</p></div>
+          <div class="card a-up"><div class="tag">Bite 2 &middot; the unit trap</div><h3>1.39 is not 2.78</h3><p>Goals per team per game versus per match differ by exactly double. The grain makes the answer right; only the analyst's label can make it wrong.</p></div>
+          <div class="card a-up"><div class="tag">Bite 3 &middot; the playoff trap</div><h3>The selected stage lied</h3><p>Four seasons resolved to playoff stages, not leagues. From then on I enumerated the dropdown instead of trusting the default. Verify the grain before you query it.</p></div>
+        </div>
+        <div class="small">Friction is evidence too. Each bite changed a habit, a paragraph, or a script, and each one is now written down somewhere.</div>
+      </section>
+
+      <!-- 13 next -->
+      <section class="slide" data-sec="The verdict"
+        data-note="Mirror the at-scale slide from the schema deck: every addition gets a trigger, not a preference. Player data earns its place when a question needs it. Knockouts earn theirs when the grain can hold a shrinking cohort. The pre-2009 dark ages earn theirs only if the source ever serves them.">
+        <div>
+          <p class="kicker"><i></i>Act three &middot; the tool &nbsp;&middot;&nbsp; what is missing</p>
+          <h2 class="display" style="margin-top:14px">What I would add,<br>and what would trigger it.</h2>
+        </div>
+        <div class="body stack">
+          <table class="tbl compact">
+            <thead><tr><th style="width:300px">Addition</th><th>Trigger that earns it</th><th style="width:260px">What stays the same</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td><b>Player-level facts</b></td><td>a question about a player, not a team, that matters</td><td>the team grain and every view</td></tr>
+              <tr class="a-row"><td><b>Knockout stages</b></td><td>a grain that holds a shrinking cohort without fake rows</td><td>the header, the keys, the assertions</td></tr>
+              <tr class="a-row"><td><b>Pre-2009 seasons</b></td><td>the source serving one full team feed</td><td>the backfill procedure, unchanged</td></tr>
+              <tr class="a-row"><td><b>xG and advanced metrics</b></td><td>a second source with a mapping row, not a guess</td><td>dim_team, which was built for exactly this</td></tr>
+            </tbody>
+          </table>
+          <div class="room a-up">
+            <span class="lbl">The rule, kept</span>
+            <p>An addition needs a question that cannot be answered without it. Until then, the smaller warehouse is the more honest one.</p>
+          </div>
+        </div>
+        <div class="small">None of these change what the warehouse promises. They change what it can be asked.</div>
+      </section>
+
+      <!-- 14 close -->
+      <section class="slide cover" data-sec="Close" data-chrome="off"
+        data-note="Close on the argument the whole deck earned: the numbers were checkable because the schema stores observations, not values. Name the report, the queries file, and the one file a skeptic should open first.">
+        <div class="inner">
+          <p class="kicker"><i></i>Close</p>
+          <h1 class="display">
+            <span class="l"><span>Ask better questions.</span></span>
+            <span class="l"><span>Trust fewer answers.</span></span>
+            <span class="l"><span>Keep every receipt.</span></span>
+          </h1>
+          <p class="standfirst">Eighteen seasons survived contact with nine analyst questions. The schema held, the gaps stayed visible, and the deductions are all still there.</p>
+          <p class="byline">Companion report: docs/reports/epl-analysis-deck.md &middot; queries: scripts/analyze_epl.py &middot; start with sql/001_schema.sql</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="18">0</div><div class="k">EPL seasons queried</div><div class="s">2009/10&ndash;2026/27</div></div>
+          <div class="stat"><div class="v" data-count="9">0</div><div class="k">analyst questions</div><div class="s">each one query</div></div>
+          <div class="stat"><div class="v" data-count="11">0</div><div class="k">leagues, one contract</div><div class="s">same columns everywhere</div></div>
+          <div class="stat"><div class="v" data-count="0">0</div><div class="k">page loads</div><div class="s">during analysis</div></div>
+        </div>
+      </section>
+
+    </div><!-- /slides -->
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">&larr;</button>
+      <button id="next" aria-label="Next">&rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) { return dec ? v.toFixed(+dec) : String(Math.round(v)); }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade,.a-row,.stamp').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('.bar').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.line-path').forEach(e => e.style.strokeDashoffset = 0);
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const bars = slide.querySelectorAll('.bar');
+    if (bars.length) {
+      gsap.set(bars, { scaleX: 0 });
+      tl.to(bars, { scaleX: 1, duration: .7, stagger: { each: .028, from: 'start' }, ease: 'power3.out' }, .25);
+    }
+
+    const paths = slide.querySelectorAll('.line-path');
+    if (paths.length) {
+      paths.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(paths, { strokeDashoffset: 0, duration: 1.6, ease: 'power2.inOut' }, .3);
+    }
+
+    const dots = slide.querySelectorAll('.dot');
+    if (dots.length) {
+      gsap.set(dots, { scale: 0, transformOrigin: 'center' });
+      tl.to(dots, { scale: 1, duration: .4, stagger: { each: .04, from: 'start' }, ease: 'back.out(2)' }, .9);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const rows = slide.querySelectorAll('.a-row');
+    if (rows.length) {
+      gsap.set(rows, { opacity: 0, y: 8 });
+      tl.to(rows, { opacity: 1, y: 0, duration: .35, stagger: .035, ease: 'power1.out' }, .2);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+
+    const drawings = slide.querySelectorAll('#pitch path,#pitch circle,#pitch rect');
+    if (drawings.length) {
+      drawings.forEach(p => {
+        const len = p.getTotalLength ? p.getTotalLength() : 0;
+        if (!len) return;
+        gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      tl.to(drawings, { strokeDashoffset: 0, duration: 1.6, stagger: .03, ease: 'power2.out' }, .1);
+    }
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) { show(i, true); busy = false; return; }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>
+
+
