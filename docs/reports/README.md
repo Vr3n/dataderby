@@ -32,6 +32,7 @@ Reports for a single change that is not a build phase.
 | Browser transport | [Browser feed transport](browser-transport.md) | complete |
 | Fetch policy | [Fetch policy](fetch-policy.md) | complete |
 | Points adjustments | [Points adjustments](points-adjustments.md) | complete |
+| Points adjustments (deck) | [Companion slides](../slides/points-adjustments-slides.html) | complete |
 | SQL and schema (deck) | [Companion slides](../slides/sql-schema-slides.html) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in

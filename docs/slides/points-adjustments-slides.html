@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The four points that weren't there — points deductions in a data pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+  :root{
+    --bg:#0B0C0E; --fg:#E8E8E4; --dim:#79818B; --dim2:#464D57;
+    --yellow:#FFD23F; --cyan:#4FD1D9; --red:#FF5C4D;
+    --green:#7CE38B; --amber:#FFA94D;
+    --card:#111317; --card2:#0E1014; --line:#232A33;
+    --mono:'Martian Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#07080A}
+  body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased}
+
+  /* ---------- stage ---------- */
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#07080A}
+  #stage{
+    position:absolute;left:50%;top:50%;width:1600px;height:900px;
+    transform:translate(-50%,-50%) scale(1);transform-origin:center center;
+    overflow:hidden;background:var(--bg);
+    box-shadow:0 50px 160px rgba(0,0,0,.75);
+    --mx:0px;--my:0px;
+  }
+
+  /* ---------- ambient ---------- */
+  .ambient{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .orb-wrap{position:absolute;inset:0;transform:translate3d(var(--mx),var(--my),0);transition:transform .9s cubic-bezier(.2,.7,.2,1);will-change:transform}
+  .orb{position:absolute;border-radius:50%;opacity:.52;will-change:transform}
+  .orb-a{width:760px;height:760px;left:-220px;top:-260px;background:radial-gradient(circle,rgba(255,210,63,.22),transparent 64%);animation:floatA 19s ease-in-out infinite}
+  .orb-b{width:700px;height:700px;right:-220px;bottom:-280px;background:radial-gradient(circle,rgba(79,209,217,.18),transparent 64%);animation:floatB 24s ease-in-out infinite}
+  .orb-c{width:420px;height:420px;left:48%;top:40%;background:radial-gradient(circle,rgba(255,92,77,.10),transparent 66%);animation:floatC 27s ease-in-out infinite}
+  @keyframes floatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(40px,26px,0)}}
+  @keyframes floatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-34px,-22px,0)}}
+  @keyframes floatC{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(18px,-30px,0)}}
+  .grid{
+    position:absolute;inset:-80px;opacity:.5;
+    background-image:
+      linear-gradient(to right,rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:72px 72px;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 34%,#000 0%,transparent 76%);
+    mask-image:radial-gradient(ellipse at 50% 34%,#000 0%,transparent 76%);
+    animation:drift 42s linear infinite;
+  }
+  @keyframes drift{to{background-position:72px 72px,72px 72px}}
+  #grain{
+    position:absolute;inset:0;z-index:45;pointer-events:none;opacity:.34;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- chrome ---------- */
+  #mast{
+    position:absolute;top:0;left:0;right:0;height:74px;z-index:40;
+    padding:0 84px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);background:linear-gradient(to bottom,rgba(11,12,14,.92),rgba(11,12,14,.35));
+  }
+  #mast::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--yellow),var(--cyan) 55%,transparent 92%)}
+  .brand{display:flex;align-items:baseline;gap:13px}
+  .brand b{font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.12em}
+  .brand span{font-family:var(--mono);font-size:9px;letter-spacing:.19em;text-transform:uppercase;color:var(--dim)}
+  #secLabel{font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim)}
+  #secLabel b{color:var(--yellow);font-weight:600}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;z-index:40;padding:0 160px 0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);background:linear-gradient(to top,rgba(11,12,14,.88),rgba(11,12,14,0));
+  }
+  .foot-l{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .foot-l b{color:var(--fg);font-weight:500}
+  #clock{display:flex;align-items:center;gap:14px}
+  #pageNum{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--fg)}
+  #track{width:190px;height:2px;background:var(--line);position:relative;overflow:hidden}
+  #fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--yellow),var(--cyan))}
+  #chrome.off{opacity:0;pointer-events:none}
+
+  /* ---------- slides ---------- */
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:108px 84px 88px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:18px;
+    opacity:0;visibility:hidden;overflow:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.breaker{background:
+    radial-gradient(ellipse at 78% 18%,rgba(79,209,217,.12),transparent 55%),
+    radial-gradient(ellipse at 18% 88%,rgba(255,210,63,.10),transparent 55%),
+    #0A0C10;
+  }
+  .slide.breaker::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(232,232,228,.14) 1px,transparent 1px);
+    background-size:14px 14px;opacity:.28;
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 22%,#000 78%,transparent);
+    mask-image:linear-gradient(to bottom,transparent,#000 22%,#000 78%,transparent);
+  }
+  .slide.breaker > *{position:relative;z-index:1}
+
+  /* ---------- type ---------- */
+  .kicker{
+    font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--yellow);display:flex;align-items:center;gap:10px;
+  }
+  .kicker i{width:7px;height:7px;background:var(--yellow);display:inline-block;box-shadow:0 0 14px rgba(255,210,63,.8)}
+  .kicker.c{color:var(--cyan)} .kicker.c i{background:var(--cyan);box-shadow:0 0 14px rgba(79,209,217,.8)}
+  .kicker.r{color:var(--red)} .kicker.r i{background:var(--red);box-shadow:0 0 14px rgba(255,92,77,.8)}
+  h1,h2,h3{font-family:var(--mono);font-weight:700;letter-spacing:-.035em;line-height:1.02}
+  h1.display{font-size:78px;line-height:.95;max-width:1020px;position:relative}
+  h2.display{font-size:46px;line-height:1.04;max-width:1120px;position:relative}
+  h3{font-size:18px;line-height:1.25;letter-spacing:-.015em}
+  .l{display:block;overflow:hidden;padding-bottom:.04em}
+  .l > span{display:block;will-change:transform}
+  .lede{font-size:20px;line-height:1.48;color:#D2D2CC;max-width:68ch}
+  .body{font-size:15.5px;line-height:1.58;color:#C6C6C0;max-width:72ch}
+  .small{font-size:12.5px;line-height:1.5;color:var(--dim)}
+  .tiny{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .y{color:var(--yellow)} .c{color:var(--cyan)} .r{color:var(--red)} .g{color:var(--green)} .a{color:var(--amber)} .dim{color:var(--dim)}
+  .rule{height:2px;background:linear-gradient(90deg,var(--yellow),transparent);width:220px;margin-top:16px;transform-origin:left center}
+  .rule.c{background:linear-gradient(90deg,var(--cyan),transparent)}
+
+  /* ---------- layout ---------- */
+  .body-wrap{min-height:0;display:flex;flex-direction:column;justify-content:center}
+  .body-wrap.top{justify-content:flex-start}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+  .two.wide{grid-template-columns:1.2fr .8fr}
+  .two.wide-r{grid-template-columns:.8fr 1.2fr}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:stretch}
+  .five{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:stretch}
+  .stack > * + *{margin-top:12px}
+  .mt-s{margin-top:10px}.mt-m{margin-top:18px}.mt-l{margin-top:28px}
+
+  /* ---------- cards ---------- */
+  .card{
+    border:1px solid var(--line);background:var(--card);padding:17px 19px;border-radius:3px;
+    position:relative;overflow:hidden;
+  }
+  .card::after{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--c,var(--dim2));opacity:.9}
+  .card .tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:7px}
+  .card h3{margin-bottom:5px}
+  .card p{font-size:13px;line-height:1.5;color:#C0C0BA}
+  .card.y{--c:var(--yellow)} .card.c{--c:var(--cyan)} .card.r{--c:var(--red)} .card.g{--c:var(--green)} .card.a{--c:var(--amber)}
+  .card.y{background:#14130C;border-color:#5A4A12}
+  .card.c{background:#0D1415;border-color:#1E4A4D}
+  .card.r{background:#150F0E;border-color:#54231E}
+  .card.g{background:#0D140F;border-color:#234A2C}
+  .card.a{background:#15110C;border-color:#5A3E1A}
+
+  .stat{border:1px solid var(--line);background:var(--card);padding:16px 18px;border-radius:3px}
+  .stat .v{font-family:var(--mono);font-size:38px;font-weight:700;line-height:1;color:var(--yellow)}
+  .stat .v.c{color:var(--cyan)} .stat .v.r{color:var(--red)} .stat .v.g{color:var(--green)}
+  .stat .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block;margin-top:9px}
+  .stat .s{font-size:11.5px;color:#A9A9A3;margin-top:5px;line-height:1.4}
+
+  /* ---------- table ---------- */
+  table.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px}
+  .tbl th{
+    font-size:8.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+    text-align:left;padding:8px 10px;border-bottom:1px solid var(--dim2);white-space:nowrap;
+  }
+  .tbl td{padding:9px 10px;border-bottom:1px solid var(--line);color:#D2D2CC;vertical-align:top}
+  .tbl .num,.tbl td.num,.tbl th.num{text-align:right}
+  .tbl tr.hot td{background:rgba(255,210,63,.07);color:var(--fg)}
+  .tbl tr.hot td:first-child{box-shadow:inset 3px 0 0 var(--yellow)}
+  .tbl tr.bad td{background:rgba(255,92,77,.06)}
+  .tbl tr.good td{background:rgba(124,227,139,.05)}
+
+  /* ---------- code ---------- */
+  .code{
+    border:1px solid var(--line);border-left:3px solid var(--cyan);background:var(--card2);
+    padding:14px 16px;border-radius:2px;font-family:var(--mono);font-size:12.5px;line-height:1.62;
+    white-space:pre;overflow:hidden;color:#D8D8D2;
+  }
+  .code.sm{font-size:11.5px;line-height:1.55;padding:12px 14px}
+  .code .kw{color:var(--yellow)} .code .fn{color:var(--cyan)} .code .n{color:var(--amber)}
+  .code .s{color:var(--green)} .code .com{color:var(--dim2)} .code .hi{background:rgba(255,210,63,.12);color:var(--yellow);padding:0 3px;border-radius:2px}
+  .code .bad{color:var(--red)}
+
+  /* ---------- flow ---------- */
+  .flow{display:flex;align-items:center;gap:0}
+  .node{
+    border:1px solid var(--line);background:var(--card);padding:13px 15px;border-radius:3px;
+    min-width:0;flex:1;
+  }
+  .node .tag{font-family:var(--mono);font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
+  .node b{font-family:var(--mono);font-size:12.5px;font-weight:600;display:block;line-height:1.3}
+  .node span{font-size:11px;color:#A9A9A3;display:block;margin-top:4px;line-height:1.35}
+  .arrow{width:38px;flex:0 0 38px;height:1px;background:var(--line);position:relative;margin:0 2px}
+  .arrow::after{content:"";position:absolute;right:-1px;top:-4px;border-left:7px solid var(--line);border-top:4px solid transparent;border-bottom:4px solid transparent}
+  .arrow.y{background:var(--yellow)} .arrow.y::after{border-left-color:var(--yellow)}
+  .arrow.c{background:var(--cyan)} .arrow.c::after{border-left-color:var(--cyan)}
+  .arrow.g{background:var(--green)} .arrow.g::after{border-left-color:var(--green)}
+
+  /* ---------- equation ---------- */
+  .eq{position:relative;border:1px solid var(--line);background:rgba(17,19,23,.7);padding:26px 28px;border-radius:4px}
+  .eq-row{display:flex;align-items:baseline;justify-content:space-between;gap:20px}
+  .eq-k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+  .eq-v{font-family:var(--mono);font-size:64px;font-weight:700;line-height:.95;color:var(--fg)}
+  .eq-line{height:1px;background:var(--line);margin:14px 0}
+  .eq-delta{
+    position:absolute;right:-18px;bottom:-24px;
+    font-family:var(--mono);font-size:54px;font-weight:700;color:var(--red);
+    text-shadow:0 0 30px rgba(255,92,77,.35);
+  }
+  .eq-note{font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+
+  /* ---------- timeline ---------- */
+  .timeline{position:relative;padding-top:24px}
+  .timeline::before{content:"";position:absolute;left:0;right:0;top:5px;height:1px;background:var(--line)}
+  .tl{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .tl-item{position:relative;padding-top:16px}
+  .tl-item::before{content:"";position:absolute;top:-23px;left:0;width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--dim2)}
+  .tl-item.done::before{border-color:var(--cyan);background:var(--cyan);box-shadow:0 0 12px rgba(79,209,217,.6)}
+  .tl-item.now::before{border-color:var(--yellow);background:var(--yellow);box-shadow:0 0 18px rgba(255,210,63,.75)}
+  .tl-item b{font-family:var(--mono);font-size:11px;display:block;color:var(--fg)}
+  .tl-item span{font-family:var(--mono);font-size:8.5px;color:var(--dim);display:block;margin-top:4px}
+  .tl-item em{font-size:11px;color:#A9A9A3;display:block;margin-top:5px;font-style:normal;line-height:1.35}
+
+  /* ---------- hash panels ---------- */
+  .bytes{display:grid;grid-template-columns:1fr 58px 1fr;gap:0;align-items:center}
+  .bytes .panel{border:1px solid var(--line);background:var(--card2);padding:16px 18px;border-radius:3px}
+  .bytes .panel .tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .bytes .panel .v{font-family:var(--mono);font-size:22px;font-weight:700;margin-top:6px}
+  .bytes .panel .h{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:8px;letter-spacing:.06em}
+  .neq{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--red);text-align:center}
+
+  /* ---------- terms ---------- */
+  .terms{display:grid;grid-template-columns:1fr 1fr;gap:0 34px}
+  .term{border-top:1px solid var(--line);padding:8px 0 9px}
+  .term b{font-family:var(--mono);font-size:12px;color:var(--cyan);display:block;margin-bottom:2px}
+  .term span{font-size:12px;line-height:1.42;color:#B9B9B3;display:block}
+
+  /* ---------- quote / breaker ---------- */
+  .break-quote{font-family:var(--mono);font-size:58px;font-weight:700;line-height:1.05;letter-spacing:-.04em;max-width:1180px}
+  .break-sub{font-size:17px;color:#B9B9B3;max-width:62ch;line-height:1.5}
+  .break-mark{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-top:18px}
+
+  /* ---------- footer line ---------- */
+  .source{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2)}
+  .source b{color:var(--dim);font-weight:500}
+
+  /* ---------- notes ---------- */
+  #notes{
+    position:absolute;left:84px;right:84px;bottom:76px;z-index:70;display:none;
+    border:1px solid var(--line);border-left:3px solid var(--yellow);background:rgba(14,16,20,.97);
+    padding:15px 18px;border-radius:3px;box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+  #notes.on{display:block}
+  #notes .h{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--yellow);display:flex;justify-content:space-between;margin-bottom:7px}
+  #notes .h span{color:var(--dim)}
+  #notes p{font-size:13px;line-height:1.55;color:#D2D2CC;max-width:none}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:absolute;bottom:14px;z-index:80;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(17,19,23,.9);color:var(--fg);
+    font-family:var(--mono);font-size:15px;cursor:pointer;display:grid;place-items:center;
+    transition:border-color .2s,background .2s,transform .2s;
+  }
+  .nav:hover{border-color:var(--yellow);background:#16130A;transform:translateY(-1px)}
+  #prev{right:62px}#next{right:18px}
+
+  /* ---------- animation helpers ---------- */
+  .sheen{
+    position:absolute;top:0;bottom:0;left:0;width:28%;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);
+    opacity:0;transform:translateX(-160%);
+  }
+  .a-up,.a-fade,.a-row,.a-scale{will-change:transform,opacity}
+  .a-scale{transform-origin:center center}
+  /* Hide before the timeline runs, but do not put a transform here: GSAP
+     would parse it into a fixed y offset and never reach zero. */
+  html.js .l > span{opacity:0}
+  html.js .a-up,html.js .a-fade,html.js .a-row,html.js .a-scale{opacity:0}
+  .bar{height:5px;background:var(--line);position:relative;overflow:hidden;border-radius:2px}
+  .bar .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--yellow),var(--cyan));width:0}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;
+    letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;border-radius:2px;
+  }
+  .chip.y{background:rgba(255,210,63,.12);color:var(--yellow);border:1px solid #5A4A12}
+  .chip.r{background:rgba(255,92,77,.12);color:var(--red);border:1px solid #54231E}
+  .chip.c{background:rgba(79,209,217,.12);color:var(--cyan);border:1px solid #1E4A4D}
+  .chip.g{background:rgba(124,227,139,.10);color:var(--green);border:1px solid #234A2C}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div class="ambient" aria-hidden="true">
+      <div class="orb-wrap">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+      </div>
+      <div class="grid"></div>
+    </div>
+    <div id="grain" aria-hidden="true"></div>
+
+    <header id="mast">
+      <div class="brand"><b>DATADERBY</b><span>points adjustments</span></div>
+      <div id="secLabel">ACT I · THE ANOMALY</div>
+    </header>
+
+    <div id="slides">
+
+      <!-- 01 · cover -->
+      <section class="slide on" data-sec="the anomaly" data-note="Open with the number, not the file. The source reported 20 points for a team that earned 24 from its results. Do not call that a bug yet: a points deduction is a real event. The deck is about how the pipeline reports it without rewriting it.">
+        <div class="kicker"><i></i>ACT I · THE ANOMALY</div>
+        <div class="body-wrap">
+          <div class="two wide" style="align-items:center">
+            <div>
+              <h1 class="display"><span class="l"><span>The four points</span></span><span class="l"><span>that weren't</span></span><span class="l"><span>there.</span></span><span class="sheen"></span></h1>
+              <p class="lede mt-m">A points deduction is an event, not a data error. The pipeline must report the gap — and never rewrite the total.</p>
+              <div class="mt-m" style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="chip y">reported vs derived</span>
+                <span class="chip c">assertions</span>
+                <span class="chip g">migration ledgers</span>
+              </div>
+            </div>
+            <div class="eq a-scale">
+              <div class="eq-row"><span class="eq-k">reported</span><span class="eq-v">20</span></div>
+              <div class="eq-line"></div>
+              <div class="eq-row"><span class="eq-k">expected maximum</span><span class="eq-v c">24</span></div>
+              <div class="eq-delta a-scale">−4</div>
+              <div class="eq-note">7 wins × 3 + 3 draws = 24</div>
+            </div>
+          </div>
+        </div>
+        <div class="source"><b>Dataderby</b> · 27 October 2026 · companion to <b>docs/reports/points-adjustments.md</b></div>
+      </section>
+
+      <!-- 02 · evidence at a glance -->
+      <section class="slide" data-sec="the evidence" data-note="This is the sweep, not a single test. Twelve stages, nine feeds each, 108 feed calls in one browser session. Eleven leagues published. One league returned an empty feed, which is a source problem. One row carried a points deduction. Keep those two exceptions separate: the deck is about the deduction, not the empty feed.">
+        <div class="kicker"><i></i>ACT I · THE EVIDENCE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Eleven leagues published.</span></span><span class="l"><span>One row did not add up.</span></span></h2>
+          <div class="four mt-m">
+            <div class="stat a-up"><div class="v" data-count="12">12</div><span class="k">stages in the registry</span><div class="s">One league table per stage.</div></div>
+            <div class="stat a-up"><div class="v c" data-count="108">108</div><span class="k">feed calls</span><div class="s">12 stages × 9 feeds.</div></div>
+            <div class="stat a-up"><div class="v g" data-count="11">11</div><span class="k">leagues published</span><div class="s">Out of 12. The twelfth returned zero rows.</div></div>
+            <div class="stat a-up"><div class="v r" data-count="1">1</div><span class="k">points deduction</span><div class="s">Southampton, −4. The only one in 11 leagues.</div></div>
+          </div>
+          <div class="two mt-m">
+            <div class="card y a-up"><span class="tag">source problem, not schema</span><p>The Conference League page showed 36 teams. Its feed returned an empty table. That is a different failure: no rows to check, so no deduction to report.</p></div>
+            <div class="card c a-up"><span class="tag">what this deck follows</span><p>One row that <em>was</em> valid, but whose total was lower than its wins and draws imply. The data was not corrupt. The model was incomplete.</p></div>
+          </div>
+        </div>
+        <div class="source">Source: <b>docs/reports/all-league-capture.md</b> · 108 = 12 × 9</div>
+      </section>
+
+      <!-- 03 · the row -->
+      <section class="slide" data-sec="the row" data-note="Read the row slowly. Seven wins and three draws is 24 points under the 3-1-0 rule. The source says 20. Both statements are true if an external penalty was applied. The expected column is not a correction; it is the arithmetic maximum. This distinction is the rest of the deck.">
+        <div class="kicker"><i></i>ACT I · THE ROW</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>One row. Two true sentences.</span></span></h2>
+          <table class="tbl mt-m">
+            <thead><tr><th>team</th><th class="num">played</th><th class="num">won</th><th class="num">drawn</th><th class="num">lost</th><th class="num">reported points</th><th class="num">3W + D</th><th class="num">gap</th></tr></thead>
+            <tbody>
+              <tr class="hot a-row"><td>Southampton</td><td class="num">10</td><td class="num">7</td><td class="num">3</td><td class="num">0</td><td class="num y">20</td><td class="num c">24</td><td class="num r">−4</td></tr>
+            </tbody>
+          </table>
+          <div class="two mt-m">
+            <div class="card y a-up"><span class="tag">sentence one</span><p>The club earned <b class="mono">7 × 3 + 3 × 1 = 24</b> points from its match results.</p></div>
+            <div class="card r a-up"><span class="tag">sentence two</span><p>The league table reports <b class="mono">20</b>. The difference is an external penalty, not a missing match.</p></div>
+          </div>
+          <p class="body mt-s a-up">The row is internally consistent for a table with a deduction. It is only inconsistent if you assume <span class="mono">points = 3W + D</span>. That assumption is the bug.</p>
+        </div>
+        <div class="source">Source: <b>docs/reports/all-league-capture.md</b> · Southampton, Championship</div>
+      </section>
+
+      <!-- 04 · definition -->
+      <section class="slide" data-sec="the definition" data-note="A deduction is applied after the match results. It is an event with a cause and a date, not a parse artefact. Say the three things it is not: not a missing match, not a bad payload, not a reason to stop the load. The last one matters because the first instinct is to block anything that breaks an identity.">
+        <div class="kicker"><i></i>ACT I · THE DEFINITION</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>A deduction is an event</span></span><span class="l"><span>outside the match results.</span></span></h2>
+          <div class="flow mt-m a-up">
+            <div class="node"><span class="tag">match results</span><b>3 / 1 / 0</b><span>Win, draw, loss.</span></div>
+            <div class="arrow y"></div>
+            <div class="node"><span class="tag">points earned</span><b>3W + D</b><span>The arithmetic maximum.</span></div>
+            <div class="arrow y"></div>
+            <div class="node" style="border-color:#54231E;background:#150F0E"><span class="tag r">external event</span><b class="r">deduction</b><span>Applied after the results.</span></div>
+            <div class="arrow c"></div>
+            <div class="node" style="border-color:#5A4A12;background:#14130C"><span class="tag y">reported total</span><b class="y">points</b><span>What the source stores.</span></div>
+          </div>
+          <div class="three mt-m">
+            <div class="card r a-up"><span class="tag">not this</span><h3>A missing match</h3><p>Played and won/drawn/lost still add up. The results are complete.</p></div>
+            <div class="card r a-up"><span class="tag">not this</span><h3>A parse error</h3><p>The value is an integer, in range, and stable across snapshots.</p></div>
+            <div class="card r a-up"><span class="tag">not this</span><h3>A reason to block</h3><p>A legitimate season would fail its load. That is the wrong trade.</p></div>
+          </div>
+        </div>
+        <div class="source">A deduction is a domain event. The database should preserve it, not explain it away.</div>
+      </section>
+
+      <!-- 05 · wrong fix -->
+      <section class="slide" data-sec="the wrong fix" data-note="Two tempting fixes, both wrong. Deriving points from wins and draws deletes the deduction. Blocking any total below the maximum stops a legitimate season. The correct rule is an inequality: points cannot exceed the maximum, and cannot be negative. The maximum is a boundary, not a definition.">
+        <div class="kicker r"><i></i>ACT I · THE WRONG FIX</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>An identity can be a constraint,</span></span><span class="l"><span>not a definition.</span></span></h2>
+          <div class="two mt-m">
+            <div class="card r a-up"><span class="tag">fix one · derive it</span><h3 class="mono" style="font-size:16px">points = 3 × won + drawn</h3><p>The −4 disappears. So does the evidence that an external event happened. A correction and a clean table become indistinguishable.</p><div class="mt-s"><span class="chip r">deletes the event</span></div></div>
+            <div class="card r a-up"><span class="tag">fix two · block it</span><h3 class="mono" style="font-size:16px">points &lt; 3W + D → reject</h3><p>A legitimate deduction stops the season's load. The operator cannot publish a correct table because the gate assumes the wrong identity.</p><div class="mt-s"><span class="chip r">stops a valid load</span></div></div>
+          </div>
+          <div class="card y mt-m a-up" style="border-color:#5A4A12;background:#14130C"><span class="tag">the rule that survives</span><div class="mono" style="font-size:24px;color:var(--yellow);margin-top:4px">0 &nbsp;≤&nbsp; points &nbsp;≤&nbsp; 3 × won + drawn</div><p class="mt-s">A deduction is the gap below the maximum. The maximum is a boundary, not a formula.</p></div>
+        </div>
+        <div class="source">A19 blocks the impossible direction. It does not force equality.</div>
+      </section>
+
+      <!-- 06 · act II breaker -->
+      <section class="slide breaker" data-sec="the model" data-note="This is the thesis. Three verbs, in order. Store the reported value. Compute the expected value. Show the gap. Nothing is rewritten, and the source remains the only authority on the total. The rest of this act shows how the three verbs map to tables, a view, and an assertion.">
+        <div class="kicker c"><i></i>ACT II · THE MODEL</div>
+        <div class="body-wrap">
+          <div class="break-quote"><span class="l"><span>Store the reported.</span></span><span class="l"><span>Compute the expected.</span></span><span class="l"><span class="c">Show the gap.</span></span></div>
+          <p class="break-sub mt-m">Three verbs. No rewriting. The source owns the total; the pipeline owns the arithmetic and the warning.</p>
+          <div class="break-mark">the rest of the deck is the proof that these three can coexist</div>
+        </div>
+        <div class="source">Reported ≠ derived. The difference is the evidence.</div>
+      </section>
+
+      <!-- 07 · glossary -->
+      <section class="slide" data-sec="the vocabulary" data-note="Pause here if anyone is new to the stack. These ten words are used later without re-explanation. The important pair is reported versus derived: reported is what the source says and is stored; derived is computed and never overwrites the source. Grain and snapshot are the two words that prevent most modelling mistakes.">
+        <div class="kicker c"><i></i>ACT II · THE VOCABULARY</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Ten words this deck will use.</span></span></h2>
+          <div class="terms mt-m">
+            <div class="term a-up"><b>reported value</b><span>What the source says. Stored as-is, even when it surprises you.</span></div>
+            <div class="term a-up"><b>derived value</b><span>Computed from other columns. Never overwrites the source value.</span></div>
+            <div class="term a-up"><b>grain</b><span>What exactly one row means: one team in one snapshot, for example.</span></div>
+            <div class="term a-up"><b>snapshot</b><span>One observation of a stage at one time. Immutable once accepted.</span></div>
+            <div class="term a-up"><b>fact</b><span>A measured value tied to a snapshot. The table that holds the reported 20.</span></div>
+            <div class="term a-up"><b>view</b><span>A saved query. It stores no data of its own; it computes when read.</span></div>
+            <div class="term a-up"><b>assertion</b><span>A SQL query over a candidate. It returns offending rows; zero rows means pass.</span></div>
+            <div class="term a-up"><b>WARN / BLOCK</b><span>WARN reports and continues. BLOCK stops the publish.</span></div>
+            <div class="term a-up"><b>migration</b><span>A versioned SQL file applied exactly once by the database.</span></div>
+            <div class="term a-up"><b>checksum</b><span>SHA-256 of a file's bytes. It detects any change to an applied migration.</span></div>
+          </div>
+        </div>
+        <div class="source">Terms are defined again where they first do real work.</div>
+      </section>
+
+      <!-- 08 · the shape -->
+      <section class="slide" data-sec="the shape" data-note="Follow the arrow, not the boxes. The feed becomes a fact row; the reported total is stored unchanged. The view reads the fact and computes two new columns. The view has no storage, so there is no second truth to reconcile. This is the difference between a derived column and a duplicated one.">
+        <div class="kicker c"><i></i>ACT II · THE SHAPE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The model is three layers,</span></span><span class="l"><span>not three copies.</span></span></h2>
+          <div class="flow mt-m a-up">
+            <div class="node"><span class="tag">source</span><b>feed payload</b><span>JSON inside the site's page.</span></div>
+            <div class="arrow y"></div>
+            <div class="node" style="border-color:#1E4A4D;background:#0D1415"><span class="tag c">stored</span><b>fact_standings_snapshot</b><span>points_overall = 20. The reported value.</span></div>
+            <div class="arrow c"></div>
+            <div class="node" style="border-color:#5A4A12;background:#14130C"><span class="tag y">computed</span><b>v_points_adjustments</b><span>reported 20 · expected 24 · −4.</span></div>
+          </div>
+          <div class="two mt-m">
+            <div class="card c a-up"><span class="tag">what the view does</span><p>It joins the snapshot header to the standings fact, computes <span class="mono">3 × won_overall + drawn_overall</span>, and subtracts. It filters to rows where the reported total is below the maximum.</p></div>
+            <div class="card y a-up"><span class="tag">what the view does not do</span><p>It does not store a row of its own. There is no second <span class="mono">points</span> column to drift. Delete the view and the fact is still correct.</p></div>
+          </div>
+        </div>
+        <div class="source">A view is a lens, not a ledger.</div>
+      </section>
+
+      <!-- 09 · the SQL -->
+      <section class="slide" data-sec="the SQL" data-note="Read the three computed lines, not the whole query. points_reported is the source value. points_expected is the arithmetic maximum. points_adjustment is the difference. The WHERE clause is the definition of an adjustment: it only returns rows where the reported value is below the maximum. Nothing here writes.">
+        <div class="kicker c"><i></i>ACT II · THE SQL</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The view computes the gap;</span></span><span class="l"><span>it does not store a second truth.</span></span></h2>
+          <div class="two wide mt-m">
+            <div class="code sm a-fade">SELECT
+  f.whoscored_team_name,
+  f.points_overall                              <span class="com">-- reported</span>
+    AS <span class="hi">points_reported</span>,
+  3 * f.won_overall + f.drawn_overall           <span class="com">-- maximum</span>
+    AS <span class="hi">points_expected</span>,
+  f.points_overall
+    - (3 * f.won_overall + f.drawn_overall)     <span class="com">-- gap</span>
+    AS <span class="hi">points_adjustment</span>
+FROM competition_snapshot AS s
+JOIN fact_standings_snapshot AS f USING (snapshot_id)
+WHERE f.points_overall IS NOT NULL
+  AND f.won_overall IS NOT NULL
+  AND f.drawn_overall IS NOT NULL
+  AND f.points_overall &lt; 3 * f.won_overall + f.drawn_overall</div>
+            <div class="a-up">
+              <table class="tbl">
+                <thead><tr><th>team</th><th class="num">reported</th><th class="num">expected</th><th class="num">adjustment</th></tr></thead>
+                <tbody><tr class="hot"><td>Southampton</td><td class="num y">20</td><td class="num c">24</td><td class="num r">−4</td></tr></tbody>
+              </table>
+              <div class="card y mt-m"><span class="tag">the only row returned</span><p>Rows where the arithmetic matches are excluded. A view called “adjustments” that returned every team would be noise.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source">SQL: <b>sql/004_points_adjustments.sql</b></div>
+      </section>
+
+      <!-- 10 · scope -->
+      <section class="slide" data-sec="the scope" data-note="A deduction applies to the overall table. Home and away points are split tables, and A20 already excludes points from their sums. Checking all three would report one deduction three times. This is a grain decision as much as a football decision: one event belongs to one grain.">
+        <div class="kicker c"><i></i>ACT II · THE SCOPE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>A deduction belongs to</span></span><span class="l"><span>the overall table.</span></span></h2>
+          <div class="three mt-m">
+            <div class="card y a-up"><span class="tag">overall · checked</span><h3>20 vs 24</h3><p>A22 compares the reported overall total with <span class="mono">3W + D</span>. This is where the deduction lives.</p><div class="mt-s"><span class="chip y">WARN</span></div></div>
+            <div class="card a-up"><span class="tag">home · not checked</span><h3>split points</h3><p>Home points are a subset of the overall table. A deduction is not applied to the split.</p><div class="mt-s"><span class="chip c">not reported</span></div></div>
+            <div class="card a-up"><span class="tag">away · not checked</span><h3>split points</h3><p>Away points are the other subset. Checking them would triple-count one event.</p><div class="mt-s"><span class="chip c">not reported</span></div></div>
+          </div>
+          <div class="card c mt-m a-up"><span class="tag">what A20 still enforces</span><p><span class="mono">played</span>, <span class="mono">won</span>, <span class="mono">drawn</span>, <span class="mono">lost</span>, goals for and goals against must add up across home and away. Points are deliberately excluded, because a deduction applies to the overall total.</p></div>
+        </div>
+        <div class="source">A20 checks the split sums, not the points split.</div>
+      </section>
+
+      <!-- 11 · the gate -->
+      <section class="slide" data-sec="the gate" data-note="A22 is an assertion, not a unit test. It runs over the staged candidate before publish and returns offending rows. A WARN is returned to the caller but does not enter the blocking set. A19 still blocks the impossible direction. The output line is the operator's first surface: team, reported, expected, gap.">
+        <div class="kicker c"><i></i>ACT II · THE GATE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>A WARN reports.</span></span><span class="l"><span>A BLOCK stops.</span></span></h2>
+          <div class="two wide mt-m">
+            <div class="code sm a-fade"><span class="kw">SELECT</span> whoscored_team_id, whoscored_team_name,
+       points, <span class="n">3</span> * won + drawn <span class="kw">AS</span> expected_points,
+       points - (<span class="n">3</span> * won + drawn) <span class="kw">AS</span> adjustment
+<span class="kw">FROM</span> _assert_standings_long
+<span class="kw">WHERE</span> view = <span class="s">'overall'</span>
+  <span class="kw">AND</span> points <span class="bad">&lt;</span> <span class="n">3</span> * won + drawn</div>
+            <div class="a-up">
+              <div class="card y"><span class="tag">the output</span><div class="mono" style="font-size:12px;line-height:1.55;color:var(--yellow)">WARN A22: Southampton (team 18)<br>reports 20 points, expected 24,<br>adjustment −4</div></div>
+              <div class="two mt-s" style="gap:12px">
+                <div class="card g"><span class="tag">WARN</span><p>Reported, logged, does not block. A human decides.</p></div>
+                <div class="card r"><span class="tag">BLOCK</span><p>A19: points above the maximum, or negative. That cannot be true.</p></div>
+              </div>
+            </div>
+          </div>
+          <p class="body mt-s a-up">A22 catches only <span class="mono">points &lt; 3W + D</span>. It never fires for the impossible direction; A19 owns that. Two assertions, two shapes, no overlap.</p>
+        </div>
+        <div class="source">Assertion file: <b>sql/005_assertions_a22.sql</b></div>
+      </section>
+
+      <!-- 12 · act III breaker -->
+      <section class="slide breaker" data-sec="the contract" data-note="This is the turn. The data model worked, but the change broke the database before it touched a fact. The migration ledger refused to run because an applied file had changed. That failure is the second lesson: a contract is a deployment artifact, and its history is part of its correctness.">
+        <div class="kicker r"><i></i>ACT III · THE CONTRACT</div>
+        <div class="body-wrap">
+          <div class="break-quote" style="font-size:46px"><span class="l"><span class="r">migration error:</span></span><span class="l"><span>002_assertions.sql changed</span></span><span class="l"><span>after it was applied.</span></span></div>
+          <div class="code mt-m a-fade" style="max-width:980px;border-left-color:var(--red)">recorded  0d21c51f4943
+now       cebfbad5fa70</div>
+          <p class="break-sub mt-m">The live database was correct. The working tree was not. The next act is about why the ledger is strict — and how a contract grows without rewriting history.</p>
+        </div>
+        <div class="source">The fix broke the database before it touched a single fact.</div>
+      </section>
+
+      <!-- 13 · ledger -->
+      <section class="slide" data-sec="the ledger" data-note="The ledger is a table with one row per applied file: version, SHA-256 checksum, applied_at. It answers a question that is otherwise unanswerable: what is this database actually running? The five rows here are the real live database after this change. The checksums are the first twelve characters of the SHA-256; the table stores the full value.">
+        <div class="kicker r"><i></i>ACT III · THE LEDGER</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>A migration ledger is</span></span><span class="l"><span>the database's memory.</span></span></h2>
+          <div class="two wide mt-m">
+            <table class="tbl">
+              <thead><tr><th>version</th><th>checksum (first 12)</th><th>applied</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>001_schema.sql</td><td class="mono dim">c6c0f113ca08</td><td class="mono dim">26 Oct</td></tr>
+                <tr class="a-row"><td>002_assertions.sql</td><td class="mono dim">0d21c51f4943</td><td class="mono dim">26 Oct</td></tr>
+                <tr class="a-row"><td>003_views.sql</td><td class="mono dim">e9d1c78e8e75</td><td class="mono dim">26 Oct</td></tr>
+                <tr class="a-row hot"><td>004_points_adjustments.sql</td><td class="mono y">a80e8df65cda</td><td class="mono y">27 Oct</td></tr>
+                <tr class="a-row hot"><td>005_assertions_a22.sql</td><td class="mono y">a687e05758de</td><td class="mono y">27 Oct</td></tr>
+              </tbody>
+            </table>
+            <div class="a-up">
+              <div class="card r"><span class="tag">the rule</span><p>Each file is applied once. Its bytes are hashed. If the bytes change, <span class="mono">migrate()</span> refuses to run.</p></div>
+              <div class="card c mt-s"><span class="tag">the question it answers</span><p>“What is this database running?” Not “what is in the folder?” The folder can change; the ledger is the record.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source">Live table: <b>schema_migration</b> · full SHA-256 is stored; twelve characters shown here.</div>
+      </section>
+
+      <!-- 14 · why immutability -->
+      <section class="slide" data-sec="why immutability" data-note="Three reasons, and they are not abstract. Reproducibility: the same bytes rebuild the same state. Audit: you can say what ran and when. Evolution: a new file adds a rule without pretending the old one never existed. A migration is a deployment unit, not a draft.">
+        <div class="kicker r"><i></i>ACT III · WHY</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Immutability is what makes</span></span><span class="l"><span>the ledger useful.</span></span></h2>
+          <div class="three mt-m">
+            <div class="card c a-up"><span class="tag">reproduce</span><h3>Same bytes, same state</h3><p>A rebuild on another host applies the same files in the same order. A changed file would make two databases disagree while both claim the same version.</p></div>
+            <div class="card y a-up"><span class="tag">audit</span><h3>What ran, and when</h3><p>The ledger records the version, the checksum and the timestamp. An incident review can reconstruct the exact contract the database was running.</p></div>
+            <div class="card g a-up"><span class="tag">evolve</span><h3>Add, don't rewrite</h3><p>A new rule is a new file. The old file remains the record of what was applied. Nothing is deleted to make the new state look inevitable.</p></div>
+          </div>
+          <div class="card mt-m a-up" style="border-color:#5A4A12;background:#14130C"><span class="tag">the sentence to remember</span><div class="mono" style="font-size:20px;color:var(--yellow);margin-top:4px">A migration is a deployment unit, not a draft.</div></div>
+        </div>
+        <div class="source">The ledger is strict because the alternative is a database that cannot explain itself.</div>
+      </section>
+
+      <!-- 15 · byte failure -->
+      <section class="slide" data-sec="the byte failure" data-note="The same SQL, two files, two hashes. LF and CRLF are different bytes. A Windows checkout rewrote the file, so the ledger saw a change even though the text looked identical. This is why the fix is not only a new assertion file: the repository has to force one line ending for SQL. The hash is over bytes, not over meaning.">
+        <div class="kicker r"><i></i>ACT III · THE BYTE FAILURE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The ledger hashes bytes,</span></span><span class="l"><span>not meaning.</span></span></h2>
+          <div class="bytes mt-m">
+            <div class="panel a-up">
+              <div class="tag">LF · the applied file</div>
+              <div class="v mono" style="color:var(--green)">0d21c51f4943</div>
+              <div class="h">10,631 bytes · 0 CRLF</div>
+              <div class="code sm mt-s" style="border-left-color:var(--green)">SELECT 1;\nSELECT 2;\n</div>
+            </div>
+            <div class="neq a-scale">≠</div>
+            <div class="panel a-up" style="border-color:#54231E">
+              <div class="tag">CRLF · the checkout</div>
+              <div class="v mono" style="color:var(--red)">cebfbad5fa70</div>
+              <div class="h">10,949 bytes · 318 CRLF</div>
+              <div class="code sm mt-s" style="border-left-color:var(--red)">SELECT 1;\r\nSELECT 2;\r\n</div>
+            </div>
+          </div>
+          <div class="two mt-m">
+            <div class="card r a-up"><span class="tag">what changed</span><p>Not the SQL. A checkout on Windows applied <span class="mono">core.autocrlf=true</span> and rewrote every line ending.</p></div>
+            <div class="card g a-up"><span class="tag">the fix</span><p><span class="mono">*.sql text eol=lf</span> in <span class="mono">.gitattributes</span>. One representation on every host.</p></div>
+          </div>
+        </div>
+        <div class="source">A text diff hides this. The checksum does not.</div>
+      </section>
+
+      <!-- 16 · the rule -->
+      <section class="slide" data-sec="the rule" data-note="Four parts. A new file for A22. A loader that reads every assertion file in lexical order. A duplicate id check so one rule cannot silently shadow another. And LF for SQL so the checksum is stable. The result is a contract that grows by addition. 002 stays at the exact bytes the live database applied.">
+        <div class="kicker r"><i></i>ACT III · THE RULE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Grow the contract by addition,</span></span><span class="l"><span>not mutation.</span></span></h2>
+          <div class="four mt-m">
+            <div class="card y a-up"><span class="tag">01 · append</span><h3>New file</h3><p><span class="mono">005_assertions_a22.sql</span> holds A22. <span class="mono">002</span> is untouched.</p></div>
+            <div class="card c a-up"><span class="tag">02 · load</span><h3>Every file</h3><p><span class="mono">load_assertions()</span> reads every <span class="mono">sql/*assertions*.sql</span> in lexical order.</p></div>
+            <div class="card g a-up"><span class="tag">03 · guard</span><h3>Duplicate ids fail</h3><p>An id in two files raises instead of silently shadowing the first definition.</p></div>
+            <div class="card a a-up"><span class="tag">04 · stabilise</span><h3>LF for SQL</h3><p><span class="mono">.gitattributes</span> forces <span class="mono">*.sql text eol=lf</span> so the hash cannot drift.</p></div>
+          </div>
+          <div class="two mt-m">
+            <div class="code sm a-fade">sql/
+  002_assertions.sql      <span class="com">A1–A21 · immutable</span>
+  005_assertions_a22.sql  <span class="com">A22 · appended</span></div>
+            <div class="a-up">
+              <div class="card y"><span class="tag">the live result</span><p><span class="mono">002</span> is still <span class="mono">0d21c51f4943</span>. <span class="mono">004</span> and <span class="mono">005</span> were applied by a real run on 27 October.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source">Rule and rejected alternatives: <b>docs/adr/0010-append-only-assertions.md</b></div>
+      </section>
+
+      <!-- 17 · alternatives -->
+      <section class="slide" data-sec="the alternatives" data-note="Every alternative looks convenient and fails for the same reason: it makes the ledger describe something other than what ran. Editing 002 and updating the row rewrites history. Exempting assertions from the checksum makes the contract the one thing that can change under a running database. Moving assertions out of migrations creates a second deployment path. Normalising text before hashing means the hash no longer describes the executed file.">
+        <div class="kicker r"><i></i>ACT III · THE ALTERNATIVES</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Every shortcut had the same flaw:</span></span><span class="l"><span>it rewrote history.</span></span></h2>
+          <table class="tbl mt-m">
+            <thead><tr><th>alternative</th><th>why it fails</th></tr></thead>
+            <tbody>
+              <tr class="a-row bad"><td class="mono">Edit 002 and update the ledger</td><td>The ledger becomes a note about the past that anyone can edit. It no longer proves what ran.</td></tr>
+              <tr class="a-row bad"><td class="mono">Exempt assertions from the checksum</td><td>The contract becomes the one migration that can change under a live database — the exact failure the ledger prevents.</td></tr>
+              <tr class="a-row bad"><td class="mono">Move assertions out of migrations</td><td>It orphans the applied 002 row and creates a second deployment path for one contract.</td></tr>
+              <tr class="a-row bad"><td class="mono">Normalise text before hashing</td><td>The hash no longer describes the bytes that were executed. The ledger becomes approximate.</td></tr>
+            </tbody>
+          </table>
+          <div class="card g mt-m a-up"><span class="tag">the accepted alternative</span><p>Append a new file, load the whole set, reject duplicates, and force LF. The ledger stays honest and the contract still grows.</p></div>
+        </div>
+        <div class="source">The strict option is the one that keeps the audit trail usable.</div>
+      </section>
+
+      <!-- 18 · act IV breaker -->
+      <section class="slide breaker" data-sec="proof" data-note="The proof is a matrix. Seventeen new tests, but they are not seventeen variations of the same check. They cover the warning's scope, the view's arithmetic, an end-to-end publish, the operator output, and the loader's failure modes. The number to remember is not 233; it is that each claim has a test at the level it lives.">
+        <div class="kicker c"><i></i>ACT IV · PROOF</div>
+        <div class="body-wrap">
+          <div class="break-quote"><span class="l"><span><span class="y" data-count="17">17</span> new tests.</span></span><span class="l"><span>One property.</span></span><span class="l"><span>Zero rewrites.</span></span></div>
+          <p class="break-sub mt-m">233 tests total. The gates are the evidence, not the screenshot.</p>
+          <div class="break-mark">the next four slides unpack the matrix</div>
+        </div>
+        <div class="source">233 = 216 before this change + 17 new tests.</div>
+      </section>
+
+      <!-- 19 · test matrix -->
+      <section class="slide" data-sec="the matrix" data-note="Read the counts, then read the claims. A22 policy has five tests: warn, silent, overall-only, impossible-total, multiple teams. The view has four, plus one property test. Publish has one end-to-end. The CLI has two. The loader has four. The migration view test was updated, not added. Nothing here asserts a timestamp or a log filename; those are implementation details, not claims.">
+        <div class="kicker c"><i></i>ACT IV · THE MATRIX</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Each test pins one claim.</span></span></h2>
+          <table class="tbl mt-m">
+            <thead><tr><th>layer</th><th>what it pins</th><th class="num">tests</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td class="mono y">A22 policy</td><td>warns with the gap; silent when exact; overall only; A19 still blocks; two teams, two gaps</td><td class="num">5</td></tr>
+              <tr class="a-row"><td class="mono c">view</td><td>only real gaps; history per snapshot; NULL/impossible excluded; home/away ignored</td><td class="num">4</td></tr>
+              <tr class="a-row"><td class="mono c">property oracle</td><td>50 generated W/D/P sets match the Python definition exactly</td><td class="num">1</td></tr>
+              <tr class="a-row"><td class="mono g">publish</td><td>accepted; one callback; stored value unchanged; view shows −4</td><td class="num">1</td></tr>
+              <tr class="a-row"><td class="mono a">CLI</td><td>dry-run prints and exits 0; real run logs and commits</td><td class="num">2</td></tr>
+              <tr class="a-row"><td class="mono r">loader</td><td>reads both files; duplicate id fails; empty marker fails; missing contract fails</td><td class="num">4</td></tr>
+            </tbody>
+          </table>
+          <div class="two mt-s">
+            <p class="small a-up">What the tests deliberately do not assert: a log filename, a timestamp, or that a deduction is “correct”. The source owns correctness; the tests own the arithmetic and the surfaces.</p>
+            <p class="small a-up">The migration view test was updated from seven views to eight; the contract-id test now expects A22. Neither is counted as new.</p>
+          </div>
+        </div>
+        <div class="source">Matrix: <b>docs/reports/points-adjustments.md</b></div>
+      </section>
+
+      <!-- 20 · oracle -->
+      <section class="slide" data-sec="the oracle" data-note="A property-based test is the right tool for a SQL rule. Instead of writing one example per branch, generate arbitrary wins, draws and points, then assert that the view equals the definition in Python. Fifty examples run in the same test. If the SQL and the definition diverge on an input nobody thought to write, the test finds it. This is not a replacement for the targeted tests; it is the net under them.">
+        <div class="kicker c"><i></i>ACT IV · THE ORACLE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>A property beats a pile</span></span><span class="l"><span>of examples.</span></span></h2>
+          <div class="two wide mt-m">
+            <div class="code sm a-fade"><span class="com"># generate arbitrary (won, drawn, points)</span>
+<span class="kw">@given</span>(rows=st.lists(st.tuples(...), max_size=<span class="n">8</span>))
+<span class="kw">def</span> <span class="fn">test_points_adjustments_matches_the_oracle</span>(con, rows):
+    insert(con, rows)
+    actual = select_adjustments(con)
+    expected = [
+        (team_id, points, <span class="n">3</span>*won + drawn,
+         points - (<span class="n">3</span>*won + drawn))
+        <span class="kw">for</span> team_id, (won, drawn, points) <span class="kw">in</span> enumerate(rows, <span class="n">1</span>)
+        <span class="kw">if</span> points &lt; <span class="n">3</span>*won + drawn
+    ]
+    <span class="kw">assert</span> actual == expected</div>
+            <div class="a-up">
+              <div class="stat"><div class="v c" data-count="50">50</div><span class="k">generated cases</span><div class="s">Arbitrary wins, draws and reported points. No hand-picked branch list.</div></div>
+              <div class="card c mt-s"><span class="tag">the invariant</span><p>For every row, the view returns a row exactly when <span class="mono">points &lt; 3W + D</span>, and the adjustment is exactly <span class="mono">points − (3W + D)</span>.</p></div>
+              <div class="card y mt-s"><span class="tag">why it matters</span><p>A SQL view is code. A property test checks the code against the definition, not against one remembered example.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source">Test: <b>tests/test_views.py::test_points_adjustments_matches_the_arithmetic_oracle</b></div>
+      </section>
+
+      <!-- 21 · end to end -->
+      <section class="slide" data-sec="end to end" data-note="This is the transaction view. A candidate with 16 points goes through A19, then A22 warns, then publish accepts. The fact stores 16, not 20. The view computes 16, 20, −4. Nothing is applied twice, and nothing is erased. The callback fired exactly once. This is the proof that the reporting model survives the publish boundary.">
+        <div class="kicker c"><i></i>ACT IV · END TO END</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The source value survives</span></span><span class="l"><span>the transaction.</span></span></h2>
+          <div class="flow mt-m a-up">
+            <div class="node"><span class="tag">candidate</span><b>points = 16</b><span>7W, 3D.</span></div>
+            <div class="arrow y"></div>
+            <div class="node" style="border-color:#234A2C;background:#0D140F"><span class="tag g">A19</span><b class="g">pass</b><span>16 ≤ 24, not negative.</span></div>
+            <div class="arrow y"></div>
+            <div class="node" style="border-color:#5A4A12;background:#14130C"><span class="tag y">A22</span><b class="y">WARN</b><span>16 vs 20, −4.</span></div>
+            <div class="arrow c"></div>
+            <div class="node" style="border-color:#1E4A4D;background:#0D1415"><span class="tag c">publish</span><b class="c">accepted</b><span>fact stores 16.</span></div>
+            <div class="arrow g"></div>
+            <div class="node"><span class="tag">view</span><b>16 · 20 · −4</b><span>reported, expected, gap.</span></div>
+          </div>
+          <div class="two mt-m">
+            <div class="code sm a-fade">fact_standings_snapshot
+  points_overall = <span class="n">16</span>   <span class="com">-- source value</span>
+
+v_points_adjustments
+  points_reported   = <span class="n">16</span>
+  points_expected   = <span class="n">20</span>
+  points_adjustment = <span class="n">-4</span></div>
+            <div class="card g a-up"><span class="tag">what the test proves</span><p>The candidate is accepted. The warning callback fires once. The stored value equals the reported value, not the expected maximum. The view returns one row with the gap.</p><div class="mt-s"><span class="chip g">no rewrite</span> <span class="chip y">one warning</span></div></div>
+          </div>
+        </div>
+        <div class="source">Test: <b>tests/test_publish.py::test_a_deducted_total_publishes_and_the_view_shows_the_gap</b></div>
+      </section>
+
+      <!-- 22 · surfaces -->
+      <section class="slide" data-sec="operations" data-note="One event, three audiences. The gate is for the operator at publish time: a WARN line in dry-run and in the run. The log is for the incident: a JSON line with the assertion id and the offending rows. The view is for the analyst: a durable row with lineage. Do not collapse them into one surface; each answers a different question.">
+        <div class="kicker c"><i></i>ACT IV · OPERATIONS</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>One event, three surfaces.</span></span></h2>
+          <div class="three mt-m">
+            <div class="card y a-up"><span class="tag">gate · the operator</span><h3>Dry-run and run</h3><div class="mono" style="font-size:10.5px;line-height:1.5;color:var(--yellow);margin-top:6px">WARN A22: Southampton<br>(team 18) reports 20 points,<br>expected 24, adjustment −4</div><p class="mt-s">Exit 0. A warning is not a failure.</p></div>
+            <div class="card c a-up"><span class="tag">log · the incident</span><h3>Daily JSONL</h3><div class="mono" style="font-size:10px;line-height:1.5;color:#B9B9B3;margin-top:6px">{"event":"publish.warning",<br>"assertion_id":"A22",<br>"rows":[[18,"Southampton",<br>20,24,-4]]}</div><p class="mt-s">Durable, append-only, one line per warning.</p></div>
+            <div class="card g a-up"><span class="tag">view · the analyst</span><h3>History with lineage</h3><div class="mono" style="font-size:10px;line-height:1.5;color:#B9B9B3;margin-top:6px">snapshot_id<br>observed_at<br>season_key<br>run_id</div><p class="mt-s">The question “when did this deduction appear?” has an answer.</p></div>
+          </div>
+          <div class="card mt-m a-up" style="border-color:#5A4A12;background:#14130C"><span class="tag">the division of labour</span><p>The console is for the person running the load. The log is for the person reconstructing the incident. The view is for the person asking a football question. One event, three verbs: report, record, query.</p></div>
+        </div>
+        <div class="source">Surfaces: <b>src/dataderby/cli.py</b> · <b>src/dataderby/publish.py</b> · <b>sql/004_points_adjustments.sql</b></div>
+      </section>
+
+      <!-- 23 · live -->
+      <section class="slide" data-sec="live" data-note="This is the live database, not a fixture. A real run applied 004 and 005, then returned no_change. The EPL has no deduction, so the view correctly returns zero rows. The synthetic snapshot shows the view working on the exact Southampton shape. Mention the empty Conference League separately: it is a source problem, not a deduction.">
+        <div class="kicker c"><i></i>ACT IV · LIVE</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The live database moved</span></span><span class="l"><span>from 003 to 005.</span></span></h2>
+          <div class="two wide mt-m">
+            <div class="code sm a-fade"><span class="com">$ uv run dataderby run --stage epl-2026-2027</span>
+epl-2026-2027: <span class="g">no_change</span> (20 teams,
+run run_e7c39ff3cc4347cb9e0be567e6198d23)
+
+<span class="com">-- schema_migration</span>
+001_schema.sql               c6c0f113ca08
+002_assertions.sql           0d21c51f4943
+003_views.sql                e9d1c78e8e75
+004_points_adjustments.sql   a80e8df65cda
+005_assertions_a22.sql       a687e05758de
+
+<span class="com">-- EPL has no deduction</span>
+SELECT count(*) FROM v_points_adjustments;  <span class="n">0</span></div>
+            <div class="a-up">
+              <div class="card g"><span class="tag">why zero is correct</span><p>The EPL table has no deduction. The view only returns gaps. Zero rows is the right answer, not a missing migration.</p></div>
+              <div class="card y mt-s"><span class="tag">synthetic proof</span><div class="mono" style="font-size:12px;color:var(--yellow);margin-top:4px">[('Southampton', 20, 24, -4)]</div><p class="mt-s">An in-memory snapshot with the exact shape. The view returns the gap, not a rewritten total.</p></div>
+              <div class="card r mt-s"><span class="tag">separate issue</span><p>The Conference League feed returned zero rows while its page showed 36 teams. That remains a source problem and is not scheduled.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source">Live evidence: <b>data/dataderby.duckdb</b> · run <b>run_e7c39ff3…</b> · 27 Oct 2026</div>
+      </section>
+
+      <!-- 24 · lessons -->
+      <section class="slide" data-sec="the lesson" data-note="Six ideas to take away, in the order they appeared. Reported versus derived is the modelling idea. Grain and scope is the football idea. Assertion actions are the contract idea. Migration immutability is the deployment idea. Byte reproducibility is the reproducibility idea. Property-based tests are the testing idea. If the audience remembers one, make it the first.">
+        <div class="kicker c"><i></i>ACT V · THE LESSON</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>What this teaches about</span></span><span class="l"><span>data engineering.</span></span></h2>
+          <div class="three mt-m">
+            <div class="card y a-up"><span class="tag">01 · modelling</span><h3>Reported ≠ derived</h3><p>Store the source value; compute the expectation beside it. A derived column that overwrites the source destroys evidence.</p></div>
+            <div class="card c a-up"><span class="tag">02 · grain</span><h3>Scope follows grain</h3><p>A deduction belongs to the overall table, not to both splits. Checking the wrong grain creates duplicate events.</p></div>
+            <div class="card g a-up"><span class="tag">03 · contracts</span><h3>WARN ≠ BLOCK</h3><p>Not every anomaly is a failure. The action is part of the rule: report legitimate events, block impossible ones.</p></div>
+            <div class="card a a-up"><span class="tag">04 · deployment</span><h3>Migrations are immutable</h3><p>An applied file is a deployment unit. Grow the contract by adding files, not by rewriting what ran.</p></div>
+            <div class="card r a-up"><span class="tag">05 · reproducibility</span><h3>Bytes, not text</h3><p>LF and CRLF are different bytes. A checksum sees the difference even when a diff looks identical.</p></div>
+            <div class="card c a-up"><span class="tag">06 · testing</span><h3>Properties beat examples</h3><p>Generate the inputs. Assert the invariant. The SQL and the definition cannot drift silently.</p></div>
+          </div>
+        </div>
+        <div class="source">If you remember one: report the gap, do not rewrite it.</div>
+      </section>
+
+      <!-- 25 · honest limits -->
+      <section class="slide" data-sec="open items" data-note="Say the limits out loud. A no_change run short-circuits before assertions, so A22 is not re-emitted for already-accepted content; the view is still the durable surface. There is no CLI query command yet. Home and away deductions are not reported by design. And the browser token race is unrelated but real. A deck that hides its limits is a sales deck.">
+        <div class="kicker r"><i></i>ACT V · OPEN ITEMS</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>The honest limits.</span></span></h2>
+          <div class="two mt-m">
+            <div class="card a a-up"><span class="tag">no_change</span><h3>Assertions are skipped</h3><p>If the content fingerprint is unchanged, publish returns before A22 runs. The deduction is still in <span class="mono">v_points_adjustments</span>; it will not re-print a warning until the content changes.</p></div>
+            <div class="card a a-up"><span class="tag">tooling</span><h3>No query command yet</h3><p>The view is queryable with DuckDB, but there is no <span class="mono">dataderby adjustments</span> command. Add it when an operator asks.</p></div>
+            <div class="card a a-up"><span class="tag">scope</span><h3>Overall only</h3><p>A deduction applied to home and away splits would need a separate rule. The current model treats it as an overall event.</p></div>
+            <div class="card r a-up"><span class="tag">transport</span><h3>Browser token race</h3><p>One live dry run failed with “page did not expose gSiteHeaderValue”; the retry succeeded. Unrelated to this change, still tracked.</p></div>
+          </div>
+        </div>
+        <div class="source">Limits are part of the design, not an omission from the slide.</div>
+      </section>
+
+      <!-- 26 · next -->
+      <section class="slide" data-sec="next" data-note="Three items, in dependency order. Issue #7 is the schedule and the freshness alert; without it the pipeline is still manual. Issue #9 is the v1 gate: two unattended runs, a no_change, a 19-team refusal, and a backup replay. Issue #8 is the E5 cadence measurement on the next matchday. Name the dependency, not just the ticket.">
+        <div class="kicker c"><i></i>ACT V · NEXT</div>
+        <div class="body-wrap top">
+          <h2 class="display"><span class="l"><span>Next, in dependency order.</span></span></h2>
+          <table class="tbl mt-m">
+            <thead><tr><th>item</th><th>what it proves</th><th>why now</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td class="mono y">Issue 7 · schedule and alert</td><td>A daily heartbeat and a post-match window. A failure alert and a dead-man's switch.</td><td>The run is still manual; the v1 gate cannot start without it.</td></tr>
+              <tr class="a-row"><td class="mono c">Issue 9 · v1 gate</td><td>Two unattended runs, the second <span class="mono">no_change</span>; a poisoned 19-team cohort refused; a backup replay matches the fingerprint.</td><td>It is the definition of “runs unattended”, not a checklist.</td></tr>
+              <tr class="a-row"><td class="mono g">Issue 8 · E5 cadence</td><td>Measure the real observation interval on the next matchday.</td><td>The cadence window has passed; the next fixture is the next chance.</td></tr>
+            </tbody>
+          </table>
+          <div class="card y mt-m a-up"><span class="tag">the dependency</span><p>The schedule is the enabling change. The gate is the proof. The cadence measurement is the calibration. Doing them out of order produces evidence that cannot be reproduced.</p></div>
+        </div>
+        <div class="source">Open issues: <b>7</b>, <b>9</b>, <b>8</b> · named in dependency order</div>
+      </section>
+
+      <!-- 27 · close -->
+      <section class="slide breaker" data-sec="close" data-note="Close on the sentence, not on a thank-you. A deduction is an event; the pipeline reports the gap and preserves the source value. The report has the exact commands, the commit and the test matrix. The ADR explains why the assertion contract is append-only. If the reader remembers one line, make it this one.">
+        <div class="kicker c"><i></i>CLOSE</div>
+        <div class="body-wrap">
+          <div class="break-quote"><span class="l"><span>Report the gap.</span></span><span class="l"><span class="y">Never rewrite it.</span></span></div>
+          <p class="break-sub mt-m">A deduction is a domain event. The source owns the total; the pipeline owns the arithmetic, the warning, and the history.</p>
+          <div class="two mt-m" style="gap:26px">
+            <div class="card c a-up"><span class="tag">read the report</span><p class="mono" style="font-size:11px">docs/reports/points-adjustments.md</p><p class="mt-s">Goal, changed files, test matrix, live evidence, limits.</p></div>
+            <div class="card y a-up"><span class="tag">read the decision</span><p class="mono" style="font-size:11px">docs/adr/0010-append-only-assertions.md</p><p class="mt-s">Why the contract grows by new files, and what was rejected.</p></div>
+          </div>
+          <div class="small mt-m">233 tests · CI green · commit d1ae261 · SQL: <span class="mono">004_points_adjustments.sql</span> · <span class="mono">005_assertions_a22.sql</span></div>
+        </div>
+        <div class="source">Companion report: <b>docs/reports/points-adjustments.md</b></div>
+      </section>
+
+    </div>
+
+    <footer id="foot">
+      <div class="foot-l"><b>docs/reports/points-adjustments.md</b> &nbsp;·&nbsp; N for notes</div>
+      <div id="clock"><div id="pageNum">01 / 27</div><div id="track"><div id="fill"></div></div></div>
+    </footer>
+
+    <div id="notes"><div class="h">presenter note <span>N to close</span></div><p id="noteText"></p></div>
+
+    <button class="nav" id="prev" type="button" aria-label="Previous slide">←</button>
+    <button class="nav" id="next" type="button" aria-label="Next slide">→</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var secLabel = document.getElementById('secLabel');
+  var pageNum = document.getElementById('pageNum');
+  var fill = document.getElementById('fill');
+  var notes = document.getElementById('notes');
+  var noteText = document.getElementById('noteText');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var i = 0, busy = false, tl = null, revealTimer = null;
+
+  function fit() {
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  function fmt(v, dec) {
+    return dec ? Number(v).toFixed(+dec) : String(Math.round(Number(v)));
+  }
+
+  function finalState(slide) {
+    slide.querySelectorAll('.l > span').forEach(function (e) { e.style.transform = 'none'; });
+    slide.querySelectorAll('.a-up,.a-fade,.a-row,.a-scale').forEach(function (e) {
+      e.style.opacity = '1'; e.style.transform = 'none';
+    });
+    slide.querySelectorAll('[data-count]').forEach(function (e) {
+      e.textContent = fmt(e.dataset.count, e.dataset.dec);
+    });
+    slide.querySelectorAll('.bar .fill').forEach(function (e) { e.style.width = (e.dataset.w || '100') + '%'; });
+    slide.querySelectorAll('.sheen').forEach(function (e) { e.style.opacity = '0'; });
+  }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (revealTimer) clearTimeout(revealTimer);
+    if (reduced || !window.gsap) { finalState(slide); return; }
+
+    tl = window.gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      onComplete: function () { if (revealTimer) clearTimeout(revealTimer); }
+    });
+
+    /* Never leave content hidden if the renderer throttles animation frames. */
+    revealTimer = setTimeout(function () {
+      if (tl) tl.kill();
+      finalState(slide);
+    }, 2200);
+
+    var lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      window.gsap.set(lines, { yPercent: 115, opacity: 1 });
+      tl.to(lines, { yPercent: 0, duration: 0.9, stagger: 0.075, ease: 'power4.out' }, 0);
+    }
+
+    var sheen = slide.querySelector('.sheen');
+    if (sheen) {
+      window.gsap.set(sheen, { xPercent: -170, opacity: 0 });
+      tl.to(sheen, { xPercent: 430, opacity: 0.55, duration: 1.25, ease: 'power2.inOut' }, 0.15)
+        .to(sheen, { opacity: 0, duration: 0.45 }, 1.28);
+    }
+
+    var ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      window.gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: 0.62, stagger: 0.055, ease: 'power2.out' }, 0.16);
+    }
+
+    var scales = slide.querySelectorAll('.a-scale');
+    if (scales.length) {
+      window.gsap.set(scales, { scale: 0.94, opacity: 0 });
+      tl.to(scales, { scale: 1, opacity: 1, duration: 0.68, stagger: 0.06, ease: 'power2.out' }, 0.22);
+    }
+
+    var rows = slide.querySelectorAll('.a-row');
+    if (rows.length) {
+      window.gsap.set(rows, { y: 8, opacity: 0 });
+      tl.to(rows, { y: 0, opacity: 1, duration: 0.38, stagger: 0.04, ease: 'power1.out' }, 0.28);
+    }
+
+    var fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      window.gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: 0.5, stagger: 0.05 }, 0.34);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(function (el) {
+      var target = +el.dataset.count, dec = el.dataset.dec;
+      var obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: function () { el.textContent = fmt(obj.v, dec); }
+      }, 0.3);
+    });
+
+    slide.querySelectorAll('.bar .fill').forEach(function (el) {
+      var w = (el.dataset.w || '100') + '%';
+      window.gsap.set(el, { width: '0%' });
+      tl.to(el, { width: w, duration: 0.9, ease: 'power3.out' }, 0.35);
+    });
+  }
+
+  function setChrome(slide) {
+    var sec = slide.dataset.sec || '';
+    secLabel.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    fill.style.width = ((i + 1) / slides.length * 100) + '%';
+    noteText.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === n); });
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    var from = slides[i];
+    var next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) {
+      show(i, true);
+      busy = false;
+      return;
+    }
+
+    if (tl) tl.kill();
+    window.gsap.killTweensOf([from, next]);
+
+    next.classList.add('on');
+    window.gsap.set(next, { opacity: 0, scale: 1.012 });
+    window.gsap.set(from, { opacity: 1, scale: 1 });
+
+    window.gsap.timeline({ onComplete: function () {
+      from.classList.remove('on');
+      window.gsap.set(from, { clearProps: 'all' });
+      window.gsap.set(next, { clearProps: 'all' });
+      busy = false;
+    } })
+      .to(from, { opacity: 0, scale: 0.988, duration: 0.32, ease: 'power1.in' }, 0)
+      .add(function () { setChrome(next); animate(next); }, 0.1)
+      .to(next, { opacity: 1, scale: 1, duration: 0.62, ease: 'power3.out' }, 0.1);
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'n' || e.key === 'N') { notes.classList.toggle('on'); return; }
+    if (e.key === 'Escape') { notes.classList.remove('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].indexOf(e.key) !== -1) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].indexOf(e.key) !== -1) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+      else { document.exitFullscreen(); }
+    }
+  });
+
+  document.getElementById('next').addEventListener('click', function () { go(i + 1); });
+  document.getElementById('prev').addEventListener('click', function () { go(i - 1); });
+
+  stage.addEventListener('mousemove', function (e) {
+    if (reduced) return;
+    var r = stage.getBoundingClientRect();
+    var x = ((e.clientX - r.left) / r.width - 0.5) * 18;
+    var y = ((e.clientY - r.top) / r.height - 0.5) * 14;
+    stage.style.setProperty('--mx', x.toFixed(1) + 'px');
+    stage.style.setProperty('--my', y.toFixed(1) + 'px');
+  });
+  stage.addEventListener('mouseleave', function () {
+    stage.style.setProperty('--mx', '0px');
+    stage.style.setProperty('--my', '0px');
+  });
+
+  show(0, false);
+  setTimeout(function () { animate(slides[0]); }, 120);
+})();
+</script>
+</body>
+</html>

@@ -239,6 +239,8 @@ loop. The following successful run applied `004` and `005` and recorded
 
 ## References
 
+- `docs/slides/points-adjustments-slides.html` — companion deck: the four points
+  that were not there, in five acts with animation and presenter notes.
 - `docs/adr/0010-append-only-assertions.md` — why the contract grows by new
   files.
 - `docs/adr/0007-migration-ledger.md` — the checksum rule.
