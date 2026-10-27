@@ -40,6 +40,7 @@ from dataderby.db import MigrationError, connect, migrate
 from dataderby.fetch import Capture, FetchBlocked, FetchError, RequestBudget, SchemaDrift
 from dataderby.landing import LandingResult, land_stage
 from dataderby.lock import LockHeld, exclusive_lock
+from dataderby.observe import log as log_event
 from dataderby.page import PageCapture, StageCapture, capture_stage
 from dataderby.parse import (
     IncompleteCohort,
@@ -52,6 +53,7 @@ from dataderby.parse_standings import check_team_sets, parse_views
 from dataderby.publish import Outcome, publish, reconcile
 from dataderby.standings import RawStandingsRow, StandingsParseError, decode_view
 from dataderby.validate import (
+    AssertionFailure,
     PublishBlocked,
     blocking_failures,
     run_assertions,
@@ -561,6 +563,56 @@ def _replay(
     return Exit.OK
 
 
+def _warning_lines(failure: AssertionFailure) -> list[str]:
+    """Render one assertion failure for an operator.
+
+    A points deduction is the common warning, so it gets a readable line with
+    the reported total, the arithmetic expectation, and the gap. Every other
+    failure keeps the generic assertion message.
+
+    Args:
+        failure: A failed assertion, including its offending rows.
+
+    Returns:
+        One or more lines, each already prefixed for the console.
+    """
+    if failure.assertion_id != "A22":
+        return [f"  {failure.action.value} {failure.assertion_id}: {failure.message}"]
+
+    lines: list[str] = []
+    for team_id, name, reported, expected, adjustment in failure.rows:
+        if not isinstance(adjustment, int):
+            lines.append(f"  WARN A22: {failure.message}")
+            continue
+        lines.append(
+            f"  WARN A22: {name} (team {team_id}) reports {reported} points, "
+            f"expected {expected}, adjustment {adjustment:+d}"
+        )
+    return lines
+
+
+def _warning_handler(
+    settings: Settings,
+    run: LandingResult,
+    out: TextIO,
+) -> Callable[[AssertionFailure], None]:
+    """Build the publish warning sink: one durable log line and console lines."""
+
+    def handle(failure: AssertionFailure) -> None:
+        log_event(
+            "publish.warning",
+            log_dir=settings.log_dir,
+            run_id=run.run_id,
+            assertion_id=failure.assertion_id,
+            action=failure.action.value,
+            rows=[list(row) for row in failure.rows],
+        )
+        for line in _warning_lines(failure):
+            _say(out, line)
+
+    return handle
+
+
 def _dry_run_one(
     spec: StageSpec,
     settings: Settings,
@@ -587,7 +639,7 @@ def _dry_run_one(
     try:
         memory.execute("SET TimeZone='UTC'")
         migrate(memory)
-        failures = blocking_failures(run_assertions(memory, candidate, standings, spec, run))
+        failures = run_assertions(memory, candidate, standings, spec, run)
     finally:
         memory.close()
 
@@ -597,9 +649,10 @@ def _dry_run_one(
         f"{spec.key}: would publish {len(candidate.rows)} teams, "
         f"{len(standings.rows)} standings rows, fingerprint {digest[:16]}",
     )
-    if failures:
-        for failure in failures:
-            _say(out, f"  {failure.action.value} {failure.assertion_id}: {failure.message}")
+    for failure in failures:
+        for line in _warning_lines(failure):
+            _say(out, line)
+    if blocking_failures(failures):
         return Exit.BLOCKED
     return Exit.OK
 
@@ -651,6 +704,7 @@ def _run(
                     spec,
                     landed,
                     allow_apps_decrease=allow_apps_decrease,
+                    on_warning=_warning_handler(settings, landed, out),
                 )
                 _say(
                     out,

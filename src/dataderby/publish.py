@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import math
+from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -18,6 +19,8 @@ from dataderby.landing import LandingResult
 from dataderby.parse import Candidate
 from dataderby.parse_standings import StandingsCandidate
 from dataderby.validate import (
+    Action,
+    AssertionFailure,
     PublishBlocked,
     blocking_failures,
     run_assertions,
@@ -312,6 +315,7 @@ def publish(
     run: LandingResult,
     *,
     allow_apps_decrease: bool = False,
+    on_warning: Callable[[AssertionFailure], None] | None = None,
 ) -> Outcome:
     """Validate and publish one candidate in a single transaction.
 
@@ -322,6 +326,8 @@ def publish(
         spec: Configured stage.
         run: Landing result that owns the raw sweep.
         allow_apps_decrease: Explicit revocation override for A10.
+        on_warning: Called once per WARN failure. Warnings never block; the
+            callback is where an operator log or console line is written.
 
     Returns:
         ``ACCEPTED`` when a header and facts were committed, or ``NO_CHANGE``
@@ -368,6 +374,10 @@ def publish(
             run,
             allow_apps_decrease=allow_apps_decrease,
         )
+        if on_warning is not None:
+            for failure in failures:
+                if failure.action is Action.WARN:
+                    on_warning(failure)
         blocking = blocking_failures(failures)
         if blocking:
             raise PublishBlocked(blocking)

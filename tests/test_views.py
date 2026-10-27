@@ -8,6 +8,8 @@ from pathlib import Path
 
 import duckdb
 import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from dataderby.config import StageSpec, load_settings
 from dataderby.db import connect, migrate
@@ -102,21 +104,30 @@ def _insert_standings(
     rank: int,
     points: int,
     form: str,
+    won: int | None = None,
+    drawn: int | None = None,
     whoscored_team_name: str | None = None,
 ) -> None:
+    # Default to the arithmetic identity so a row is only an adjustment when a
+    # test asks for one, not because the helper chose inconsistent defaults.
+    won_overall = points // 3 if won is None else won
+    drawn_overall = points % 3 if drawn is None else drawn
     con.execute(
         """
         INSERT INTO fact_standings_snapshot (
             snapshot_id, whoscored_team_id, whoscored_team_name,
+            won_overall, drawn_overall,
             rank_overall, points_overall, form_overall,
             rank_home, points_home, form_home,
             rank_away, points_away, form_away
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             snapshot_id,
             whoscored_team_id,
             whoscored_team_name or f"Team {whoscored_team_id}",
+            won_overall,
+            drawn_overall,
             rank,
             points,
             form,
@@ -179,7 +190,7 @@ def _insert_run(
     )
 
 
-def test_migrate_creates_all_seven_consumer_views(
+def test_migrate_creates_all_eight_consumer_views(
     con: duckdb.DuckDBPyConnection,
 ) -> None:
     views = con.execute(
@@ -192,6 +203,7 @@ def test_migrate_creates_all_seven_consumer_views(
         "v_latest_team_state",
         "v_latest_team_with_standings",
         "v_pipeline_freshness",
+        "v_points_adjustments",
         "v_snapshot_clock",
         "v_snapshot_delta",
         "v_standings_history",
@@ -467,3 +479,161 @@ def test_snapshot_clock_renders_one_instant_in_utc_and_ist(
     assert row[1].tzinfo is None
     assert row[2] == observed
     assert row[3] == datetime(2026, 10, 21, 15, 30)
+
+
+def test_points_adjustments_lists_only_the_gap(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    _insert_snapshot(con, "snap_pts", observed_at=_NOW)
+    _insert_standings(
+        con,
+        "snap_pts",
+        10,
+        rank=1,
+        points=20,
+        form="wwd",
+        won=6,
+        drawn=2,
+        whoscored_team_name="Exact FC",
+    )
+    _insert_standings(
+        con,
+        "snap_pts",
+        11,
+        rank=2,
+        points=16,
+        form="wwd",
+        won=6,
+        drawn=2,
+        whoscored_team_name="Deducted FC",
+    )
+
+    rows = con.execute(
+        """
+        SELECT whoscored_team_id, whoscored_team_name, won_overall, drawn_overall,
+               points_reported, points_expected, points_adjustment,
+               season_key, run_id
+        FROM v_points_adjustments
+        WHERE snapshot_id = 'snap_pts'
+        ORDER BY whoscored_team_id
+        """
+    ).fetchall()
+
+    assert rows == [(11, "Deducted FC", 6, 2, 16, 20, -4, _SPEC.season_key, "run_seed")]
+
+
+def test_points_adjustments_keeps_each_snapshot_in_history(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    later = _NOW + timedelta(days=1)
+    _insert_snapshot(con, "snap_a", observed_at=_NOW)
+    _insert_snapshot(con, "snap_b", observed_at=later)
+    _insert_standings(con, "snap_a", 11, rank=1, points=16, form="wwd", won=6, drawn=2)
+    _insert_standings(con, "snap_b", 11, rank=1, points=19, form="wwd", won=6, drawn=2)
+
+    rows = con.execute(
+        """
+        SELECT snapshot_id, points_reported, points_adjustment
+        FROM v_points_adjustments
+        WHERE whoscored_team_id = 11
+        ORDER BY observed_at
+        """
+    ).fetchall()
+
+    assert rows == [("snap_a", 16, -4), ("snap_b", 19, -1)]
+
+
+def test_points_adjustments_excludes_rows_it_cannot_interpret(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    _insert_snapshot(con, "snap_pts", observed_at=_NOW)
+    _insert_standings(con, "snap_pts", 20, rank=1, points=20, form="wwd", won=6, drawn=2)
+    _insert_standings(con, "snap_pts", 21, rank=2, points=25, form="wwd", won=6, drawn=2)
+    con.execute(
+        """
+        INSERT INTO fact_standings_snapshot (
+            snapshot_id, whoscored_team_id, whoscored_team_name,
+            rank_overall, points_overall, won_overall, drawn_overall
+        ) VALUES ('snap_pts', 22, 'Null Points', 3, NULL, 6, 2),
+                 ('snap_pts', 23, 'Null Wins', 4, 16, NULL, 2)
+        """
+    )
+
+    rows = con.execute(
+        "SELECT whoscored_team_id FROM v_points_adjustments WHERE snapshot_id = 'snap_pts'"
+    ).fetchall()
+
+    assert rows == []
+
+
+def test_points_adjustments_ignores_the_home_and_away_splits(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    _insert_snapshot(con, "snap_pts", observed_at=_NOW)
+    con.execute(
+        """
+        INSERT INTO fact_standings_snapshot (
+            snapshot_id, whoscored_team_id, whoscored_team_name,
+            rank_overall, points_overall, won_overall, drawn_overall,
+            rank_home, points_home, won_home, drawn_home
+        ) VALUES ('snap_pts', 30, 'Split Only', 1, 20, 6, 2, 1, 6, 3, 1)
+        """
+    )
+
+    rows = con.execute(
+        "SELECT whoscored_team_id FROM v_points_adjustments WHERE snapshot_id = 'snap_pts'"
+    ).fetchall()
+
+    assert rows == []
+
+
+@settings(
+    deadline=None,
+    max_examples=50,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
+@given(
+    rows=st.lists(
+        st.tuples(
+            st.integers(min_value=0, max_value=38),  # won
+            st.integers(min_value=0, max_value=38),  # drawn
+            st.integers(min_value=-10, max_value=120),  # reported points
+        ),
+        min_size=1,
+        max_size=8,
+    )
+)
+def test_points_adjustments_matches_the_arithmetic_oracle(
+    con: duckdb.DuckDBPyConnection,
+    rows: list[tuple[int, int, int]],
+) -> None:
+    con.execute("DELETE FROM fact_standings_snapshot")
+    con.execute("DELETE FROM competition_snapshot")
+    _insert_snapshot(con, "snap_prop", observed_at=_NOW)
+    for team_id, (won, drawn, points) in enumerate(rows, start=1):
+        _insert_standings(
+            con,
+            "snap_prop",
+            team_id,
+            rank=team_id,
+            points=points,
+            won=won,
+            drawn=drawn,
+            form="wd",
+        )
+
+    actual = con.execute(
+        """
+        SELECT whoscored_team_id, points_reported, points_expected, points_adjustment
+        FROM v_points_adjustments
+        WHERE snapshot_id = 'snap_prop'
+        ORDER BY whoscored_team_id
+        """
+    ).fetchall()
+    expected = [
+        (team_id, points, 3 * won + drawn, points - (3 * won + drawn))
+        for team_id, (won, drawn, points) in enumerate(rows, start=1)
+        if points < 3 * won + drawn
+    ]
+
+    assert actual == expected

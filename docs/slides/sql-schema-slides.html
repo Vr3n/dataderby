@@ -281,7 +281,7 @@
         <div class="mast-right">Schema v1 &middot; 26 Oct 2026</div>
       </div>
       <div id="foot">
-        <div class="l">WhoScored &middot; seven tables, seven views, one transaction</div>
+        <div class="l">WhoScored &middot; seven tables, eight views, one transaction</div>
         <div id="clock">
           <span class="l">Progress</span>
           <div id="clockTrack"><div id="clockFill"></div></div>
@@ -311,7 +311,7 @@
             <span class="l"><span>when, and is it</span></span>
             <span class="l"><span>the same observation?</span></span>
           </h1>
-          <p class="standfirst">Seven tables and seven views that answer those three questions
+          <p class="standfirst">Seven tables and eight views that answer those three questions
             about one football season. Every choice here has a rejected alternative, and a
             reason you can check.</p>
           <p class="byline">For a SQL engineer, a data engineer, and the person learning the schema &middot; 216 tests</p>
@@ -1077,6 +1077,7 @@ WHERE h.snapshot_rank = 1;</div>
                 <tr class="a-row"><td><span class="mono">v_standings_history</span></td><td>one team per snapshot: rank, points, form</td></tr>
                 <tr class="a-row"><td><span class="mono">v_snapshot_delta</span></td><td>one team per snapshot with an immediate predecessor</td></tr>
                 <tr class="a-row"><td><span class="mono">v_pipeline_freshness</span></td><td>one known stage: age, outcome, counts</td></tr>
+                <tr class="a-row"><td><span class="mono">v_points_adjustments</span></td><td>one team snapshot where reported points fall short of 3W+D</td></tr>
                 <tr class="a-row"><td><span class="mono">v_snapshot_clock</span></td><td>one snapshot: the same instant in UTC and IST</td></tr>
               </tbody>
             </table>
@@ -1224,7 +1225,7 @@ VALUES
               <thead><tr><th>What replaces it</th><th>Scope</th></tr></thead>
               <tbody>
                 <tr class="a-row"><td>Constraints: PK, FK, UNIQUE, CHECK</td><td>one row, at insert time</td></tr>
-                <tr class="a-row"><td>Assertions: A1&ndash;A21 and A7U</td><td>one candidate, before publish</td></tr>
+                <tr class="a-row"><td>Assertions: A1&ndash;A22 and A7U</td><td>one candidate, before publish</td></tr>
                 <tr class="a-row"><td>Views: seven, including freshness</td><td>one reader, at query time</td></tr>
                 <tr class="a-row"><td>Ledger: <span class="mono">schema_migration</span></td><td>one file, once</td></tr>
               </tbody>
@@ -1251,7 +1252,7 @@ VALUES
             <div class="link"></div>
             <div class="node"><b>Land raw</b><span>files + ledger</span></div>
             <div class="link"></div>
-            <div class="node"><b>Audit</b><span>22 definitions</span></div>
+            <div class="node"><b>Audit</b><span>23 definitions</span></div>
             <div class="link"></div>
             <div class="node hot"><b>Publish</b><span>one transaction</span></div>
             <div class="link"></div>

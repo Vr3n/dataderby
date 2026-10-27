@@ -17,7 +17,8 @@ from dataderby.landing import LandingResult
 from dataderby.parse import Candidate, parse_capture
 from dataderby.parse_standings import StandingsCandidate
 
-_SQL_PATH = Path(__file__).resolve().parents[2] / "sql" / "002_assertions.sql"
+_SQL_DIR = Path(__file__).resolve().parents[2] / "sql"
+_ASSERTION_GLOB = "*assertions*.sql"
 _MARKER = re.compile(r"^--\s*@@(?P<assertion_id>[A-Z0-9_]+)\|(?P<action>BLOCK|RETRY|WARN)\s*$")
 _PROVENANCE_ASSERTIONS = frozenset({"A3", "A4", "A11", "A12", "A15", "A17"})
 
@@ -58,12 +59,30 @@ class PublishBlocked(RuntimeError):
         super().__init__(f"publish blocked by: {ids}")
 
 
-def load_assertions(path: Path = _SQL_PATH) -> tuple[AssertionDefinition, ...]:
-    """Load marker-delimited SQL assertions from ``002_assertions.sql``.
+def assertion_files(sql_dir: Path = _SQL_DIR) -> tuple[Path, ...]:
+    """Return the assertion contract files in lexical order.
 
-    The file is comment-only so ``migrate()`` can execute it safely. Markers
-    have the form ``-- @@A1|BLOCK`` followed by ``--``-prefixed SQL lines.
+    Assertions are comment-only migration files. A file that has been applied
+    is immutable, so a new assertion is added in a new file rather than by
+    editing an old one.
+
+    Args:
+        sql_dir: Directory holding the migration files.
+
+    Returns:
+        Every ``*assertions*.sql`` file, sorted by name.
+
+    Raises:
+        FileNotFoundError: If the directory contains no assertion file.
     """
+    files = tuple(sorted(sql_dir.glob(_ASSERTION_GLOB)))
+    if not files:
+        raise FileNotFoundError(f"no assertion files in {sql_dir}")
+    return files
+
+
+def _load_assertion_file(path: Path) -> tuple[AssertionDefinition, ...]:
+    """Parse one marker-delimited assertion file."""
     definitions: list[AssertionDefinition] = []
     current_id: str | None = None
     current_action: Action | None = None
@@ -98,10 +117,43 @@ def load_assertions(path: Path = _SQL_PATH) -> tuple[AssertionDefinition, ...]:
         elif raw_line.strip() == "--":
             sql_lines.append("")
     finish()
+    return tuple(definitions)
+
+
+def load_assertions(path: Path | None = None) -> tuple[AssertionDefinition, ...]:
+    """Load marker-delimited SQL assertions from one file or the contract set.
+
+    By default every ``*assertions*.sql`` file in ``sql/`` is read in lexical
+    order, so the contract can grow without editing an applied migration. Pass a
+    file to read only that file, or a directory to read its contract files.
+
+    Markers have the form ``-- @@A1|BLOCK`` followed by ``--``-prefixed SQL
+    lines.
+
+    Args:
+        path: Optional file or directory. Defaults to the repository ``sql/``.
+
+    Returns:
+        Assertion definitions in file order.
+
+    Raises:
+        ValueError: If an assertion has no SQL or an id appears twice.
+        FileNotFoundError: If no assertion file is found.
+    """
+    if path is None:
+        paths = assertion_files()
+    elif path.is_dir():
+        paths = assertion_files(path)
+    else:
+        paths = (path,)
+
+    definitions: list[AssertionDefinition] = []
+    for file_path in paths:
+        definitions.extend(_load_assertion_file(file_path))
 
     ids = [definition.assertion_id for definition in definitions]
     if len(ids) != len(set(ids)):
-        raise ValueError("duplicate assertion id in 002_assertions.sql")
+        raise ValueError("duplicate assertion id in the assertion contract")
     return tuple(definitions)
 
 
@@ -237,6 +289,7 @@ def _stage_rows(
         """
         CREATE TEMP TABLE _assert_standings_long (
             whoscored_team_id INTEGER,
+            whoscored_team_name VARCHAR,
             view VARCHAR,
             rank INTEGER,
             played INTEGER,
@@ -435,6 +488,7 @@ def _stage_rows(
     standings_long_params: list[list[object]] = [
         [
             standings_row.whoscored_team_id,
+            standings_row.whoscored_team_name,
             standings_view,
             *(standings_row.measures.get(f"{field}_{standings_view}") for field in fields),
         ]
@@ -459,6 +513,7 @@ def _stage_rows(
         "_assert_standings_long",
         (
             "whoscored_team_id",
+            "whoscored_team_name",
             "view",
             "rank",
             "played",
@@ -491,9 +546,9 @@ def run_assertions(
     run: LandingResult | None = None,
     *,
     allow_apps_decrease: bool = False,
-    assertions_path: Path = _SQL_PATH,
+    assertions_path: Path | None = None,
 ) -> list[AssertionFailure]:
-    """Execute A1-A21 against a staged candidate.
+    """Execute A1-A22 against a staged candidate.
 
     The candidate and standings are loaded into temporary tables; source-level
     assertions read the supplied landing result. When ``run`` is omitted, the
@@ -507,7 +562,8 @@ def run_assertions(
         spec: Configured stage.
         run: The landing result that owns the raw captures.
         allow_apps_decrease: Explicit revocation override for A10.
-        assertions_path: Contract file, normally ``sql/002_assertions.sql``.
+        assertions_path: Contract file or directory. Defaults to every
+            ``*assertions*.sql`` file in ``sql/``.
 
     Returns:
         Every failed assertion in file order. A WARN is returned but does not

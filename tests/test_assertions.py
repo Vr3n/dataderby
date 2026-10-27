@@ -21,6 +21,7 @@ from dataderby.standings import RawStandingsRow
 from dataderby.validate import (
     Action,
     AssertionFailure,
+    blocking_failures,
     load_assertions,
     run_assertions,
 )
@@ -152,7 +153,7 @@ def test_assertion_file_loads_all_contract_ids() -> None:
     definitions = load_assertions()
     ids = [definition.assertion_id for definition in definitions]
 
-    assert set(ids) == {*(f"A{number}" for number in range(1, 22)), "A7U"}
+    assert set(ids) == {*(f"A{number}" for number in range(1, 23)), "A7U"}
     assert len(ids) == len(set(ids))
     assert {definition.action for definition in definitions} == {
         Action.BLOCK,
@@ -160,6 +161,37 @@ def test_assertion_file_loads_all_contract_ids() -> None:
         Action.WARN,
     }
     assert all(definition.sql for definition in definitions)
+
+
+def test_assertion_loader_reads_every_contract_file(tmp_path: Path) -> None:
+    (tmp_path / "002_assertions.sql").write_text("-- @@A1|BLOCK\n-- SELECT 1\n", encoding="utf-8")
+    (tmp_path / "005_assertions.sql").write_text("-- @@A22|WARN\n-- SELECT 2\n", encoding="utf-8")
+
+    definitions = load_assertions(tmp_path)
+
+    assert [definition.assertion_id for definition in definitions] == ["A1", "A22"]
+
+
+def test_assertion_loader_rejects_a_duplicate_id_across_files(tmp_path: Path) -> None:
+    (tmp_path / "002_assertions.sql").write_text("-- @@A1|BLOCK\n-- SELECT 1\n", encoding="utf-8")
+    (tmp_path / "005_assertions.sql").write_text("-- @@A1|WARN\n-- SELECT 2\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="duplicate assertion id"):
+        load_assertions(tmp_path)
+
+
+def test_assertion_loader_rejects_a_marker_without_sql(tmp_path: Path) -> None:
+    (tmp_path / "002_assertions.sql").write_text("-- @@A1|BLOCK\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="has no SQL"):
+        load_assertions(tmp_path)
+
+
+def test_assertion_loader_rejects_a_directory_without_a_contract(tmp_path: Path) -> None:
+    (tmp_path / "001_schema.sql").write_text("SELECT 1;\n", encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="no assertion files"):
+        load_assertions(tmp_path)
 
 
 def test_clean_candidate_passes_every_assertion(
@@ -573,6 +605,89 @@ def test_a_points_deduction_is_not_blocked(
 
     assert "A19" not in _ids(failures)
     assert "A20" not in _ids(failures)
+
+
+def test_a22_reports_a_points_deduction_as_a_warning(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+    row = standings.rows[0]
+    points = int(row.measures["points_overall"])  # type: ignore[arg-type]
+    deducted = _replace_standings_measure(standings, 0, "points_overall", points - 4)
+
+    failures = run_assertions(con, candidate, deducted, _SPEC, run)
+
+    [warning] = [failure for failure in failures if failure.assertion_id == "A22"]
+    assert warning.action is Action.WARN
+    assert warning.rows == (
+        (row.whoscored_team_id, row.whoscored_team_name, points - 4, points, -4),
+    )
+    assert blocking_failures(failures) == []
+
+
+def test_a22_is_absent_when_every_total_matches_won_and_drawn(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+
+    failures = run_assertions(con, candidate, standings, _SPEC, run)
+
+    assert "A22" not in _ids(failures)
+
+
+def test_a22_checks_only_the_overall_table(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+    row = standings.rows[0]
+    points = int(row.measures["points_home"])  # type: ignore[arg-type]
+    deducted = _replace_standings_measure(standings, 0, "points_home", points - 4)
+
+    failures = run_assertions(con, candidate, deducted, _SPEC, run)
+
+    assert "A22" not in _ids(failures)
+    assert "A20" not in _ids(failures)
+
+
+def test_a22_does_not_soften_an_impossible_total(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+    poisoned = _replace_standings_measure(standings, 0, "points_overall", 999)
+
+    failures = run_assertions(con, candidate, poisoned, _SPEC, run)
+
+    assert "A19" in _ids(failures)
+    assert "A22" not in _ids(failures)
+    assert [failure.assertion_id for failure in blocking_failures(failures)] == ["A19"]
+
+
+def test_a22_reports_each_deducted_team_with_its_own_gap(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    candidate, standings, run = _clean()
+    deducted = _replace_standings_measure(standings, 0, "points_overall", 16)
+    deducted = _replace_standings_measure(deducted, 1, "points_overall", 19)
+
+    failures = run_assertions(con, candidate, deducted, _SPEC, run)
+
+    [warning] = [failure for failure in failures if failure.assertion_id == "A22"]
+    assert warning.rows == (
+        (
+            deducted.rows[0].whoscored_team_id,
+            deducted.rows[0].whoscored_team_name,
+            16,
+            20,
+            -4,
+        ),
+        (
+            deducted.rows[1].whoscored_team_id,
+            deducted.rows[1].whoscored_team_name,
+            19,
+            20,
+            -1,
+        ),
+    )
 
 
 def test_a20_home_away_standings_must_add_up(

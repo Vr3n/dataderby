@@ -1,0 +1,4 @@
+# Migration checksums are byte hashes, not text hashes. A SQL file checked out
+# with CRLF on Windows would no longer match the ledger written on a host that
+# used LF. Force one representation for the files migrate() hashes.
+*.sql text eol=lf

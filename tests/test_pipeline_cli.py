@@ -81,6 +81,19 @@ def seeded(tmp_path: Path) -> Iterator[tuple[Path, Path]]:
     yield config, tmp_path / "pipeline.duckdb"
 
 
+def _deducted_page() -> PageCapture:
+    """A page whose first team in every split is four points short."""
+    page = _page()
+    standings = {
+        view: tuple(
+            replace(row, points=str(int(row.points) - 4)) if index == 0 else row
+            for index, row in enumerate(rows)
+        )
+        for view, rows in page.standings.items()
+    }
+    return _page(standings=standings)
+
+
 def _count(db_path: Path, table: str) -> int:
     con = connect(db_path, read_only=True)
     try:
@@ -166,6 +179,56 @@ def test_a_dry_run_writes_nothing(tmp_path: Path, capsys: pytest.CaptureFixture[
     assert not settings.db_path.exists()
     assert not settings.raw_dir.exists()
     assert "would publish 20 teams" in capsys.readouterr().out
+
+
+def test_a_dry_run_prints_a_points_deduction(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = _config(tmp_path)
+    settings = _settings(tmp_path)
+
+    assert (
+        main(
+            ["run", "--dry-run", "--config", str(config)],
+            runtime=_runtime(page=_deducted_page()),
+        )
+        == 0
+    )
+
+    out = capsys.readouterr().out
+    assert "WARN A22" in out
+    assert "adjustment -4" in out
+    assert not settings.db_path.exists()
+
+
+def test_a_run_logs_a_points_deduction_without_blocking(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = _config(tmp_path)
+    settings = _settings(tmp_path)
+
+    assert main(["run", "--config", str(config)], runtime=_runtime(page=_deducted_page())) == 0
+
+    out = capsys.readouterr().out
+    assert "accepted" in out
+    assert "WARN A22" in out
+
+    records = [
+        json.loads(line)
+        for path in settings.log_dir.glob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ]
+    warnings = [record for record in records if record["event"] == "publish.warning"]
+    assert len(warnings) == 1
+    assert warnings[0]["assertion_id"] == "A22"
+    assert warnings[0]["rows"][0][-1] == -4
+
+    con = connect(settings.db_path, read_only=True)
+    try:
+        assert con.execute("SELECT count(*) FROM competition_snapshot").fetchone()[0] == 1
+        assert con.execute("SELECT count(*) FROM v_points_adjustments").fetchone()[0] == 1
+    finally:
+        con.close()
 
 
 def test_freshness_reports_an_empty_pipeline(

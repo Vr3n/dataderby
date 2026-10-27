@@ -32,6 +32,7 @@ from tests.test_assertions import (
     _insert_run,
     _page,
     _replace_measure,
+    _replace_standings_measure,
 )
 from tests.test_whoscored_parse import _captures
 
@@ -109,6 +110,34 @@ def test_publish_accepts_and_writes_one_atomic_snapshot(
     assert checkpoint[1] is not None
     assert checkpoint[2] == 1
     assert con.execute("SELECT outcome FROM ingestion_run").fetchone()[0] == "accepted"
+
+
+def test_a_deducted_total_publishes_and_the_view_shows_the_gap(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    run = _run_at("run_deduction", _NOW)
+    candidate, standings = _prepare(con, run)
+    points = int(standings.rows[0].measures["points_overall"])  # type: ignore[arg-type]
+    deducted = _replace_standings_measure(standings, 0, "points_overall", points - 4)
+    warnings: list[object] = []
+
+    outcome = publish(con, candidate, deducted, _SPEC, run, on_warning=warnings.append)
+
+    assert outcome is Outcome.ACCEPTED
+    [warning] = warnings
+    assert warning.assertion_id == "A22"  # type: ignore[attr-defined]
+    rows = con.execute(
+        """
+        SELECT whoscored_team_id, points_reported, points_expected, points_adjustment
+        FROM v_points_adjustments
+        """
+    ).fetchall()
+    assert rows == [(deducted.rows[0].whoscored_team_id, points - 4, points, -4)]
+    stored = con.execute(
+        "SELECT points_overall FROM fact_standings_snapshot WHERE whoscored_team_id = ?",
+        [deducted.rows[0].whoscored_team_id],
+    ).fetchone()
+    assert stored == (points - 4,)
 
 
 def test_publish_same_content_is_idempotent(

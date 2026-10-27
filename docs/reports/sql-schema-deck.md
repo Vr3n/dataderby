@@ -12,7 +12,7 @@ A 28-slide explanation of the database design, in the paper/editorial theme:
    same observation.
 2. A glossary of grain, key, foreign key, check, unique, snapshot, assertion,
    SCD2, EAV, surrogate key, and materialized view.
-3. The seven tables and seven views, with an ER diagram that distinguishes
+3. The seven tables and eight views, with an ER diagram that distinguishes
    declared foreign keys from unconstrained links.
 4. The decisions, each with the rejected alternative: the migration ledger vs
    `CREATE IF NOT EXISTS`, snapshots vs SCD2, header + facts vs one flat table,
@@ -47,7 +47,7 @@ code, or test was changed for the deck.
 
 - [ ] The ER diagram matches `sql/001_schema.sql`.
 - [ ] The transaction slide matches `publish.py`.
-- [ ] A1–A21 + A7U are described correctly (22 definitions).
+- [ ] A1-A22 + A7U are described correctly (23 definitions).
 - [ ] Test count is 216.
 - [ ] The close links to this report.
 

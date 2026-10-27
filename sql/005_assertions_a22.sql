@@ -1,0 +1,21 @@
+-- Append-only assertion contract, part 2.
+--
+-- 002_assertions.sql is already applied in the live ledger, so editing it would
+-- change its checksum and make migrate() refuse to run. New assertions land in
+-- a new comment-only migration file instead. validate.py reads every
+-- *assertions*.sql file in lexical order and rejects a duplicate id.
+--
+-- A22 is a WARN: a deduction is legitimate, so it is reported with the gap and
+-- never blocks. Only the overall table is checked; a deduction applies to the
+-- overall total, not to the home and away splits.
+
+-- @@A22|WARN
+-- SELECT whoscored_team_id, whoscored_team_name, points,
+--        3 * won + drawn AS expected_points,
+--        points - (3 * won + drawn) AS adjustment
+-- FROM _assert_standings_long
+-- WHERE view = 'overall'
+--   AND points IS NOT NULL
+--   AND won IS NOT NULL
+--   AND drawn IS NOT NULL
+--   AND points < 3 * won + drawn

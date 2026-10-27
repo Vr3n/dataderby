@@ -93,7 +93,7 @@ Our mapping:
 | Layer | Here | Notes |
 |---|---|---|
 | Bronze | `data/raw/<tournament>/<season>/<stage>/<timestamp>/` | page, standings, nine feeds, SHA-256 sidecars. Git-ignored. |
-| Silver | the in-memory `Candidate` + standings, checked by A1–A21 | **Not persisted.** See below. |
+| Silver | the in-memory `Candidate` + standings, checked by A1–A22 | **Not persisted.** See below. |
 | Gold | DuckDB `fact_team_snapshot`, `fact_standings_snapshot`, and the `v_latest_*` / history views | What a consumer reads. |
 
 Why silver is not a folder: the dataset is 20–36 teams per snapshot, the
@@ -142,7 +142,7 @@ dataderby/
 │   ├── parse.py              feeds → Candidate (60 measures)
 │   ├── parse_standings.py    page → StandingsCandidate (30 measures)
 │   ├── canonical.py          sort, encode, fingerprint
-│   ├── validate.py           A1–A21, actions, PublishBlocked
+│   ├── validate.py           A1–A22, actions, PublishBlocked
 │   ├── publish.py            one transaction, no_change, reconcile
 │   ├── db.py                 connect, migrate, transaction
 │   ├── lock.py               exclusive pipeline lock
@@ -154,7 +154,9 @@ dataderby/
 ├── sql/                      the database contract, versioned
 │   ├── 001_schema.sql        tables, constraints, keys
 │   ├── 002_assertions.sql    A1–A21, comment-delimited
-│   └── 003_views.sql         consumer views
+│   ├── 003_views.sql         consumer views
+│   ├── 004_points_adjustments.sql  the points-deduction view
+│   └── 005_assertions_a22.sql      A22, appended because 002 is immutable
 │
 ├── config/                   runtime configuration, not code
 │   ├── stages.toml           the stage registry
