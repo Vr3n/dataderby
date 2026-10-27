@@ -28,6 +28,8 @@ class StageSpec(BaseModel):
         expected_teams: Number of teams the feed must return for this stage.
         whoscored_page_url: The show page used to mint the feed token.
         has_league_table: Whether the stage has a standings table.
+        active: Whether scheduled runs include this stage. Archived seasons set
+            this to false so polling skips them while explicit runs still work.
         whoscored_stage_name: Verbatim source label, when one was observed.
     """
 
@@ -44,6 +46,7 @@ class StageSpec(BaseModel):
     expected_teams: int = Field(gt=0)
     whoscored_page_url: str
     has_league_table: bool
+    active: bool = True
     whoscored_stage_name: str | None = None
 
     @field_validator("whoscored_page_url")

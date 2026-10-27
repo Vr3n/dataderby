@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One club, one row - the dim plan - dataderby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EDE3; --paper2:#E8E1D2; --paper3:#DFD7C6;
+    --ink:#14161A; --navy:#0E1A31; --navy2:#16243F;
+    --red:#D4382A; --green:#2E6B4F; --amber:#C98A2E;
+    --muted:#6E695E; --line:#D3CBBA;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0A0C10}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #viewport{position:fixed;inset:0;display:grid;place-items:center;background:#0A0C10}
+  #stage{
+    position:relative;width:1600px;height:900px;background:var(--paper);
+    transform-origin:center center;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);
+  }
+  #grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  #chrome{position:absolute;inset:0;z-index:40;pointer-events:none;transition:opacity .3s}
+  #chrome.off{opacity:0}
+  #chrome .bar{position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+  #mast{
+    position:absolute;top:4px;left:0;right:0;height:74px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand b{font-family:var(--cond);font-weight:700;font-size:22px;letter-spacing:.16em;text-transform:uppercase}
+  .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  #secLabel{font-family:var(--cond);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  #secLabel b{color:var(--red);font-weight:600}
+  .mast-right{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  #foot{
+    position:absolute;bottom:0;left:0;right:0;height:58px;padding:0 84px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--line);
+  }
+  #foot{padding-right:150px}
+  #foot .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  #clock{display:flex;align-items:center;gap:14px}
+  #clockTrack{width:180px;height:3px;background:var(--line);position:relative}
+  #clockFill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--red)}
+  #pageNum{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink)}
+
+  #slides{position:absolute;inset:0;z-index:10}
+  .slide{
+    position:absolute;inset:0;padding:112px 84px 86px;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:22px;
+    opacity:0;visibility:hidden;
+  }
+  .slide.on{opacity:1;visibility:visible}
+  .slide.dark{background:var(--navy);color:var(--paper)}
+  .slide.dark::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(242,237,227,.10) 1px,transparent 1px);
+    background-size:12px 12px;opacity:.5;
+  }
+  .slide.dark > *{position:relative;z-index:1}
+
+  .kicker{font-family:var(--cond);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .kicker i{width:9px;height:9px;background:var(--red);display:inline-block}
+  .dark .kicker{color:#9D9789}
+  h1.display{font-family:var(--serif);font-weight:600;letter-spacing:-.025em;line-height:.96;font-size:86px}
+  h2.display{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.02;font-size:47px;max-width:36ch}
+  h3{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.01em;line-height:1.15}
+  .l{display:block;overflow:hidden}
+  .l>span{display:block;will-change:transform}
+  .standfirst{font-family:var(--serif);font-weight:400;font-size:22px;line-height:1.45;color:#3B3B39;max-width:48ch}
+  .dark .standfirst{color:#CFC8B8}
+  .body{font-size:16px;line-height:1.6;color:#3C3B37;max-width:62ch}
+  div.body{max-width:none}
+  .dark .body{color:#CFC8B8}
+  .small{font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .dark .small{color:#9D9789}
+  .mono{font-family:var(--mono)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  .body{min-height:0}
+  .c2{display:grid;grid-template-columns:1fr 1fr;gap:44px}
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .c4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .c2,.c3,.c4{align-content:start}
+  .stack{display:grid;gap:16px;align-content:start}
+  .between{display:flex;justify-content:space-between;align-items:baseline;gap:20px}
+
+  .card{border-top:3px solid var(--navy);background:rgba(255,255,255,.42);padding:20px 22px 22px}
+  .dark .card{border-top-color:var(--paper);background:rgba(242,237,227,.05)}
+  .card .tag{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .dark .card .tag{color:#9D9789}
+  .card h3{margin:8px 0 10px}
+  .card p{font-size:14px;line-height:1.55;color:#4A4842}
+  .dark .card p{color:#C6BFAF}
+
+  .tbl{width:100%;border-collapse:collapse}
+  .tbl th{
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--ink);
+  }
+  .dark .tbl th{color:#9D9789;border-bottom-color:rgba(242,237,227,.35)}
+  .tbl td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:middle}
+  .dark .tbl td{border-bottom-color:rgba(242,237,227,.14);color:#DCD5C5}
+  .tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .tbl th.n{text-align:right}
+  .tbl tr.hi td{background:rgba(212,56,42,.06)}
+  .dark .tbl tr.hi td{background:rgba(240,106,90,.10)}
+  .tbl td.ok{color:var(--green);font-family:var(--mono);font-size:13px}
+  .tbl td.no{color:var(--red);font-family:var(--mono);font-size:13px}
+  .dark .tbl td.ok{color:#6FC69A} .dark .tbl td.no{color:#F06A5A}
+  .tbl.compact td{padding:8px 9px;font-size:13.2px}
+  .tbl.compact th{padding:8px 9px;font-size:10px}
+  .tbl.tight td{padding:6px 9px;font-size:12.6px;line-height:1.4}
+  .tbl.tight th{padding:7px 9px;font-size:10px}
+
+  .stat .v{font-family:var(--mono);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .stat .k{font-family:var(--cond);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dark .stat .k{color:#9D9789}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:5px}
+
+  .rule{height:1px;background:var(--line);width:100%}
+  .dark .rule{background:rgba(242,237,227,.18)}
+  .pull{font-family:var(--serif);font-size:36px;line-height:1.18;letter-spacing:-.015em;max-width:34ch}
+  .pull b{font-weight:600;color:var(--red)}
+
+  .room{
+    background:var(--paper2);border-left:3px solid var(--red);
+    padding:12px 16px;display:flex;gap:14px;align-items:baseline;
+  }
+  .dark .room{background:rgba(242,237,227,.06)}
+  .room .lbl{font-family:var(--cond);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .dark .room .lbl{color:#F06A5A}
+  .room p{font-size:13.5px;line-height:1.5;color:#3C3B37}
+  .dark .room p{color:#CFC8B8}
+
+  .code{
+    font-family:var(--mono);font-size:12.2px;line-height:1.7;
+    background:rgba(20,22,26,.05);border-left:2px solid var(--red);
+    padding:13px 15px;white-space:pre-wrap;color:#2E2E2B;
+  }
+  .dark .code{background:rgba(242,237,227,.06);color:#CFC8B8;border-left-color:#F06A5A}
+  .code .kw{color:var(--navy);font-weight:600}
+  .dark .code .kw{color:#9DB8E8}
+  .code .ty{color:var(--green);font-weight:500}
+  .dark .code .ty{color:#6FC69A}
+  .code .str{color:var(--amber)}
+  .code .num{color:var(--red)}
+  .dark .code .num{color:#F06A5A}
+  .code .cm{color:var(--muted);font-style:italic}
+
+  .chain{display:flex;align-items:center;gap:0}
+  .node{
+    width:150px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--paper);
+    font-family:var(--mono);font-size:11px;line-height:1.5;
+  }
+  .node b{display:block;font-family:var(--cond);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+  .node span{color:var(--muted)}
+  .node.hot{border-color:var(--red);background:rgba(212,56,42,.07)}
+  .link{width:44px;height:2px;background:var(--ink);position:relative;flex:none}
+  .link::after{
+    content:"";position:absolute;right:-1px;top:-5px;width:0;height:0;
+    border-left:10px solid var(--ink);border-top:6px solid transparent;border-bottom:6px solid transparent;
+  }
+  .dark .link{background:var(--paper)} .dark .link::after{border-left-color:var(--paper)}
+
+  .cover{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 96px}
+  .cover .inner{flex:none;align-self:flex-start;display:grid;gap:24px;max-width:1060px}
+  .cover h1{font-size:84px}
+  .byline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cover-stats{display:flex;gap:56px;border-top:1px solid var(--line);padding-top:18px;width:100%;margin-top:32px}
+
+  #nav{position:absolute;right:26px;bottom:18px;z-index:60;display:flex;gap:8px;align-items:center}
+  #nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-family:var(--mono);font-size:13px;cursor:pointer;transition:.15s;
+  }
+  #nav button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  #notes{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;background:#0A0C10;color:var(--paper);
+    border-top:2px solid var(--red);padding:18px 28px 20px;
+    transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex;gap:24px;align-items:baseline;
+  }
+  #notes.on{transform:translateY(0)}
+  #notes .lbl{font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F06A5A;white-space:nowrap}
+  #notes p{font-size:14px;line-height:1.55;max-width:1100px;color:#D8D2C4}
+  #notes .hint{margin-left:auto;font-family:var(--mono);font-size:10px;color:#6b6a63;white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .body > .room{align-self:start}
+  .a-row{will-change:transform,opacity}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="grain"></div>
+
+    <div id="chrome">
+      <div class="bar"></div>
+      <div id="mast">
+        <div class="brand"><b>Dataderby</b><span>Data desk &middot; dims plan</span></div>
+        <div id="secLabel"><b>01</b> &nbsp; The plan</div>
+        <div class="mast-right">ADR 0011 &middot; 27 Oct 2026</div>
+      </div>
+      <div id="foot">
+        <div class="l">dim_team + dim_stage &middot; four tables, one backfill, 233 tests stay green</div>
+        <div id="clock">
+          <span class="l">Progress</span>
+          <div id="clockTrack"><div id="clockFill"></div></div>
+          <span id="pageNum">01 / 14</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="slides">
+      <!-- 01 cover -->
+      <section class="slide cover" data-sec="The plan" data-chrome="off"
+        data-note="Open with the promise. Today a club is a name repeated on every fact row, so a second source has nowhere to attach. The plan gives every club and every stage one canonical row, then maps each source to it. Facts keep their WhoScored columns, consumers join on the canonical id.">
+        <div class="inner">
+          <p class="kicker"><i></i>Dims plan &nbsp;&middot;&nbsp; 27 October 2026</p>
+          <h1 class="display">
+            <span class="l"><span>One club, one row.</span></span>
+            <span class="l"><span>One stage, one row.</span></span>
+            <span class="l"><span>Every source maps in.</span></span>
+          </h1>
+          <p class="standfirst">Four small tables that let StatsBomb join without rewriting 258 fact rows. Backfilled from the 11 snapshots live today, checked on every publish, invisible to readers until the second source arrives.</p>
+          <p class="byline">For the data engineer adding source two &middot; ADR 0011 &middot; 233 tests stay green</p>
+        </div>
+        <div class="cover-stats">
+          <div class="stat"><div class="v" data-count="11">0</div><div class="k">snapshots live</div></div>
+          <div class="stat"><div class="v" data-count="258">0</div><div class="k">fact rows per side</div></div>
+          <div class="stat"><div class="v" data-count="221">0</div><div class="k">distinct clubs</div></div>
+          <div class="stat"><div class="v" data-count="37">0</div><div class="k">clubs in two stages</div></div>
+        </div>
+      </section>
+
+      <!-- 02 where we stand -->
+      <section class="slide" data-sec="Today"
+        data-note="Ground the plan in measured data, not in the old single-EPL file. Eleven snapshots, one per stage, 258 team facts and 258 standings facts, zero nulls, one deduction. The 37 shared clubs are the reason a mapping table pays off: Arsenal exists twice today under one id.">
+        <div>
+          <p class="kicker"><i></i>Today, measured</p>
+          <h2 class="display" style="margin-top:14px">Eleven snapshots.<br>221 clubs. 37 appear twice.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl tight">
+              <thead><tr><th>Stage</th><th class="n">Teams</th><th>Facts</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>EPL 2/25544</td><td class="n">20</td><td class="n">20 + 20</td></tr>
+                <tr class="a-row"><td>Bundesliga 3/25666</td><td class="n">18</td><td class="n">18 + 18</td></tr>
+                <tr class="a-row"><td>LaLiga 4/25662</td><td class="n">20</td><td class="n">20 + 20</td></tr>
+                <tr class="a-row"><td>Serie A 5/25518</td><td class="n">20</td><td class="n">20 + 20</td></tr>
+                <tr class="a-row"><td>Championship 7/25588</td><td class="n">24</td><td class="n">24 + 24</td></tr>
+                <tr class="a-row"><td>League One 8/25589</td><td class="n">24</td><td class="n">24 + 24</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <table class="tbl tight">
+              <thead><tr><th>Stage</th><th class="n">Teams</th><th>Facts</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>League Two 9/25590</td><td class="n">24</td><td class="n">24 + 24</td></tr>
+                <tr class="a-row"><td>UCL 12/25800</td><td class="n">36</td><td class="n">36 + 36</td></tr>
+                <tr class="a-row"><td>Eredivisie 13/25537</td><td class="n">18</td><td class="n">18 + 18</td></tr>
+                <tr class="a-row"><td>Ligue 1 22/25554</td><td class="n">18</td><td class="n">18 + 18</td></tr>
+                <tr class="a-row"><td>UEL 30/25801</td><td class="n">36</td><td class="n">36 + 36</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">The evidence</span>
+              <p>15 runs (11 accepted, 4 no_change), 11 checkpoints, 0 null measures, 1 deduction (Southampton, minus 4, Championship). Names are stable: no id maps to two names.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Counts read from data/dataderby.duckdb on 27 Oct 2026. Sum of the Teams column is 258, matching both fact tables.</div>
+      </section>
+
+      <!-- 03 problem team -->
+      <section class="slide" data-sec="The problem"
+        data-note="Make the team problem tangible with Arsenal. One club, two snapshots, one id, two copies of the name. A StatsBomb column on the fact would copy the mapping 258 times and allow two different StatsBomb ids for the same club in different snapshots.">
+        <div>
+          <p class="kicker"><i></i>The problem, team side</p>
+          <h2 class="display" style="margin-top:14px">Arsenal exists twice.<br>The name is copied twice.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>snapshot</th><th>team_id</th><th>team_name</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td><span class="mono">snap_d90c (EPL)</span></td><td class="n">13</td><td>Arsenal</td></tr>
+                <tr class="a-row"><td><span class="mono">snap_535f (UCL)</span></td><td class="n">13</td><td>Arsenal</td></tr>
+                <tr class="a-row"><td colspan="3">37 clubs look like this: Liverpool, Man City, Bayern, Real Madrid, PSG, and 32 more.</td></tr>
+              </tbody>
+            </table>
+            <p class="body">The name <span class="mono">whoscored_team_name</span> is stored 258 times for 221 clubs. Today that is harmless. A <span class="mono">statsbomb_id</span> column would copy the mapping 258 times too, with no constraint stopping snapshot one from saying 87 and snapshot two from saying 89.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Rejected &middot; statsbomb_id on the fact</div><h3>258 copies, zero guarantees</h3><p>Breaks on the third source, repeats every mapping per snapshot, and permits one WhoScored id to point at two StatsBomb ids.</p></div>
+            <div class="card a-up"><div class="tag">Rejected &middot; team_snapshot</div><h3>Same grain, second copy</h3><p>One row per team per snapshot is the fact grain again. It stores no new information, only another copy of the name.</p></div>
+            <div class="room a-up">
+              <span class="lbl">The fix</span>
+              <p>One row per club in <span class="mono">dim_team</span>. One mapping row per source in <span class="mono">team_source_key</span>. Facts keep their columns and gain one canonical id.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">37 clubs in two stages each, verified by grouping fact rows on whoscored_team_id across stage ids.</div>
+      </section>
+
+      <!-- 04 problem stage -->
+      <section class="slide" data-sec="The problem"
+        data-note="Stages are worse than teams because the hierarchies do not align. WhoScored thinks in tournament, season, stage. StatsBomb thinks in competition, season. A UEFA league phase plus knockout may map one way or two. That decision belongs in a mapping table, not in a column.">
+        <div>
+          <p class="kicker"><i></i>The problem, stage side</p>
+          <h2 class="display" style="margin-top:14px">Stages do not line up<br>one to one.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>WhoScored</th><th>StatsBomb shape</th><th>Mapping</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>EPL 2/11141/25544</td><td>competition  fiction-free  season</td><td class="ok">one to one</td></tr>
+                <tr class="a-row"><td>UCL league 12/11295/25800</td><td>UCL season</td><td>one to one today</td></tr>
+                <tr class="a-row"><td>UCL knockout (later)</td><td>same UCL season</td><td class="no">two stages, one season</td></tr>
+                <tr class="a-row"><td>Championship + playoff</td><td>one season</td><td class="no">same question</td></tr>
+              </tbody>
+            </table>
+            <p class="body">Eleven stage addresses live in headers and checkpoints today. Forcing StatsBomb season ids into header columns hides the equivalence decision. A mapping row records it where reviewers can see it.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Chosen &middot; dim_stage + mapping</div><h3>One canonical row per stage</h3><p><span class="mono">dim_stage</span> names the stage once. <span class="mono">stage_source_key</span> records how each source addresses it. A split or merge is a new mapping row, not a migration.</p></div>
+            <div class="room a-up">
+              <span class="lbl">Lineage stays</span>
+              <p>Headers keep every <span class="mono">whoscored_*</span> column. The raw archive still rebuilds everything, per ADR 0004.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">The UCL knockout and Championship playoff stages are not scheduled yet, so the mapping starts one to one and grows.</div>
+      </section>
+
+      <!-- 05 proposal -->
+      <section class="slide" data-sec="The proposal"
+        data-note="This is the whole design on one slide. Two dimension tables hold canonical rows, two mapping tables hold source addresses, facts and headers keep their source columns and gain one canonical id each. Walk the arrows: dims never point at facts, facts point at dims.">
+        <div>
+          <p class="kicker"><i></i>The proposal</p>
+          <h2 class="display" style="margin-top:14px">Four small tables.<br>Facts keep everything.</h2>
+        </div>
+        <div class="body stack">
+          <div class="chain">
+            <div class="node"><b>dim_team</b><span>221 rows, PK canonical id</span></div>
+            <div class="link"></div>
+            <div class="node"><b>team_source_key</b><span>221 rows, whoscored first</span></div>
+            <div class="link"></div>
+            <div class="node hot"><b>facts</b><span>+ dataderby_team_id</span></div>
+            <div class="link"></div>
+            <div class="node"><b>views</b><span>join canonical name</span></div>
+          </div>
+          <div class="chain">
+            <div class="node"><b>dim_stage</b><span>11 rows, PK canonical id</span></div>
+            <div class="link"></div>
+            <div class="node"><b>stage_source_key</b><span>11 rows, whoscored first</span></div>
+            <div class="link"></div>
+            <div class="node hot"><b>header</b><span>+ dataderby_stage_id</span></div>
+            <div class="link"></div>
+            <div class="node"><b>views</b><span>join canonical name</span></div>
+          </div>
+          <div class="c3">
+            <div class="card a-up"><div class="tag">dim_team</div><h3>One row per club</h3><p>Canonical id, canonical name, first seen, updated at. Backfill: 221 rows from live facts.</p></div>
+            <div class="card a-up"><div class="tag">dim_stage</div><h3>One row per stage</h3><p>Canonical id, tournament, season, stage code, canonical name. Backfill: 11 rows from live headers.</p></div>
+            <div class="card a-up"><div class="tag">Two key maps</div><h3>One row per source</h3><p>PK on (source, source ids) stops duplicates. UNIQUE on (canonical id, source) stops double mapping.</p></div>
+          </div>
+        </div>
+        <div class="small">Full DDL in ADR 0011. Migration files 006 and 007, one table family per file.</div>
+      </section>
+
+      <!-- 06 ddl team -->
+      <section class="slide" data-sec="The DDL"
+        data-note="Read the constraints, not the columns. The primary key on source ids stops the same source row mapping twice. The unique on canonical plus source stops one club mapping to two StatsBomb ids. That pair is the whole guarantee.">
+        <div>
+          <p class="kicker"><i></i>The DDL, team side &middot; sql/006</p>
+          <h2 class="display" style="margin-top:14px">The mapping is the<br>constraint.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code"><span class="kw">CREATE TABLE</span> dim_team (
+  dataderby_team_id <span class="ty">VARCHAR PRIMARY KEY</span>,
+  canonical_name    <span class="ty">VARCHAR NOT NULL</span>,
+  first_seen_at     <span class="ty">TIMESTAMPTZ NOT NULL</span>,
+  updated_at        <span class="ty">TIMESTAMPTZ NOT NULL</span>
+);
+<span class="kw">CREATE TABLE</span> team_source_key (
+  dataderby_team_id <span class="ty">VARCHAR NOT NULL REFERENCES</span> dim_team,
+  source            <span class="ty">VARCHAR NOT NULL</span>,
+  source_team_id    <span class="ty">VARCHAR NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (source, source_team_id),
+  <span class="kw">UNIQUE</span> (dataderby_team_id, source)
+);</div>
+            <p class="small">Backfill: 221 dim rows, 221 key rows with source = 'whoscored'. StatsBomb rows arrive with source two.</p>
+          </div>
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Rule</th><th>What it stops</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td><b>PK (source, source_team_id)</b></td><td>the same WhoScored id mapping to two clubs</td></tr>
+                <tr class="a-row"><td><b>UNIQUE (canonical, source)</b></td><td>one club holding two StatsBomb ids</td></tr>
+                <tr class="a-row"><td><b>FK to dim_team</b></td><td>a mapping with no club behind it</td></tr>
+                <tr class="a-row"><td><b>New assertion A23</b></td><td>a fact whose team has no mapping row (BLOCK)</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">No SCD2 yet</span>
+              <p>Names are stable today. A rename updates <span class="mono">canonical_name</span> and <span class="mono">updated_at</span>. Validity columns arrive only with the first real rename.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Team 13 maps once: ('whoscored','13') to one canonical id, used by both its EPL and UCL fact rows.</div>
+      </section>
+
+      <!-- 07 ddl stage -->
+      <section class="slide" data-sec="The DDL"
+        data-note="Same pattern for stages, with the harder grain decision made explicit. The canonical stage is tournament, season, stage code. The mapping holds each source's native address. A UEFA split is a second mapping row, not a redesign.">
+        <div>
+          <p class="kicker"><i></i>The DDL, stage side &middot; sql/007</p>
+          <h2 class="display" style="margin-top:14px">Name the stage once.<br>Map every address.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <div class="code"><span class="kw">CREATE TABLE</span> dim_stage (
+  dataderby_stage_id <span class="ty">VARCHAR PRIMARY KEY</span>,
+  tournament_name    <span class="ty">VARCHAR NOT NULL</span>,
+  season_key         <span class="ty">VARCHAR NOT NULL</span>,
+  stage_code         <span class="ty">VARCHAR NOT NULL</span>,
+  canonical_name     <span class="ty">VARCHAR NOT NULL</span>,
+  <span class="kw">UNIQUE</span> (tournament_name, season_key, stage_code)
+);</div>
+            <div class="code"><span class="kw">CREATE TABLE</span> stage_source_key (
+  dataderby_stage_id   <span class="ty">VARCHAR NOT NULL REFERENCES</span> dim_stage,
+  source               <span class="ty">VARCHAR NOT NULL</span>,
+  source_tournament_id <span class="ty">VARCHAR NOT NULL</span>,
+  source_season_id     <span class="ty">VARCHAR NOT NULL</span>,
+  source_stage_id      <span class="ty">VARCHAR NOT NULL</span>,
+  <span class="kw">PRIMARY KEY</span> (source, source_tournament_id,
+                   source_season_id, source_stage_id)
+);</div>
+          </div>
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Backfill</th><th class="n">Rows</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>dim_stage from headers</td><td class="n">11</td></tr>
+                <tr class="a-row"><td>stage_source_key, whoscored</td><td class="n">11</td></tr>
+                <tr class="a-row"><td>header <span class="mono">dataderby_stage_id</span></td><td class="n">11</td></tr>
+                <tr class="a-row"><td>fact <span class="mono">dataderby_team_id</span></td><td class="n">258 + 258</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">New assertion A24</span>
+              <p>A header whose stage has no mapping row blocks the publish. A genuinely new stage goes through curation first, then publishes.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Headers keep all whoscored_* columns. The canonical id is added, never substituted.</div>
+      </section>
+
+      <!-- 08 flow -->
+      <section class="slide" data-sec="How it runs"
+        data-note="Two speeds. The backfill runs once and is verified by counts. Every publish after that resolves both ids inside the same transaction that already carries the 23 assertions. Readers see nothing change until source two lands.">
+        <div>
+          <p class="kicker"><i></i>How it runs</p>
+          <h2 class="display" style="margin-top:14px">Backfill once.<br>Check on every publish.</h2>
+        </div>
+        <div class="body stack">
+          <div class="chain">
+            <div class="node"><b>Backfill</b><span>221 + 11 rows, once</span></div>
+            <div class="link"></div>
+            <div class="node"><b>Audit</b><span>A23 + A24 on TEMP</span></div>
+            <div class="link"></div>
+            <div class="node"><b>Publish</b><span>same transaction</span></div>
+            <div class="link"></div>
+            <div class="node hot"><b>Read</b><span>canonical join</span></div>
+            <div class="link"></div>
+            <div class="node"><b>Source two</b><span>mapping rows only</span></div>
+          </div>
+          <div class="c2">
+            <table class="tbl compact">
+              <thead><tr><th>Step</th><th>What proves it</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>Backfill dims and keys</td><td>221 teams, 11 stages, zero unmapped facts</td></tr>
+                <tr class="a-row"><td>A23 team mapping present</td><td>unknown team blocks, known team passes</td></tr>
+                <tr class="a-row"><td>A24 stage mapping present</td><td>unknown stage blocks, known stage passes</td></tr>
+                <tr class="a-row"><td>Views join canonical names</td><td>byte-identical output on whoscored-only data</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">Rollback</span>
+              <p>Each migration file is independent. If 007 fails, 006 still stands and facts still publish, because the canonical columns stay nullable until cutover.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">Nullable canonical columns during rollout, NOT NULL after the backfill verifies. No publish blocks on a half-built dim.</div>
+      </section>
+
+      <!-- 09 tests -->
+      <section class="slide" data-sec="Tests"
+        data-note="Every new guarantee gets a test at the level it lives. Constraints get insert tests, assertions get trap tests, the backfill gets count tests, views get equivalence tests. The suite grows from 233, it does not rewrite 233.">
+        <div>
+          <p class="kicker"><i></i>Tests, added with the code</p>
+          <h2 class="display" style="margin-top:14px">Twelve new tests.<br>Zero rewritten.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl tight">
+              <thead><tr><th>Test</th><th>Pins</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td><span class="mono">test_dim_backfill_counts</span></td><td>221 teams, 11 stages from live data</td></tr>
+                <tr class="a-row"><td><span class="mono">test_team_key_uniqueness</span></td><td>duplicate source id rejected</td></tr>
+                <tr class="a-row"><td><span class="mono">test_team_double_mapping</span></td><td>one club, two StatsBomb ids rejected</td></tr>
+                <tr class="a-row"><td><span class="mono">test_stage_key_uniqueness</span></td><td>duplicate stage address rejected</td></tr>
+                <tr class="a-row"><td><span class="mono">test_a23_unknown_team</span></td><td>unmapped team blocks publish</td></tr>
+                <tr class="a-row"><td><span class="mono">test_a24_unknown_stage</span></td><td>unmapped stage blocks publish</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stack">
+            <table class="tbl tight">
+              <thead><tr><th>Test</th><th>Pins</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td><span class="mono">test_views_equivalent</span></td><td>canonical join returns same rows as today</td></tr>
+                <tr class="a-row"><td><span class="mono">test_shared_club_collapses</span></td><td>team 13 has one dim row, two fact rows</td></tr>
+                <tr class="a-row"><td><span class="mono">test_rename_updates</span></td><td>rename path without SCD2</td></tr>
+                <tr class="a-row"><td><span class="mono">test_new_team_curation</span></td><td>promoted club lands via curation</td></tr>
+                <tr class="a-row"><td><span class="mono">test_rollback_006_only</span></td><td>publish works if 007 never ran</td></tr>
+                <tr class="a-row"><td><span class="mono">test_no_fact_rewrite</span></td><td>whoscored_* columns untouched</td></tr>
+              </tbody>
+            </table>
+            <div class="room a-up">
+              <span class="lbl">Deliberately not tested</span>
+              <p>StatsBomb mapping values. No fixture exists yet, so any values would be invented. The constraint tests use synthetic ids.</p>
+            </div>
+          </div>
+        </div>
+        <div class="small">New tests live in tests/test_dims.py and tests/test_dim_assertions.py. Existing 233 stay untouched.</div>
+      </section>
+
+      <!-- 10 perf -->
+      <section class="slide" data-sec="Performance"
+        data-note="The honest perf story. The dims are tiny, the joins are on primary keys, and the backfill runs once. Measure publish time and view time before and after, and refuse any regression above the stated budget.">
+        <div>
+          <p class="kicker"><i></i>Performance measures</p>
+          <h2 class="display" style="margin-top:14px">Tiny tables.<br>Measured joins.</h2>
+        </div>
+        <div class="body c2">
+          <div class="stack">
+            <table class="tbl compact">
+              <thead><tr><th>Measure</th><th>Budget</th><th>How</th></tr></thead>
+              <tbody>
+                <tr class="a-row"><td>Backfill wall time</td><td class="n">&lt; 60 s</td><td>one-off script, 221 + 11 rows</td></tr>
+                <tr class="a-row"><td>Publish p95 delta</td><td class="n">&lt; +5%</td><td>two PK lookups per row inside txn</td></tr>
+                <tr class="a-row"><td><span class="mono">v_latest_*</span> delta</td><td class="n">&lt; +10%</td><td>one extra PK join per view</td></tr>
+                <tr class="a-row"><td>DB file growth</td><td class="n">&lt; +2%</td><td>232 dim rows + 516 id columns</td></tr>
+              </tbody>
+            </table>
+            <p class="body">221 plus 11 rows fit in one DuckDB page each. The joins are primary-key lookups, not scans. If a view regresses past budget, the view definition is wrong, not the idea.</p>
+          </div>
+          <div class="stack">
+            <div class="card a-up"><div class="tag">Baseline first</div><h3>Measure before merging</h3><p>Run the publish and view benchmarks on the current file, commit the numbers, then compare after 006 and 007 land.</p></div>
+            <div class="card a-up"><div class="tag">No new index needed</div><h3>PKs are the index</h3><p>Every new join targets a primary key. No secondary index, no covering trick, nothing to maintain.</p></div>
+          </div>
+        </div>
+        <div class="small">Benchmarks: scripts/bench_dims.py (new), timed on this machine, reported in the implementation report.</div>
+      </section>
+
+      <!-- 11 kpis -->
+      <section class="slide" data-sec="KPIs"
+        data-note="KPIs are the operator's view after rollout. Each one has a query behind it, and each one pages or blocks when it leaves its band. Coverage is the only one that must read 100 percent on day one.">
+        <div>
+          <p class="kicker"><i></i>KPIs, every week</p>
+          <h2 class="display" style="margin-top:14px">Five numbers that say<br>the dims are healthy.</h2>
+        </div>
+        <div class="body stack">
+          <table class="tbl">
+            <thead><tr><th style="width:260px">KPI</th><th style="width:170px">Target</th><th>Query behind it</th></tr></thead>
+            <tbody>
+              <tr class="a-row hi"><td><b>Team mapping coverage</b></td><td class="n"><b>100%</b></td><td>facts with no <span class="mono">team_source_key</span> row = 0</td></tr>
+              <tr class="a-row"><td><b>Stage mapping coverage</b></td><td class="n"><b>100%</b></td><td>headers with no <span class="mono">stage_source_key</span> row = 0</td></tr>
+              <tr class="a-row"><td><b>Unmapped publishes blocked</b></td><td class="n">every one</td><td>A23 + A24 fire before any bad publish lands</td></tr>
+              <tr class="a-row"><td><b>Name drift</b></td><td class="n">0 unreviewed</td><td>fact name vs <span class="mono">dim_team.canonical_name</span> mismatches reviewed weekly</td></tr>
+              <tr class="a-row"><td><b>Freshness unchanged</b></td><td class="n">same age</td><td><span class="mono">v_pipeline_freshness</span> ages within the old band</td></tr>
+            </tbody>
+          </table>
+          <div class="room a-up">
+            <span class="lbl">Day one bar</span>
+            <p>Coverage reads 221 of 221 and 11 of 11 before 006 and 007 are marked done. Anything less is not a partial success, it is an unfinished backfill.</p>
+          </div>
+        </div>
+        <div class="small">Coverage queries ship in the implementation report and run in CI on fixtures, not on the live file.</div>
+      </section>
+
+      <!-- 12 rollout -->
+      <section class="slide" data-sec="Rollout"
+        data-note="Four phases, each shippable on its own. Nothing blocks publishing mid-way, because the canonical columns start nullable and the views keep returning WhoScored columns until cutover. StatsBomb mapping is last, when a real fixture exists.">
+        <div>
+          <p class="kicker"><i></i>Rollout</p>
+          <h2 class="display" style="margin-top:14px">Four phases.<br>Each one shippable.</h2>
+        </div>
+        <div class="body stack">
+          <table class="tbl">
+            <thead><tr><th style="width:120px">Phase</th><th>Ships</th><th style="width:260px">Done means</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td><b>P0</b></td><td>ADR 0011, this deck, report</td><td>shape agreed, no SQL run</td></tr>
+              <tr class="a-row hi"><td><b>P1</b></td><td><span class="mono">sql/006_dim_team.sql</span> + backfill (221 + 221 rows)</td><td>coverage 100%, views byte-identical</td></tr>
+              <tr class="a-row"><td><b>P2</b></td><td><span class="mono">sql/007_dim_stage.sql</span> + A23/A24 + view cutover</td><td>unknown team or stage blocks</td></tr>
+              <tr class="a-row"><td><b>P3</b></td><td>StatsBomb pilot mapping on one league</td><td>one league joins end to end</td></tr>
+            </tbody>
+          </table>
+          <div class="room a-up">
+            <span class="lbl">The rule</span>
+            <p>No phase breaks publishing. Nullable columns first, verification second, NOT NULL last.</p>
+          </div>
+        </div>
+        <div class="small">Files: sql/006_dim_team.sql, sql/007_dim_stage.sql, src/dataderby/dims.py, tests/test_dims.py. One file, one change each.</div>
+      </section>
+
+      <!-- 13 risks -->
+      <section class="slide" data-sec="Risks"
+        data-note="Name the three real risks with their trigger and their answer. Promotion and relegation churn the team list every season. A rename tests the no-SCD2 call. A second source with different stage semantics tests the mapping table. Each has a rehearsed response.">
+        <div>
+          <p class="kicker"><i></i>Risks</p>
+          <h2 class="display" style="margin-top:14px">What breaks, and<br>what answers it.</h2>
+        </div>
+        <div class="body stack">
+          <table class="tbl">
+            <thead><tr><th style="width:300px">Risk</th><th>Trigger</th><th style="width:320px">Answer</th></tr></thead>
+            <tbody>
+              <tr class="a-row"><td><b>Promoted clubs arrive unmapped</b></td><td>new season, new ids</td><td>A23 blocks, curation adds the dim row, publish retries</td></tr>
+              <tr class="a-row"><td><b>A club renames mid-season</b></td><td>fact name vs canonical diverges</td><td>weekly drift query flags it, update lands, SCD2 only if it recurs</td></tr>
+              <tr class="a-row"><td><b>StatsBomb splits a stage</b></td><td>one WhoScored stage, two StatsBomb seasons</td><td>second mapping row, no DDL, views unchanged</td></tr>
+              <tr class="a-row"><td><b>Someone edits a mapping by hand</b></td><td>coverage drops below 100%</td><td>migration ledger pattern: mappings change by script, checksums recorded</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small">None of these touch the fact grain, the assertion vocabulary, or the raw archive.</div>
+      </section>
+
+      <!-- 14 close -->
+      <section class="slide dark" data-sec="Close"
+        data-note="Close on the one sentence to remember. Identity lives in four small tables, observations stay where they are, and the second source arrives as data rather than as a redesign. Name the next artifacts: the two migration files and the implementation report.">
+        <div>
+          <p class="kicker"><i></i>Close</p>
+          <h2 class="display" style="margin-top:14px">Identity in four tables.<br>History untouched.</h2>
+        </div>
+        <div class="body">
+          <div class="c3">
+            <div class="stack">
+              <h3>It gives</h3>
+              <div class="rule"></div>
+              <p class="body">Every club one row, every stage one row.</p>
+              <p class="body">Every source one mapping row, checked by keys.</p>
+              <p class="body">Facts keep their columns and gain one id.</p>
+            </div>
+            <div class="stack">
+              <h3>It keeps</h3>
+              <div class="rule"></div>
+              <p class="body">The fact grain, the keys, the 23 assertions.</p>
+              <p class="body">The raw archive as the system of record.</p>
+              <p class="body">Byte-identical views until source two.</p>
+            </div>
+            <div class="stack">
+              <h3>Next</h3>
+              <div class="rule"></div>
+              <p class="body mono" style="font-size:13.5px">sql/006_dim_team.sql<br>sql/007_dim_stage.sql<br>src/dataderby/dims.py<br>tests/test_dims.py</p>
+              <p class="body" style="font-size:14px">ADR 0011 decides the shape. P1 builds team, P2 builds stage.</p>
+            </div>
+          </div>
+          <p class="pull" style="margin-top:64px">A second source should arrive<br>as <b>data, not a redesign.</b></p>
+        </div>
+        <div class="small">Plan report: <a href="../reports/dim-tables-plan.md" style="color:inherit;border-bottom:1px solid currentColor;text-decoration:none">docs/reports/dim-tables-plan.md</a> &middot; shape: <a href="../adr/0011-team-stage-dimensions.md" style="color:inherit;border-bottom:1px solid currentColor;text-decoration:none">ADR 0011</a> &middot; counts from data/dataderby.duckdb, 27 Oct 2026</div>
+      </section>
+
+    </div><!-- /slides -->
+
+    <div id="nav">
+      <button id="prev" aria-label="Previous">&larr;</button>
+      <button id="next" aria-label="Next">&rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div id="notes">
+  <span class="lbl">Talking point</span>
+  <p id="noteText"></p>
+  <span class="hint">N to close</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const chrome  = document.getElementById('chrome');
+  const secLbl  = document.getElementById('secLabel');
+  const pageNum = document.getElementById('pageNum');
+  const clock   = document.getElementById('clockFill');
+  const noteBox = document.getElementById('notes');
+  const noteTxt = document.getElementById('noteText');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let i = 0, busy = false, tl = null;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+  stage.style.position = 'absolute';
+  stage.style.left = '50%';
+  stage.style.top = '50%';
+
+  function fmt(v, dec) { return dec ? v.toFixed(+dec) : String(Math.round(v)); }
+
+  function animate(slide) {
+    if (tl) tl.kill();
+    if (reduced || !window.gsap) {
+      slide.querySelectorAll('.l > span').forEach(e => e.style.transform = 'none');
+      slide.querySelectorAll('.a-up,.a-fade,.a-row,.stamp').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; });
+      slide.querySelectorAll('[data-count]').forEach(e => e.textContent = fmt(+e.dataset.count, e.dataset.dec));
+      return;
+    }
+
+    tl = gsap.timeline();
+
+    const lines = slide.querySelectorAll('.l > span');
+    if (lines.length) {
+      gsap.set(lines, { yPercent: 112 });
+      tl.to(lines, { yPercent: 0, duration: .85, stagger: .09, ease: 'power3.out' }, 0);
+    }
+
+    const nodes = slide.querySelectorAll('.chain .node');
+    if (nodes.length) {
+      gsap.set(nodes, { opacity: 0, y: 12 });
+      tl.to(nodes, { opacity: 1, y: 0, duration: .45, stagger: .08, ease: 'power2.out' }, .1);
+    }
+    const links = slide.querySelectorAll('.chain .link');
+    if (links.length) {
+      gsap.set(links, { scaleX: 0, transformOrigin: 'left center' });
+      tl.to(links, { scaleX: 1, duration: .45, stagger: .08, ease: 'power2.out' }, .18);
+    }
+
+    const ups = slide.querySelectorAll('.a-up');
+    if (ups.length) {
+      gsap.set(ups, { y: 22, opacity: 0 });
+      tl.to(ups, { y: 0, opacity: 1, duration: .62, stagger: .055, ease: 'power2.out' }, .12);
+    }
+
+    const rows = slide.querySelectorAll('.a-row');
+    if (rows.length) {
+      gsap.set(rows, { opacity: 0, y: 8 });
+      tl.to(rows, { opacity: 1, y: 0, duration: .35, stagger: .035, ease: 'power1.out' }, .2);
+    }
+
+    const fades = slide.querySelectorAll('.a-fade');
+    if (fades.length) {
+      gsap.set(fades, { opacity: 0 });
+      tl.to(fades, { opacity: 1, duration: .5, stagger: .05 }, .35);
+    }
+
+    const stamps = slide.querySelectorAll('.stamp');
+    if (stamps.length) {
+      gsap.set(stamps, { opacity: 0, scale: 1.5 });
+      tl.to(stamps, { opacity: 1, scale: 1, duration: .55, ease: 'back.out(2)' }, .55);
+    }
+
+    slide.querySelectorAll('[data-count]').forEach(el => {
+      const target = +el.dataset.count, dec = el.dataset.dec;
+      const obj = { v: 0 };
+      el.textContent = fmt(0, dec);
+      tl.to(obj, {
+        v: target, duration: 1.15, ease: 'power2.out',
+        onUpdate: () => { el.textContent = fmt(obj.v, dec); }
+      }, .25);
+    });
+  }
+
+  function setChrome(slide) {
+    const sec = slide.dataset.sec || '';
+    secLbl.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> &nbsp; ' + sec;
+    pageNum.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    clock.style.width = ((i + 1) / slides.length * 100) + '%';
+    chrome.classList.toggle('off', slide.dataset.chrome === 'off');
+    document.body.classList.toggle('dark', slide.classList.contains('dark'));
+    noteTxt.textContent = slide.dataset.note || '';
+  }
+
+  function show(n, runAnim) {
+    slides.forEach((s, k) => s.classList.toggle('on', k === n));
+    setChrome(slides[n]);
+    if (runAnim) animate(slides[n]);
+  }
+
+  function go(to) {
+    if (busy || to < 0 || to >= slides.length || to === i) return;
+    busy = true;
+    const from = slides[i];
+    const next = slides[to];
+    i = to;
+
+    if (reduced || !window.gsap) { show(i, true); busy = false; return; }
+
+    if (tl) tl.kill();
+    gsap.killTweensOf([from, next]);
+
+    next.classList.add('on');
+    gsap.set(next, { opacity: 0 });
+    gsap.set(from, { opacity: 1 });
+
+    gsap.timeline({ onComplete: () => { busy = false; } })
+      .to(from, { opacity: 0, duration: .24, ease: 'power1.in' }, 0)
+      .add(() => { setChrome(next); animate(next); }, .12)
+      .to(next, { opacity: 1, duration: .42, ease: 'power1.out' }, .12)
+      .add(() => {
+        from.classList.remove('on');
+        gsap.set(from, { clearProps: 'opacity' });
+        gsap.set(next, { clearProps: 'opacity' });
+      });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' || e.key === 'N') { noteBox.classList.toggle('on'); return; }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+
+  show(0, false);
+  setTimeout(() => animate(slides[0]), 100);
+})();
+</script>
+</body>
+</html>

@@ -38,6 +38,8 @@ Reports for a single change that is not a build phase.
 | V1 gate | [V1 gate](v1-gate.md) | complete |
 | SQL and schema (deck) | [Companion slides](../slides/sql-schema-slides.html) | complete |
 | SQL schema slides refresh | [Tables slide, highlighting, counts](sql-schema-slides-refresh.md) | complete |
+| Dims plan | [Team + stage dims plan](dim-tables-plan.md) | proposed |
+| Dim team P1 | [006, backfill, archived split](dim-team-p1.md) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.

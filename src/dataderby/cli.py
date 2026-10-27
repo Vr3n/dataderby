@@ -108,8 +108,13 @@ def _lock_path(settings: Settings) -> Path:
 
 
 def _keys(settings: Settings, key: str | None) -> list[str]:
+    """Return the stage keys one command should touch.
+
+    An explicit key always resolves, even for an archived stage, so one-shot
+    backfills keep working. No key means the polling set: active stages only.
+    """
     if key is None:
-        return sorted(settings.stages)
+        return sorted(name for name, spec in settings.stages.items() if spec.active)
     if key not in settings.stages:
         available = ", ".join(sorted(settings.stages))
         raise ConfigError(f"unknown stage {key!r}; configured: {available}")
@@ -189,12 +194,40 @@ def _build_parser() -> argparse.ArgumentParser:
         help="check this snapshot id instead of the newest (must be the newest to compare)",
     )
 
+    dims = sub.add_parser("dims", help="canonical team identity maintenance")
+    with_config(dims)
+    dims.add_argument("action", choices=["backfill"])
+
     return parser
+
+
+def _dims_backfill(settings: Settings, out: TextIO) -> Exit:
+    """Insert canonical team rows for every unmapped fact team."""
+    from dataderby.dims import backfill_team_dims, unmapped_teams
+
+    if not settings.db_path.exists():
+        raise ConfigError(f"database does not exist: {settings.db_path}")
+    with exclusive_lock(_lock_path(settings)):
+        con = connect(settings.db_path)
+        try:
+            migrate(con)
+            before = unmapped_teams(con)
+            added = backfill_team_dims(con)
+            after = unmapped_teams(con)
+        finally:
+            con.close()
+    _say(out, f"dim_team: {added.teams} teams, {added.mappings} mappings added")
+    if after:
+        _say(out, f"unmapped teams remaining: {len(after)}")
+        return Exit.INTERNAL
+    _say(out, f"coverage: 100% ({len(before)} teams mapped)")
+    return Exit.OK
 
 
 def _stages_list(settings: Settings, out: TextIO) -> Exit:
     header = (
-        f"{'KEY':24} {'COMPETITION':22} {'SEASON':10} {'STAGE':12} {'TEAMS':>5} {'STAGE_ID':>8}"
+        f"{'KEY':24} {'COMPETITION':22} {'SEASON':10} {'STAGE':12} "
+        f"{'TEAMS':>5} {'STAGE_ID':>8} {'ACTIVE':>6}"
     )
     _say(out, header)
     for key in sorted(settings.stages):
@@ -202,7 +235,8 @@ def _stages_list(settings: Settings, out: TextIO) -> Exit:
         _say(
             out,
             f"{spec.key:24} {spec.competition:22} {spec.season_key:10} "
-            f"{spec.stage:12} {spec.expected_teams:5} {spec.whoscored_stage_id:8}",
+            f"{spec.stage:12} {spec.expected_teams:5} {spec.whoscored_stage_id:8} "
+            f"{'yes' if spec.active else 'no':>6}",
         )
     return Exit.OK
 
@@ -239,6 +273,18 @@ def _freshness(
         ).fetchall()
     finally:
         con.close()
+
+    if check:
+        active = {
+            (
+                spec.whoscored_tournament_id,
+                spec.whoscored_season_id,
+                spec.whoscored_stage_id,
+            )
+            for spec in settings.stages.values()
+            if spec.active
+        }
+        rows = [row for row in rows if (row[0], row[1], row[2]) in active]
 
     evaluated = evaluate_freshness(rows, max_age_seconds=max_age_hours * 3600) if check else ()
     by_stage = {
@@ -898,6 +944,8 @@ def dispatch(args: argparse.Namespace, runtime: Runtime, out: TextIO) -> Exit:
         return _probe(settings, args.stage, runtime, out)
     if args.command == "drift":
         return _drift(settings, args.stage, args.snapshot, out)
+    if args.command == "dims":
+        return _dims_backfill(settings, out)
     raise ConfigError(f"unknown command: {args.command}")
 
 

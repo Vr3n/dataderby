@@ -212,6 +212,26 @@
   .dark .code{background:rgba(242,237,227,.06);color:#CFC8B8;border-left-color:#F06A5A}
   .code b{color:var(--red);font-weight:500}
   .dark .code b{color:#F06A5A}
+  /* SQL syntax highlight: keywords navy, types green, strings amber, comments muted */
+  .code .kw{color:var(--navy);font-weight:600}
+  .dark .code .kw{color:#9DB8E8}
+  .code .ty{color:var(--green);font-weight:500}
+  .dark .code .ty{color:#6FC69A}
+  .code .str{color:var(--amber)}
+  .code .num{color:var(--red)}
+  .dark .code .num{color:#F06A5A}
+  .code .cm{color:var(--muted);font-style:italic}
+  /* table 05: column chips make stored columns scannable */
+  .cols{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+  .cols span{font-family:var(--mono);font-size:10.5px;line-height:1.5;
+    background:rgba(20,22,26,.06);border:1px solid var(--line);
+    padding:1px 6px;border-radius:20px;white-space:nowrap}
+  .snap-ex{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:0;align-items:stretch;margin-top:4px}
+  .snap-ex .cell{border:1.5px solid var(--ink);background:rgba(255,255,255,.5);
+    padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.55}
+  .snap-ex .cell b{display:block;font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+  .snap-ex .cell .n{font-size:19px;font-weight:600}
+  .snap-ex .plus{align-self:center;padding:0 8px;font-family:var(--mono);font-size:15px;color:var(--muted)}
 
   /* key-value list: term / meaning */
   .kv{border-top:1px solid var(--line);display:grid;grid-template-columns:200px 1fr}
@@ -314,13 +334,13 @@
           <p class="standfirst">Seven tables and eight views that answer those three questions
             about one football season. Every choice here has a rejected alternative, and a
             reason you can check.</p>
-          <p class="byline">For a SQL engineer, a data engineer, and the person learning the schema &middot; 216 tests</p>
+          <p class="byline">For a SQL engineer, a data engineer, and the person learning the schema &middot; 233 tests</p>
         </div>
         <div class="cover-stats">
           <div class="stat"><div class="v" data-count="7">0</div><div class="k">tables</div></div>
-          <div class="stat"><div class="v" data-count="7">0</div><div class="k">views</div></div>
-          <div class="stat"><div class="v" data-count="22">0</div><div class="k">assertion definitions</div></div>
-          <div class="stat"><div class="v" data-count="216">0</div><div class="k">tests</div></div>
+          <div class="stat"><div class="v" data-count="8">0</div><div class="k">views</div></div>
+          <div class="stat"><div class="v" data-count="23">0</div><div class="k">assertion definitions</div></div>
+          <div class="stat"><div class="v" data-count="233">0</div><div class="k">tests</div></div>
         </div>
       </section>
 
@@ -333,31 +353,27 @@
         </div>
         <div class="body c2">
           <div class="stack">
-            <p class="body">The source publishes no timestamp in the page, the JSON feed, or the
-              response headers. One sweep is twelve requests, not one instant. And a re-fetch can
-              return exactly the bytes we already have.</p>
-            <p class="body">So the warehouse stores an <b>observation</b>, not a value: a header row
-              that says when, a fingerprint that says what, and facts that say which teams.</p>
-            <p class="body">Each of the seven tables answers one of those questions. Nothing is
-              stored that cannot be checked by a constraint, a key, or a query that returns bad rows.</p>
+            <p class="body">WhoScored prints no timestamp. Not on the page, not in the nine team feeds, not in the three standings feeds, not in the headers. One sweep is thirteen requests, and the first byte and the last byte arrive seconds apart. A re-fetch can return exactly the bytes we already hold.</p>
+            <p class="body">So the warehouse stores an <b>observation</b>. One header row says when the sweep started and how long it took. One fingerprint says what the sweep contained. Twenty plus twenty fact rows say what each team did.</p>
+            <p class="body">Each table holds one of those pieces. A key, a constraint, or a query checks every piece, so no reader has to trust the loader.</p>
             <div class="room a-up">
               <span class="lbl">The claim</span>
-              <p>The schema is not a container for numbers. It is the argument that the numbers are comparable.</p>
+              <p>Comparable numbers need a shared clock and a shared fingerprint. This schema stores both.</p>
             </div>
           </div>
           <div class="kv">
             <div class="k">What</div>
-            <div class="v">60 measures per team in the feed, 30 more in the league table, one row per team per observation.</div>
+            <div class="v">60 performance measures per team plus 30 league-table measures, one row per team per observation. Example: Brighton, 23 goals in <span class="mono">fact_team_snapshot</span>, 16 points in <span class="mono">fact_standings_snapshot</span>.</div>
             <div class="k">When</div>
-            <div class="v"><span class="mono">observed_at</span> is the earliest capture in the sweep; <span class="mono">capture_span_seconds</span> says how long the sweep took.</div>
+            <div class="v"><span class="mono">observed_at</span> is the first capture time in the sweep; <span class="mono">capture_span_seconds</span> is the gap to the last capture. The live EPL row spans 18.9 seconds.</div>
             <div class="k">Same?</div>
-            <div class="v"><span class="mono">content_fingerprint</span> is a SHA-256 of the canonical rows. Equal fingerprints mean one observation, not two.</div>
+            <div class="v"><span class="mono">content_fingerprint</span> is a SHA-256 over the canonical rows. The same bytes give the same hash, so a re-fetch publishes nothing new.</div>
             <div class="k">Why it holds</div>
-            <div class="v">A key, a constraint, and a transaction each answer a question the loader could forget to ask.</div>
+            <div class="v">The header carries the clock, the facts carry the foreign key, and one transaction carries all 41 rows. Each part has an owner.</div>
           </div>
           <div class="room a-up" style="grid-column:1/-1">
             <span class="lbl">One example</span>
-            <p>Twenty teams, 60 measures each, captured between 10:00:00 and 10:00:14 UTC. The header stores that instant and the 14-second span; the facts store no time at all; the fingerprint decides whether this sweep is already in the table.</p>
+            <p>Twenty teams, 60 performance measures each, captured over 18.9 seconds on 26 October. The header stores that start time and that span. The forty fact rows store no time. The fingerprint decides whether the next sweep is new data or the same bytes again.</p>
           </div>
         </div>
         <div class="small">Three questions, asked of every row. The next two pages define every word used to answer them.</div>
@@ -374,19 +390,19 @@
           <table class="tbl gloss">
             <thead><tr><th style="width:190px">Term</th><th>What it means here</th></tr></thead>
             <tbody>
-              <tr class="a-row"><td><b>Grain</b></td><td>What one row means. <span class="mono">fact_team_snapshot</span> is one team in one snapshot; a table has exactly one grain.</td></tr>
-              <tr class="a-row"><td><b>Primary key</b></td><td>The column or pair that makes a row unique. <span class="mono">(snapshot_id, whoscored_team_id)</span> is the fact tables' primary key.</td></tr>
-              <tr class="a-row"><td><b>Natural key</b></td><td>A key built from values that already exist. The stage address <span class="mono">(tournament, season, stage, observed_at)</span> is natural.</td></tr>
-              <tr class="a-row"><td><b>Surrogate key</b></td><td>A value invented to name a row. <span class="mono">snapshot_id</span> is one: it carries no meaning and is never reused.</td></tr>
-              <tr class="a-row"><td><b>Foreign key</b></td><td>A column that must match a key in another table. A fact row's <span class="mono">snapshot_id</span> must exist in the header.</td></tr>
-              <tr class="a-row"><td><b>UNIQUE</b></td><td>A constraint that no two rows share the listed values. The header has two, doing different jobs.</td></tr>
-              <tr class="a-row"><td><b>CHECK</b></td><td>A per-row rule the database evaluates on insert. <span class="mono">CHECK (apps_overall &gt;= 0)</span> rejects a negative count.</td></tr>
-              <tr class="a-row"><td><b>NOT NULL</b></td><td>The column must have a value. <span class="mono">parent_snapshot_id</span> is NOT NULL because NULL would break its UNIQUE.</td></tr>
+              <tr class="a-row"><td><b>Grain</b></td><td>What one row stands for. One row of <span class="mono">fact_team_snapshot</span> is one team in one snapshot. Brighton in the EPL snapshot is one row, Liverpool is another.</td></tr>
+              <tr class="a-row"><td><b>Primary key</b></td><td>The columns that make a row unique. <span class="mono">(snapshot_id, whoscored_team_id)</span> means the same team can appear twice only under two snapshots, never twice in one.</td></tr>
+              <tr class="a-row"><td><b>Natural key</b></td><td>A key the source already gives you. Tournament 2, season 11141, stage 25544, plus <span class="mono">observed_at</span>, names the EPL observation without inventing anything.</td></tr>
+              <tr class="a-row"><td><b>Surrogate key</b></td><td>A name the pipeline invents. <span class="mono">snap_d90c...</span> means nothing, and facts join on it because it is short and stable.</td></tr>
+              <tr class="a-row"><td><b>Foreign key</b></td><td>A column that must match a row elsewhere. Every fact's <span class="mono">snapshot_id</span> must match a header row, or the database rejects the insert.</td></tr>
+              <tr class="a-row"><td><b>UNIQUE</b></td><td>A rule that forbids duplicates. The header has two. One stops two snapshots claiming one instant. The other stops one parent holding the same content twice.</td></tr>
+              <tr class="a-row"><td><b>CHECK</b></td><td>A per-row test at insert time. <span class="mono">CHECK (apps_overall &gt;= 0)</span> rejects a negative appearance count and lets NULL through, because a missing value is not a negative one.</td></tr>
+              <tr class="a-row"><td><b>NOT NULL</b></td><td>The column must hold a value. <span class="mono">parent_snapshot_id</span> defaults to <span class="mono">'genesis'</span> and stays NOT NULL, because two NULLs never count as equal in a UNIQUE index.</td></tr>
             </tbody>
           </table>
           <div class="room a-up">
             <span class="lbl">Grain first</span>
-            <p>Two grains in one table cannot be repaired by a query later. That is why the header, the team facts and the table facts are three tables, not one.</p>
+            <p>Mixing two kinds of rows in one table breaks every query downstream. That is why the clock lives in the header, performance lives in <span class="mono">fact_team_snapshot</span>, and league-table state lives in <span class="mono">fact_standings_snapshot</span>.</p>
           </div>
         </div>
         <div class="small">Eight words. The next page has ten more, about history.</div>
@@ -403,16 +419,16 @@
           <table class="tbl gloss2">
             <thead><tr><th style="width:190px">Term</th><th>What it means here</th></tr></thead>
             <tbody>
-              <tr class="a-row"><td><b>Snapshot</b></td><td>One complete observation of one stage at one moment. Stored, never edited; a new observation is a new snapshot.</td></tr>
-              <tr class="a-row"><td><b>Append-only</b></td><td>Rows are added; existing history is never updated or deleted. A correction is a new row.</td></tr>
-              <tr class="a-row"><td><b>SCD2</b></td><td>Slowly changing dimension, type 2: one row per version with <span class="mono">valid_from</span>, <span class="mono">valid_to</span> and an <span class="mono">is_current</span> flag. The alternative to append-only snapshots.</td></tr>
-              <tr class="a-row"><td><b>EAV / long</b></td><td>Entity-attribute-value: one row per measure instead of one column per measure. Flexible, and every query has to pivot.</td></tr>
-              <tr class="a-row"><td><b>Materialized view</b></td><td>A view whose result is stored on disk, so it must be refreshed. This project uses plain views: they store nothing.</td></tr>
-              <tr class="a-row"><td><b>Fingerprint</b></td><td>A SHA-256 over the canonical rows. Equal fingerprints mean equal content, whatever the order or formatting.</td></tr>
-              <tr class="a-row"><td><b>Assertion</b></td><td>A SQL query that returns offending rows. Zero rows means it passed. 21 numbered rules, plus one companion warn.</td></tr>
-              <tr class="a-row"><td><b>Transaction</b></td><td>Statements that commit together or not at all: <span class="mono">BEGIN</span>, then <span class="mono">COMMIT</span>, and <span class="mono">ROLLBACK</span> on failure.</td></tr>
-              <tr class="a-row"><td><b>Write-audit-publish</b></td><td>Write the raw evidence, audit the candidate, then publish. The warehouse is written only after the audit passes.</td></tr>
-              <tr class="a-row"><td><b>TOCTOU</b></td><td>Time-of-check to time-of-use: a rule checked before a write can be false by the time the write happens.</td></tr>
+              <tr class="a-row"><td><b>Snapshot</b></td><td>One finished observation of one stage. The EPL snapshot is 1 header plus 40 fact rows with one shared <span class="mono">snapshot_id</span>. Nothing edits it afterwards.</td></tr>
+              <tr class="a-row"><td><b>Append-only</b></td><td>New rows only. A correction is a second snapshot with a later <span class="mono">observed_at</span>, not an UPDATE.</td></tr>
+              <tr class="a-row"><td><b>SCD2</b></td><td>Slowly changing dimension, type 2: one row per version with <span class="mono">valid_from</span>, <span class="mono">valid_to</span>, <span class="mono">is_current</span>. This project rejected it, because a late correction would rewrite published history.</td></tr>
+              <tr class="a-row"><td><b>EAV / long</b></td><td>Entity-attribute-value: one row per measure. For this warehouse that is 1,800 rows per snapshot instead of 40, and every read becomes a pivot.</td></tr>
+              <tr class="a-row"><td><b>Materialized view</b></td><td>A view the database stores on disk and must refresh. This project uses plain views. <span class="mono">v_latest_team_state</span> runs its query on every read.</td></tr>
+              <tr class="a-row"><td><b>Fingerprint</b></td><td>A SHA-256 over the canonical rows. The live EPL hash starts <span class="mono">ddd50026...</span>. Same bytes, same hash, no second snapshot.</td></tr>
+              <tr class="a-row"><td><b>Assertion</b></td><td>A query that must return zero rows. A1 checks the team count, A19 checks the points arithmetic. Any row back is a failed publish, plus the offending teams.</td></tr>
+              <tr class="a-row"><td><b>Transaction</b></td><td>All or nothing. The header, the 40 facts, the checkpoint, and the run outcome commit in one <span class="mono">BEGIN</span> to <span class="mono">COMMIT</span>. A crash mid-write keeps nothing.</td></tr>
+              <tr class="a-row"><td><b>Write-audit-publish</b></td><td>The order of work. Raw bytes land first, the 23 assertions run on TEMP copies, and the warehouse changes only after every check passes.</td></tr>
+              <tr class="a-row"><td><b>TOCTOU</b></td><td>Time-of-check to time-of-use. Checking first and inserting later leaves a gap where a second writer slips in. <span class="mono">ON CONFLICT DO NOTHING</span> closes it by deciding inside the insert.</td></tr>
             </tbody>
           </table>
           <div class="room a-up">
@@ -425,35 +441,44 @@
 
       <!-- 05 seven tables -->
       <section class="slide" data-sec="The shape"
-        data-note="Read the grain column aloud; it is the whole design. Four tables describe the pipeline's behaviour, three describe the data. Point out that the seventh table is not in 001_schema.sql: the migration ledger creates itself in db.py, because it has to exist before any SQL file runs. The small print names the two links that are values, not constraints, so nobody assumes the diagram over-promises.">
+        data-note="Read the grain aloud: each table holds exactly one kind of row. The first two tables record the attempt, the header records the accepted observation, the next two hold the numbers consumers read, and the last two record pipeline state and schema state. A snapshot is one header plus its facts: 1 + 20 + 20 rows for a 20-team league. The ledger table is created by db.migrate before any SQL file runs.">
         <div>
           <p class="kicker"><i></i>Seven tables</p>
-          <h2 class="display" style="margin-top:14px">Seven tables, seven jobs.<br>No table does two.</h2>
+          <h2 class="display" style="margin-top:14px">Seven tables, seven jobs.<br>Read the grain, then the columns.</h2>
         </div>
         <div class="body stack">
+          <div class="snap-ex a-up" aria-label="One snapshot is one header plus forty fact rows">
+            <div class="cell"><b>snapshot =</b><span class="n">1</span><br>header<br><span class="mono">competition_snapshot</span></div>
+            <div class="plus">+</div>
+            <div class="cell"><b>performance</b><span class="n">20</span><br>one row per team<br><span class="mono">fact_team_snapshot</span></div>
+            <div class="plus">+</div>
+            <div class="cell"><b>league table</b><span class="n">20</span><br>one row per team<br><span class="mono">fact_standings_snapshot</span></div>
+            <div class="plus">=</div>
+            <div class="cell"><b>one observation</b><span class="n">41 rows</span><br>same snapshot_id<br>on all 41</div>
+          </div>
           <table class="tbl compact">
-            <thead><tr><th style="width:250px">Table</th><th style="width:340px">One row is</th><th style="width:300px">Key</th><th>Why it exists</th></tr></thead>
+            <thead><tr><th style="width:210px">Table</th><th style="width:230px">One row means</th><th style="width:210px">Key</th><th>Principal columns it stores</th></tr></thead>
             <tbody>
-              <tr class="a-row"><td><span class="mono">ingestion_run</span></td><td>one attempt to capture a stage</td><td><span class="mono">run_id</span></td><td>says what happened to the attempt, even when nothing was published</td></tr>
-              <tr class="a-row"><td><span class="mono">raw_capture</span></td><td>one archived payload from a run</td><td><span class="mono">(run_id, section, view)</span></td><td>proves which bytes were read: path, SHA-256, byte count</td></tr>
-              <tr class="a-row"><td><span class="mono">competition_snapshot</span></td><td>one accepted observation of one stage</td><td><span class="mono">snapshot_id</span></td><td>the header: when, what, from where, after which</td></tr>
-              <tr class="a-row"><td><span class="mono">fact_team_snapshot</span></td><td>one team in one snapshot</td><td><span class="mono">(snapshot_id, whoscored_team_id)</span></td><td>the 60 team measures, three splits</td></tr>
-              <tr class="a-row"><td><span class="mono">fact_standings_snapshot</span></td><td>one team's league-table row</td><td><span class="mono">(snapshot_id, whoscored_team_id)</span></td><td>the 30 table measures; zero rows when a stage has no table</td></tr>
-              <tr class="a-row"><td><span class="mono">pipeline_checkpoint</span></td><td>one stage address</td><td><span class="mono">(tournament, season, stage)</span></td><td>last outcome, last fingerprint, attempt and abandoned counts</td></tr>
-              <tr class="a-row"><td><span class="mono">schema_migration</span></td><td>one applied SQL file</td><td><span class="mono">version</span> (the file name)</td><td>the ledger: refuses an edited or missing file</td></tr>
+              <tr class="a-row"><td><span class="mono">ingestion_run</span></td><td>one attempt to capture a stage, published or not</td><td><span class="mono">run_id</span></td><td>outcome (7 values), started / finished at, stage ids, observed_at, http_requests, error_code<div class="cols"><span>outcome</span><span>started_at</span><span>stage ids</span></div></td></tr>
+              <tr class="a-row"><td><span class="mono">raw_capture</span></td><td>one archived payload read from the source</td><td><span class="mono">(run_id, section, view)</span></td><td>file path, SHA-256, byte count, captured_at, attempt<div class="cols"><span>path</span><span>sha256</span><span>byte_count</span></div></td></tr>
+              <tr class="a-row hi"><td><b><span class="mono">competition_snapshot</span></b></td><td><b>one accepted observation of one stage (the header)</b></td><td><span class="mono">snapshot_id</span> + 2 UNIQUEs</td><td>stage address, fingerprint, observed / accepted at, span, provenance<div class="cols"><span>observed_at</span><span>fingerprint</span><span>parent_id</span><span>run_id</span></div></td></tr>
+              <tr class="a-row hi"><td><b><span class="mono">fact_team_snapshot</span></b></td><td><b>one team's performance in one snapshot</b></td><td><span class="mono">(snapshot_id, team_id)</span> + FK</td><td>60 performance measures: apps, rating, shots, summary, defensive, offensive, rankings x overall/home/away<div class="cols"><span>rating_*</span><span>summary_*</span><span>defensive_*</span><span>offensive_*</span></div></td></tr>
+              <tr class="a-row hi"><td><b><span class="mono">fact_standings_snapshot</span></b></td><td><b>one team's league-table row in one snapshot</b></td><td><span class="mono">(snapshot_id, team_id)</span> + FK</td><td>30 league-table measures: rank, played, W/D/L, goals, GD, points, form x overall/home/away<div class="cols"><span>rank_*</span><span>points_*</span><span>form_*</span><span>W/D/L</span></div></td></tr>
+              <tr class="a-row"><td><span class="mono">pipeline_checkpoint</span></td><td>current state of one stage address, not history</td><td><span class="mono">(tournament, season, stage)</span></td><td>last snapshot id, last fingerprint, probe / success times, outcome, counters<div class="cols"><span>last_outcome</span><span>attempt_count</span></div></td></tr>
+              <tr class="a-row"><td><span class="mono">schema_migration</span></td><td>one applied SQL file (the ledger)</td><td><span class="mono">version</span> = file name</td><td>checksum, applied_at; refuses an edited or missing file<div class="cols"><span>checksum</span><span>applied_at</span></div></td></tr>
             </tbody>
           </table>
           <div class="room a-up">
-            <span class="lbl">Read the grain</span>
-            <p>The two fact tables are the only tables a consumer reads. The other five explain how those rows got there, and whether to trust them.</p>
+            <span class="lbl">How to read it</span>
+            <p>Consumers read the two highlighted fact tables, joined to the header for competition and time. The other four tables record how those rows were obtained and whether they can be trusted.</p>
           </div>
         </div>
-        <div class="small">Six tables come from <span class="mono">sql/001_schema.sql</span>; the ledger is created by <span class="mono">db.migrate()</span> before it reads the folder. Two links are values, not constraints: <span class="mono">raw_capture.run_id</span> and <span class="mono">competition_snapshot.run_id</span> declare no foreign key.</div>
+        <div class="small">Six tables come from <span class="mono">sql/001_schema.sql</span>; the ledger is created by <span class="mono">db.migrate()</span> first. <span class="mono">raw_capture.run_id</span> and <span class="mono">competition_snapshot.run_id</span> are matching values, not foreign keys.</div>
       </section>
 
       <!-- 06 er diagram -->
       <section class="slide" data-sec="The shape"
-        data-note="Walk the arrows, not the boxes. The solid arrows are the two declared foreign keys: every fact row must have a header. The dashed lines are matching values with no constraint, which is honest rather than hidden. The header is the only table the facts point at, and it is the only place time is recorded. Everything else is a ledger around that centre.">
+        data-note="Start at the centre box. The header holds the only clock and the only fingerprint. The two fact tables point at it with foreign keys, and every competition question joins through that id. The dashed lines are plain values with no constraint, and the diagram draws them dashed so nobody mistakes them for guarantees.">
         <div>
           <p class="kicker"><i></i>The shape</p>
           <h2 class="display" style="margin-top:14px">One header, two facts,<br>four ledgers.</h2>
@@ -554,22 +579,19 @@
         </div>
         <div class="body c2">
           <div class="stack">
-            <div class="code">CREATE TABLE competition_snapshot (
-  snapshot_id           VARCHAR PRIMARY KEY,
-  parent_snapshot_id    VARCHAR NOT NULL
-      DEFAULT 'genesis',
-  whoscored_tournament_id INTEGER NOT NULL
-      CHECK (whoscored_tournament_id &gt; 0),
-  whoscored_season_id   INTEGER NOT NULL,
-  whoscored_stage_id    INTEGER NOT NULL,
-  content_fingerprint   VARCHAR NOT NULL,
-  observed_at           TIMESTAMPTZ NOT NULL,
-  accepted_at           TIMESTAMPTZ NOT NULL,
-  capture_span_seconds  DOUBLE NOT NULL
-      CHECK (capture_span_seconds &gt;= 0),
-  run_id                VARCHAR NOT NULL,
-  UNIQUE (parent_snapshot_id, content_fingerprint),
-  UNIQUE (whoscored_tournament_id, whoscored_season_id,
+            <div class="code"><span class="kw">CREATE TABLE</span> competition_snapshot (
+  snapshot_id           <span class="ty">VARCHAR</span> <span class="kw">PRIMARY KEY</span>,
+  parent_snapshot_id    <span class="ty">VARCHAR</span> <span class="kw">NOT NULL DEFAULT</span> <span class="str">'genesis'</span>,
+  whoscored_tournament_id <span class="ty">INTEGER NOT NULL CHECK</span> (whoscored_tournament_id &gt; <span class="num">0</span>),
+  whoscored_season_id   <span class="ty">INTEGER NOT NULL</span>,
+  whoscored_stage_id    <span class="ty">INTEGER NOT NULL</span>,
+  content_fingerprint   <span class="ty">VARCHAR NOT NULL</span>,
+  observed_at           <span class="ty">TIMESTAMPTZ NOT NULL</span>  <span class="cm">-- when seen: orders history</span>,
+  accepted_at           <span class="ty">TIMESTAMPTZ NOT NULL</span>  <span class="cm">-- when stored: audit only</span>,
+  capture_span_seconds  <span class="ty">DOUBLE NOT NULL CHECK</span> (capture_span_seconds &gt;= <span class="num">0</span>),
+  run_id                <span class="ty">VARCHAR NOT NULL</span>,
+  <span class="kw">UNIQUE</span> (parent_snapshot_id, content_fingerprint),
+  <span class="kw">UNIQUE</span> (whoscored_tournament_id, whoscored_season_id,
           whoscored_stage_id, observed_at)
 );</div>
             <p class="small"><span class="mono">TIMESTAMPTZ</span> is the short spelling of
@@ -581,19 +603,19 @@
           </div>
           <div class="kv">
             <div class="k">snapshot_id</div>
-            <div class="v">Opaque name, minted by the publisher. The facts join on this and nothing else.</div>
+            <div class="v"><span class="mono">snap_d90c...</span> in the live file. Opaque text, invented once per accepted sweep. Both fact tables join on it.</div>
             <div class="k">parent_snapshot_id</div>
-            <div class="v">Previous accepted snapshot for the same stage, or <span class="mono">'genesis'</span>. It makes the history an edge, not just a list.</div>
+            <div class="v">The previous accepted snapshot for the same stage, or <span class="mono">'genesis'</span> for the first one. This edge turns a list of snapshots into a chain you can walk.</div>
             <div class="k">observed_at</div>
-            <div class="v">Earliest capture time in the sweep. <b>This</b> orders history and picks "latest".</div>
+            <div class="v">When the sweep started, taken from the earliest capture. This column orders history and picks the latest snapshot. Nothing else does.</div>
             <div class="k">accepted_at</div>
-            <div class="v">When the transaction committed. Audit only; it never orders anything.</div>
+            <div class="v">When the transaction committed. Useful for debugging, never for ordering. A backfill keeps its old <span class="mono">observed_at</span> and never becomes latest.</div>
             <div class="k">fingerprint</div>
-            <div class="v">SHA-256 of the canonical rows, plus the <span class="mono">canonical_version</span> that encoded them.</div>
+            <div class="v">SHA-256 over the canonical rows (<span class="mono">ddd50026...</span> live). Same content gives the same hash, so the database can refuse a duplicate instead of asking the loader.</div>
             <div class="k">span</div>
-            <div class="v">How long the sweep took. Above 180 seconds, the attempt is retried rather than accepted.</div>
+            <div class="v">Seconds from first capture to last capture. Live value 18.9. Over 180, the run retries instead of publishing, because a slow sweep may straddle a source update.</div>
             <div class="k">provenance</div>
-            <div class="v"><span class="mono">run_id</span>, <span class="mono">whoscored_page_url</span>, <span class="mono">is_opta</span>: which run, which page, whose data.</div>
+            <div class="v"><span class="mono">run_id</span> names the attempt, <span class="mono">whoscored_page_url</span> names the page, <span class="mono">is_opta</span> names the feed. Any snapshot can be traced to its bytes.</div>
           </div>
         </div>
         <div class="small">The two UNIQUEs are the whole idempotency argument: one observation per instant, one content per parent edge.</div>
@@ -618,26 +640,27 @@
             <div class="node"><b>View</b><span>latest state</span></div>
           </div>
           <div class="c2">
-            <div class="code">CREATE TABLE fact_team_snapshot (
-  snapshot_id         VARCHAR NOT NULL,
-  whoscored_team_id   INTEGER NOT NULL
-      CHECK (whoscored_team_id &gt; 0),
-  whoscored_team_name VARCHAR NOT NULL,
-  &hellip;                 -- 60 measures, each nullable
-  &hellip;                 -- each CHECK (measure &gt;= 0)
-  PRIMARY KEY (snapshot_id, whoscored_team_id),
-  FOREIGN KEY (snapshot_id)
-      REFERENCES competition_snapshot(snapshot_id)
+            <div class="code"><span class="kw">CREATE TABLE</span> fact_team_snapshot (
+  snapshot_id         <span class="ty">VARCHAR NOT NULL</span>,
+  whoscored_team_id   <span class="ty">INTEGER NOT NULL CHECK</span> (whoscored_team_id &gt; <span class="num">0</span>),
+  whoscored_team_name <span class="ty">VARCHAR NOT NULL</span>,
+  <span class="cm">-- 60 performance measures, each nullable, each &gt;= 0 --</span>
+  apps_overall        <span class="ty">INTEGER CHECK</span> (apps_overall &gt;= <span class="num">0</span>),
+  rating_overall      <span class="ty">DOUBLE CHECK</span> (rating_overall &gt;= <span class="num">0</span>),
+  <span class="cm">-- … summary / defensive / offensive / rankings × 3 splits … --</span>
+  <span class="kw">PRIMARY KEY</span> (snapshot_id, whoscored_team_id),
+  <span class="kw">FOREIGN KEY</span> (snapshot_id)
+      <span class="kw">REFERENCES</span> competition_snapshot(snapshot_id)
 );</div>
             <div class="kv">
               <div class="k">Grain</div>
-              <div class="v">One team in one snapshot: 20 rows for a 20-team league, 36 for a 36-team one.</div>
+              <div class="v">One team in one snapshot. The EPL snapshot holds 20 rows here, from Arsenal (<span class="mono">13</span>) to Hull (<span class="mono">214</span>). A 36-team UEFA phase holds 36.</div>
               <div class="k">Key</div>
-              <div class="v"><span class="mono">(snapshot_id, whoscored_team_id)</span> is the grain, written down as a constraint.</div>
+              <div class="v"><span class="mono">(snapshot_id, whoscored_team_id)</span>. Team 13 can appear under two snapshots, never twice under one.</div>
               <div class="k">Foreign key</div>
-              <div class="v">The header must exist. An orphan fact is rejected by the database, not by the loader.</div>
+              <div class="v">The header row must exist first. A fact that points at a missing <span class="mono">snapshot_id</span> fails the insert, even from a notebook.</div>
               <div class="k">No clock</div>
-              <div class="v">No <span class="mono">observed_at</span> here, so twenty facts cannot disagree about when.</div>
+              <div class="v">Facts carry no <span class="mono">observed_at</span>. Twenty rows cannot disagree about when the sweep happened, because only the header says when.</div>
             </div>
           </div>
         </div>
@@ -655,10 +678,10 @@
           <table class="tbl">
             <thead><tr><th style="width:260px">Shape</th><th style="width:150px">Rows per snapshot</th><th>What it buys, and what it costs</th><th style="width:120px">Verdict</th></tr></thead>
             <tbody>
-              <tr class="a-row hi"><td><b>Header + two fact tables</b></td><td class="n">41<br><span class="small">1 + 20 + 20</span></td><td>One time and one fingerprint per observation; a foreign key makes an orphan impossible; a stage without a table has zero standings rows instead of 30 invented NULLs.</td><td class="ok">chosen</td></tr>
-              <tr class="a-row"><td>One flat table</td><td class="n">20<br><span class="small">~100 columns</span></td><td>The header's 14 columns repeat on every team row, so two rows can disagree about when the sweep happened. A no-table stage needs 30 NULLs to mean "not applicable".</td><td class="no">rejected</td></tr>
-              <tr class="a-row"><td>EAV / long</td><td class="n">1,800<br><span class="small">20 &times; 90</span></td><td>A new measure needs no DDL. Every read pivots, column types blur into one value column, and a CHECK cannot name a column the table does not have.</td><td class="no">rejected</td></tr>
-              <tr class="a-row"><td>JSON blob</td><td class="n">1</td><td>Schema-free. No CHECK, no foreign key, no per-column type; every consumer re-implements the contract, and two of them will disagree.</td><td class="no">rejected</td></tr>
+              <tr class="a-row hi"><td><b>Header + two fact tables</b></td><td class="n">41<br><span class="small">1 + 20 + 20</span></td><td>One clock and one fingerprint per observation. The foreign key rejects a fact without a header. A knockout stage stores zero standings rows instead of 30 invented NULLs.</td><td class="ok">chosen</td></tr>
+              <tr class="a-row"><td>One flat table</td><td class="n">20<br><span class="small">~100 columns</span></td><td>The 14 header columns repeat on every team row, so two rows can claim different sweep times. A stage with no league table still pays 30 NULLs per team to say nothing.</td><td class="no">rejected</td></tr>
+              <tr class="a-row"><td>EAV / long</td><td class="n">1,800<br><span class="small">20 &times; 90</span></td><td>Adding a measure costs no DDL, but every read becomes a pivot, types blur into one value column, and a CHECK cannot name a column the table lacks.</td><td class="no">rejected</td></tr>
+              <tr class="a-row"><td>JSON blob</td><td class="n">1</td><td>No CHECK, no foreign key, no per-column type. Every consumer reimplements the contract, and two of them will drift apart.</td><td class="no">rejected</td></tr>
             </tbody>
           </table>
           <div class="c4" style="margin-top:8px">
@@ -680,9 +703,9 @@
         </div>
         <div class="body c2">
           <div class="stack">
-            <div class="card a-up"><div class="tag">Rejected &middot; update in place</div><h3>The old value disappears</h3><p>A correction and a fresh observation become indistinguishable. No query can prove what the table said yesterday.</p></div>
-            <div class="card a-up"><div class="tag">Rejected &middot; SCD2</div><h3>Two rows and a validity interval</h3><p>Correct, and it needs a writer that closes the previous version on every change. A late correction then rewrites an interval that was already published.</p></div>
-            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">Chosen &middot; append-only snapshot</div><h3>Every observation is its own header</h3><p>A correction arrives with a later <span class="mono">observed_at</span>. The old row stays readable, and nothing is closed or rewritten.</p></div>
+            <div class="card a-up"><div class="tag">Rejected &middot; update in place</div><h3>The old value disappears</h3><p>Overwriting B with A leaves no trace that B ever existed. Yesterday's table becomes unprovable.</p></div>
+            <div class="card a-up"><div class="tag">Rejected &middot; SCD2</div><h3>Two rows and a validity interval</h3><p>SCD2 works, but someone must close the old version on every change. A late correction then rewrites an interval readers already used.</p></div>
+            <div class="card a-up" style="border-top-color:#2E6B4F"><div class="tag">Chosen &middot; append-only snapshot</div><h3>Every observation is its own header</h3><p>A correction arrives with a later <span class="mono">observed_at</span>. The old header stays readable, and nothing closes or rewrites.</p></div>
           </div>
           <div class="stack">
             <div class="chain" style="margin-top:6px">
@@ -732,10 +755,10 @@ PRIMARY KEY (snapshot_id, whoscored_team_id)</div>
             <p class="small">Two identities for one row: one a reader can reproduce, one the database can join on cheaply.</p>
           </div>
           <div class="stack">
-            <p class="body"><b>Natural address.</b> Four columns identify an observation without asking permission from a generated id. A rebuild can mint a different <span class="mono">snapshot_id</span> and still produce the same address and the same fingerprint.</p>
-            <p class="body"><b>Surrogate name.</b> The id is minted by the publisher, so two writers cannot collide on it, and a fact row carries 32 characters instead of four columns.</p>
-            <p class="body"><b>Why VARCHAR.</b> Ids are built by concatenation &mdash; <span class="mono">run_</span>, <span class="mono">snap_</span>, <span class="mono">replay_</span> &mdash; and read by humans in logs and errors. Nothing does arithmetic on them.</p>
-            <p class="body"><b>Why the source ids stay INTEGER.</b> Tournament, season, stage and team are the source's numbers. Making them text would hide which values we invented and which we received.</p>
+            <p class="body"><b>Natural address.</b> Tournament 2, season 11141, stage 25544, plus <span class="mono">observed_at</span> names the EPL observation with values the source already gave. A rebuild can mint a new <span class="mono">snapshot_id</span> and still describe the same observation.</p>
+            <p class="body"><b>Surrogate name.</b> The publisher mints <span class="mono">snap_</span> plus 32 hex characters, so two writers never collide. Each fact row carries that short name instead of four address columns.</p>
+            <p class="body"><b>Why VARCHAR.</b> Run, snapshot, and replay ids are built by concatenation and read by people in logs. Nothing does arithmetic on them, so text fits and numbers would mislead.</p>
+            <p class="body"><b>Why the source ids stay INTEGER.</b> Tournament, season, stage, and team arrive as WhoScored numbers. Keeping them numeric shows which values came from the source and which the pipeline invented.</p>
             <div class="room a-up">
               <span class="lbl">The composite</span>
               <p><span class="mono">(snapshot_id, whoscored_team_id)</span> is the grain as a constraint: one team, once, per snapshot.</p>
@@ -773,7 +796,7 @@ league table, per split             10
             <p class="small">Every column is nullable. A missing measure is NULL; a real zero is 0 (ADR 0002).</p>
             <div class="room a-up">
               <span class="lbl">Why 60, not 57</span>
-              <p>The feed sends 57 raw columns. Nine repeat <span class="mono">apps</span> or <span class="mono">shots</span> across sections, leaving 48 unique; add three rating columns and nine rankings and the count is exactly 60.</p>
+              <p>The feed carries 57 raw columns. Nine repeat <span class="mono">apps</span> or <span class="mono">shots</span> across sections, which leaves 48 unique values. Three rating columns and nine ranking columns bring the performance total to exactly 60.</p>
             </div>
           </div>
           <div>
@@ -820,11 +843,11 @@ league table, per split             10
             <p class="small" style="margin-top:10px">Each row has a test in <span class="mono">tests/test_schema.py</span>; the assertion rules have one per trap in <span class="mono">tests/test_assertions.py</span>.</p>
           </div>
           <div class="stack">
-            <p class="body"><b>NULL is not FALSE.</b> A CHECK passes when its expression is TRUE <i>or</i> NULL. It fails only on FALSE.</p>
-            <div class="code">NULL &gt;= 0   -&gt; NULL    CHECK passes
-0    &gt;= 0   -&gt; TRUE    CHECK passes
--1   &gt;= 0   -&gt; FALSE   CHECK fails</div>
-            <p class="body">That is deliberate. A missing measure is not a negative one, so the column stays nullable and the constraint still rejects a real negative.</p>
+            <p class="body"><b>NULL is not FALSE.</b> A CHECK passes on TRUE or NULL, and fails only on FALSE.</p>
+            <div class="code">NULL &gt;= 0   -&gt; NULL    CHECK passes: value missing
+0    &gt;= 0   -&gt; TRUE    CHECK passes: value measured
+-1   &gt;= 0   -&gt; FALSE   CHECK fails: value impossible</div>
+            <p class="body">A missing measure stays NULL. A measured zero stays 0. The constraint still rejects a real negative, such as Brighton on minus 1 goal.</p>
             <div class="room a-up">
               <span class="lbl">What Python still owns</span>
               <p>Rules that need more than one row: the cohort size, the nine captures, the home/away sums. Those are assertions, not constraints.</p>
@@ -870,8 +893,8 @@ WHERE parent_snapshot_id = ?
                 <tr class="a-row"><td>outcome</td><td class="ok">accepted</td><td>existing id, no_change</td></tr>
               </tbody>
             </table>
-            <p class="body">A check-then-insert has a gap between the two statements. Both writers pass the check, then one fails at insert time with a constraint error the caller has to interpret.</p>
-            <p class="body">Here the database decides, and the second writer gets a normal outcome instead of an exception.</p>
+            <p class="body">Check-then-insert leaves a gap. Both writers read, both see nothing, then one fails on the insert and the caller must interpret a constraint error.</p>
+            <p class="body">Here the insert decides. The second writer gets a normal <span class="mono">no_change</span> outcome with the existing id, not an exception.</p>
             <div class="room a-up">
               <span class="lbl">The NULL trap</span>
               <p>A UNIQUE index treats two NULLs as different. <span class="mono">parent_snapshot_id</span> is <span class="mono">NOT NULL DEFAULT 'genesis'</span> so that the guard cannot silently stop working.</p>
@@ -890,7 +913,7 @@ WHERE parent_snapshot_id = ?
         <div class="body c2">
           <div class="stack">
             <div class="code">BEGIN
-  run 22 assertions     -- TEMP tables only
+  run 23 assertions    -- TEMP tables only
   INSERT header         -- ON CONFLICT &hellip; RETURNING
   INSERT 20 team facts  -- one statement
   INSERT 20 table facts -- one statement
@@ -907,7 +930,7 @@ except BaseException:
             </div>
           </div>
           <div class="stack">
-            <p class="body"><b>Write, audit, publish.</b> The raw payloads and their ledger rows are committed first, by <span class="mono">land_stage</span>. The audit reads those bytes, and only then is the warehouse touched.</p>
+            <p class="body"><b>Write, audit, publish.</b> <span class="mono">land_stage</span> commits the raw payloads first. The 23 assertions then read those bytes. The warehouse changes only after every check passes.</p>
             <table class="tbl compact">
               <thead><tr><th>A crash between&hellip;</th><th>What survives</th></tr></thead>
               <tbody>
@@ -924,10 +947,10 @@ except BaseException:
           </div>
           <div class="room a-up" style="grid-column:1/-1">
             <span class="lbl">The promise</span>
-            <p>There is no state in which a reader sees a header without its facts, or facts without a run outcome: either the whole observation committed, or none of it did.</p>
+            <p>No reader ever sees a header without its facts, or facts without a run outcome. Either the whole observation commits, or nothing does.</p>
           </div>
         </div>
-        <div class="small">The alternative to write-audit-publish is auditing after the insert, which means a bad observation is already history when the rule fires.</div>
+        <div class="small">Write, audit, then publish. Auditing after the insert would make a bad observation history before any rule fires.</div>
       </section>
 
       <!-- 16 assertions -->
@@ -949,17 +972,17 @@ except BaseException:
                 <div class="cap">rows returned &rarr; fail</div>
               </div>
             </div>
-            <p class="body">The candidate and its provenance are loaded into <span class="mono">TEMP</span> tables. Each rule is a query over those tables plus the previous accepted snapshot; the failure carries its rows.</p>
-            <p class="body">A test framework asserts that code behaved. This asks whether the data is coherent, and it can only be answered in SQL because the rules compare rows: nine captures, twenty teams, home plus away.</p>
+            <p class="body">The candidate and its provenance load into <span class="mono">TEMP</span> tables. Each rule queries those tables plus the previous accepted snapshot. A hit returns the offending teams, not a stack trace.</p>
+            <p class="body">Unit tests check code. Assertions check data. Only SQL can do this job, because the rules compare rows: nine captures, twenty teams, home plus away.</p>
             <div class="room a-up">
               <span class="lbl">In the file</span>
               <p><span class="mono">sql/002_assertions.sql</span> is deliberately comment-only, so the migration runner can execute it and the validator can read the same file.</p>
             </div>
           </div>
           <div class="stack">
-            <div class="card a-up"><div class="tag">BLOCK &middot; 14 rules</div><h3>Stop the publish</h3><p>The data is incoherent or impossible. A human or a config change is needed: cohort size, ranking range, negative measures, a missing team, a non-increasing appearance count.</p></div>
-            <div class="card a-up"><div class="tag">RETRY &middot; 7 rules</div><h3>Fetch again</h3><p>The source may be mid-update: mismatched team sets, split totals that do not add up, a slow sweep, a missing standings view.</p></div>
-            <div class="card a-up"><div class="tag">WARN &middot; 1 rule</div><h3>Record and continue</h3><p>A duplicate rank is suspicious, not impossible. The snapshot is kept and the finding is recorded.</p></div>
+            <div class="card a-up"><div class="tag">BLOCK &middot; 14 rules</div><h3>Stop the publish</h3><p>The numbers cannot all be true. Wrong team count, rank outside 1 to N, negative measure, missing team, or appearances that run backwards. A person or a config change must intervene.</p></div>
+            <div class="card a-up"><div class="tag">RETRY &middot; 7 rules</div><h3>Fetch again</h3><p>The source may sit mid-update. Team sets differ across feeds, home plus away misses the overall, the sweep ran over 180 seconds, or a standings feed is missing.</p></div>
+            <div class="card a-up"><div class="tag">WARN &middot; 2 rules</div><h3>Record and continue</h3><p>A duplicate rank or a points shortfall is suspicious but publishable. The snapshot lands, and the finding lands with it.</p></div>
           </div>
         </div>
         <div class="small">BLOCK and RETRY both stop this attempt; only the caller's retry policy differs. WARN returns a failure without blocking.</div>
@@ -1037,30 +1060,30 @@ HAVING count(*) &gt; 1</div>
 
       <!-- 19 views -->
       <section class="slide" data-sec="The decisions"
-        data-note="The order of operations in the view is the whole argument. Rank the headers per stage first, keep rank one, then join the facts. If you join first and filter later, a team that disappeared from the newest snapshot can be resurrected by an older fact row. Seven plain views, no stored results, and the history views never order by accepted_at.">
+        data-note="The order of operations in the view is the whole argument. Rank the headers per stage first, keep rank one, then join the facts. If you join first and filter later, a team that disappeared from the newest snapshot can be resurrected by an older fact row. Eight plain views, no stored results, and the history views never order by accepted_at.">
         <div>
           <p class="kicker"><i></i>Decision 11 &middot; consumers</p>
           <h2 class="display" style="margin-top:14px">Pick the snapshot first.<br>Join the facts second.</h2>
         </div>
         <div class="body c2">
           <div class="stack">
-            <div class="code">WITH latest AS (
-  SELECT *,
-    row_number() OVER (
-      PARTITION BY whoscored_tournament_id,
+            <div class="code"><span class="kw">WITH</span> latest <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> *,
+    <span class="kw">row_number() OVER</span> (
+      <span class="kw">PARTITION BY</span> whoscored_tournament_id,
                    whoscored_season_id,
                    whoscored_stage_id
-      ORDER BY observed_at DESC,
-               accepted_at DESC,
-               snapshot_id DESC
-    ) AS snapshot_rank
-  FROM competition_snapshot
+      <span class="kw">ORDER BY</span> observed_at <span class="kw">DESC</span>,
+               accepted_at <span class="kw">DESC</span>,
+               snapshot_id <span class="kw">DESC</span>
+    ) <span class="kw">AS</span> snapshot_rank
+  <span class="kw">FROM</span> competition_snapshot
 )
-SELECT h.* EXCLUDE (snapshot_rank),
-       f.* EXCLUDE (snapshot_id)
-FROM latest h
-JOIN fact_team_snapshot f USING (snapshot_id)
-WHERE h.snapshot_rank = 1;</div>
+<span class="kw">SELECT</span> h.* <span class="kw">EXCLUDE</span> (snapshot_rank),
+       f.* <span class="kw">EXCLUDE</span> (snapshot_id)
+<span class="kw">FROM</span> latest h
+<span class="kw">JOIN</span> fact_team_snapshot f <span class="kw">USING</span> (snapshot_id)
+<span class="kw">WHERE</span> h.snapshot_rank = <span class="num">1</span>;</div>
             <p class="small">The ordering is observed_at first. accepted_at is only a tie-break inside one instant, so a backfill cannot become latest.</p>
             <div class="room a-up">
               <span class="lbl">Rejected</span>
@@ -1071,14 +1094,14 @@ WHERE h.snapshot_rank = 1;</div>
             <table class="tbl tight">
               <thead><tr><th>View</th><th>One row is</th></tr></thead>
               <tbody>
-                <tr class="a-row"><td><span class="mono">v_latest_team_state</span></td><td>one team in the latest snapshot of a stage</td></tr>
-                <tr class="a-row"><td><span class="mono">v_latest_standings</span></td><td>the same, league-table measures only</td></tr>
-                <tr class="a-row"><td><span class="mono">v_latest_team_with_standings</span></td><td>both, one row per team, LEFT JOINed</td></tr>
-                <tr class="a-row"><td><span class="mono">v_standings_history</span></td><td>one team per snapshot: rank, points, form</td></tr>
-                <tr class="a-row"><td><span class="mono">v_snapshot_delta</span></td><td>one team per snapshot with an immediate predecessor</td></tr>
-                <tr class="a-row"><td><span class="mono">v_pipeline_freshness</span></td><td>one known stage: age, outcome, counts</td></tr>
-                <tr class="a-row"><td><span class="mono">v_points_adjustments</span></td><td>one team snapshot where reported points fall short of 3W+D</td></tr>
-                <tr class="a-row"><td><span class="mono">v_snapshot_clock</span></td><td>one snapshot: the same instant in UTC and IST</td></tr>
+                <tr class="a-row"><td><span class="mono">v_latest_team_state</span></td><td>performance of each team in the newest snapshot</td></tr>
+                <tr class="a-row"><td><span class="mono">v_latest_standings</span></td><td>league-table row of each team in the newest snapshot</td></tr>
+                <tr class="a-row"><td><span class="mono">v_latest_team_with_standings</span></td><td>performance plus league table, one row per team</td></tr>
+                <tr class="a-row"><td><span class="mono">v_standings_history</span></td><td>every snapshot per team: rank, points, form over time</td></tr>
+                <tr class="a-row"><td><span class="mono">v_snapshot_delta</span></td><td>each snapshot against its parent: what moved</td></tr>
+                <tr class="a-row"><td><span class="mono">v_pipeline_freshness</span></td><td>each known stage: data age, last outcome, row counts</td></tr>
+                <tr class="a-row"><td><span class="mono">v_points_adjustments</span></td><td>teams whose reported points sit below 3W+D, with the gap</td></tr>
+                <tr class="a-row"><td><span class="mono">v_snapshot_clock</span></td><td>each snapshot rendered in UTC and in IST</td></tr>
               </tbody>
             </table>
             <div class="room a-up">
@@ -1087,7 +1110,7 @@ WHERE h.snapshot_rank = 1;</div>
             </div>
           </div>
         </div>
-        <div class="small">Seven plain views: they store nothing. <span class="mono">EXCLUDE</span> is DuckDB's way to drop a column from <span class="mono">*</span>; PostgreSQL spells the column list out.</div>
+        <div class="small">Eight plain views: they store nothing. <span class="mono">EXCLUDE</span> is DuckDB's way to drop a column from <span class="mono">*</span>; PostgreSQL spells the column list out.</div>
       </section>
 
       <!-- 20 timestamptz -->
@@ -1217,7 +1240,7 @@ VALUES
         <div class="body">
           <div class="c3">
             <div class="card a-up"><div class="tag">No triggers</div><h3>Nothing fires on insert</h3><p>DuckDB has no trigger surface. The audit runs before the insert, in the same transaction, instead of reacting after it.</p></div>
-            <div class="card a-up"><div class="tag">No stored procedures</div><h3>The rules are readable text</h3><p>There is no <span class="mono">CREATE PROCEDURE</span>. The 22 rules are SQL in <span class="mono">sql/002</span>, read by the validator and executed as queries.</p></div>
+            <div class="card a-up"><div class="tag">No stored procedures</div><h3>The rules are readable text</h3><p>There is no <span class="mono">CREATE PROCEDURE</span>. The 23 rules live in <span class="mono">sql/002</span> and <span class="mono">sql/005</span>, read by the validator and run as queries.</p></div>
             <div class="card a-up"><div class="tag">No ORM</div><h3>The schema is the contract</h3><p><span class="mono">publish.py</span> sends SQL; <span class="mono">contract.py</span> owns the column names. No generated layer sits between the code and the DDL.</p></div>
           </div>
           <div class="c2" style="margin-top:26px">
@@ -1226,7 +1249,7 @@ VALUES
               <tbody>
                 <tr class="a-row"><td>Constraints: PK, FK, UNIQUE, CHECK</td><td>one row, at insert time</td></tr>
                 <tr class="a-row"><td>Assertions: A1&ndash;A22 and A7U</td><td>one candidate, before publish</td></tr>
-                <tr class="a-row"><td>Views: seven, including freshness</td><td>one reader, at query time</td></tr>
+                <tr class="a-row"><td>Views: eight, including freshness</td><td>one reader, at query time</td></tr>
                 <tr class="a-row"><td>Ledger: <span class="mono">schema_migration</span></td><td>one file, once</td></tr>
               </tbody>
             </table>
@@ -1334,14 +1357,14 @@ VALUES
       </section>
       <!-- 26 evidence -->
       <section class="slide" data-sec="Evidence"
-        data-note="Every number here is checkable. 216 tests is the collected count. Eleven of twelve leagues published on a real sweep of 108 feed requests. The twelfth is a source problem, not a schema problem: its feed returns zero rows while its page shows thirty-six teams. Southampton is the case that changed a rule, and it is on this page because a schema is only as good as the evidence that it survives contact with real data.">
+        data-note="Every number here is checkable. 233 tests pass. Eleven of twelve leagues published on a real sweep of 108 feed requests. The twelfth is a source problem, not a schema problem: its feed returns zero rows while its page shows thirty-six teams. Southampton is the case that changed a rule, and it is on this page because a schema is only as good as the evidence that it survives contact with real data.">
         <div>
           <p class="kicker"><i></i>Evidence</p>
-          <h2 class="display" style="margin-top:14px">216 tests, 11 leagues,<br>one deduction.</h2>
+          <h2 class="display" style="margin-top:14px">233 tests, 11 leagues,<br>one deduction.</h2>
         </div>
         <div class="body stack">
           <div class="c4">
-            <div class="stat a-up"><div class="v" data-count="216">0</div><div class="k">tests</div><div class="s">collected, all passing</div></div>
+            <div class="stat a-up"><div class="v" data-count="233">0</div><div class="k">tests</div><div class="s">collected, all passing</div></div>
             <div class="stat a-up"><div class="v" data-count="11">0</div><div class="k">leagues accepted</div><div class="s">of 12 configured stages</div></div>
             <div class="stat a-up"><div class="v" data-count="108">0</div><div class="k">feed requests</div><div class="s">12 stages &times; 9 feeds</div></div>
             <div class="stat a-up"><div class="v" data-count="0">0</div><div class="k">null measures</div><div class="s">across the 11 accepted leagues</div></div>
@@ -1427,7 +1450,7 @@ VALUES
           </div>
           <p class="pull" style="margin-top:64px">If a reader has to trust the loader,<br><b>the schema has failed.</b></p>
         </div>
-        <div class="small">Companion report: <a href="../reports/sql-schema-deck.md" style="color:inherit;border-bottom:1px solid currentColor;text-decoration:none">docs/reports/sql-schema-deck.md</a> &middot; built from <span class="mono">sql/001</span>&ndash;<span class="mono">003</span> and the P3, P6, P7 reports &middot; 26 October 2026</div>
+        <div class="small">Companion report: <a href="../reports/sql-schema-deck.md" style="color:inherit;border-bottom:1px solid currentColor;text-decoration:none">docs/reports/sql-schema-deck.md</a> &middot; refresh: <a href="../reports/sql-schema-slides-refresh.md" style="color:inherit;border-bottom:1px solid currentColor;text-decoration:none">sql-schema-slides-refresh.md</a> &middot; built from <span class="mono">sql/001</span>&ndash;<span class="mono">003</span> and the P3, P6, P7 reports &middot; 26 October 2026</div>
       </section>
 
 
