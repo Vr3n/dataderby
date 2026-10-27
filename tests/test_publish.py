@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 
 from dataderby.config import StageSpec
 from dataderby.db import connect, migrate
+from dataderby.dims import ensure_team_mapping
 from dataderby.landing import LandingResult
 from dataderby.parse import Candidate, TeamRow, build_candidate
 from dataderby.parse_standings import StandingsCandidate, parse_views
@@ -345,7 +346,18 @@ def test_insert_facts_uses_names_verbatim(
             run.page.url,
         ],
     )
-    insert_facts(con, renamed, standings, "snap_1")
+    insert_facts(
+        con,
+        renamed,
+        standings,
+        "snap_1",
+        {
+            row.whoscored_team_id: ensure_team_mapping(
+                con, row.whoscored_team_id, row.whoscored_team_name
+            )
+            for row in renamed.rows
+        },
+    )
     con.execute("COMMIT")
 
     name = con.execute(

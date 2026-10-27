@@ -18,14 +18,14 @@ from tests.test_whoscored_parse import _SPEC, _captures
 _STAGE_B = """[[stage]]
 key = "epl-test-archived"
 whoscored_tournament_id = 2
-whoscored_season_id = 11141
+whoscored_season_id = 11142
 whoscored_stage_id = 29999
-season_key = "2026-2027"
+season_key = "2025-2026"
 competition = "Premier League"
 stage = "league"
 expected_stages = ["league"]
 expected_teams = 20
-whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/11141/stages/29999/show/england-premier-league-2026-2027"
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/11142/stages/29999/show/england-premier-league-2025-2026"
 has_league_table = true
 active = false
 """
@@ -70,11 +70,14 @@ def _runtime(seen: list[str]) -> Runtime:
     ) -> StageCapture:
         seen.append(spec.key)
         stage_id = spec.whoscored_stage_id
+        season_id = spec.whoscored_season_id
         feeds = tuple(
             replace(capture, url=re.sub(r"stageId=\d+", f"stageId={stage_id}", capture.url))
             for capture in _captures()
         )
-        page = _page(url=re.sub(r"/stages/\d+/", f"/stages/{stage_id}/", _PAGE_URL))
+        page_url = re.sub(r"/stages/\d+/", f"/stages/{stage_id}/", _PAGE_URL)
+        page_url = re.sub(r"/seasons/\d+/", f"/seasons/{season_id}/", page_url)
+        page = _page(url=page_url)
         return StageCapture(page=page, feeds=feeds)
 
     return Runtime(sweep=sweep)

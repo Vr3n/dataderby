@@ -196,31 +196,107 @@ def _build_parser() -> argparse.ArgumentParser:
 
     dims = sub.add_parser("dims", help="canonical team identity maintenance")
     with_config(dims)
-    dims.add_argument("action", choices=["backfill"])
+    dims.add_argument("action", choices=["backfill", "map-team", "map-stage"])
+    dims.add_argument("--team-id", type=int, help="WhoScored team id (map-team only)")
+    dims.add_argument("--name", help="canonical club name (map-team only)")
+    dims.add_argument("--stage", help="stage key (map-stage only)")
 
     return parser
 
 
 def _dims_backfill(settings: Settings, out: TextIO) -> Exit:
-    """Insert canonical team rows for every unmapped fact team."""
-    from dataderby.dims import backfill_team_dims, unmapped_teams
+    """Insert canonical stage and team rows and fill ids on old rows."""
+    from dataderby.dims import (
+        backfill_stage_dims,
+        backfill_team_dims,
+        ensure_stage_mapping,
+        fill_canonical_ids,
+        unmapped_stages,
+        unmapped_teams,
+    )
 
-    if not settings.db_path.exists():
-        raise ConfigError(f"database does not exist: {settings.db_path}")
     with exclusive_lock(_lock_path(settings)):
         con = connect(settings.db_path)
         try:
             migrate(con)
-            before = unmapped_teams(con)
-            added = backfill_team_dims(con)
-            after = unmapped_teams(con)
+            teams = backfill_team_dims(con)
+            # Registry first with real names; warehouse leftovers after that
+            # keep placeholder names, so proper names always win.
+            for spec in settings.stages.values():
+                ensure_stage_mapping(
+                    con,
+                    tournament_id=spec.whoscored_tournament_id,
+                    season_id=spec.whoscored_season_id,
+                    stage_id=spec.whoscored_stage_id,
+                    tournament_name=spec.competition,
+                    season_key=spec.season_key,
+                    stage_code=spec.stage,
+                    canonical_name=f"{spec.competition} {spec.season_key}",
+                )
+            stages = backfill_stage_dims(con)
+            filled = fill_canonical_ids(con)
+            missing_teams = unmapped_teams(con)
+            missing_stages = unmapped_stages(con)
         finally:
             con.close()
-    _say(out, f"dim_team: {added.teams} teams, {added.mappings} mappings added")
-    if after:
-        _say(out, f"unmapped teams remaining: {len(after)}")
+    _say(out, f"dim_team: {teams.teams} teams, {teams.mappings} mappings added")
+    _say(out, f"dim_stage: {stages.stages} stages, {stages.mappings} mappings added")
+    _say(
+        out,
+        f"canonical ids now on {filled.headers} headers, "
+        f"{filled.team_facts} team facts, {filled.standings_facts} standings facts",
+    )
+    if missing_teams or missing_stages:
+        _say(out, f"unmapped teams remaining: {len(missing_teams)}")
+        _say(out, f"unmapped stages remaining: {len(missing_stages)}")
         return Exit.INTERNAL
-    _say(out, f"coverage: 100% ({len(before)} teams mapped)")
+    _say(out, "coverage: 100% teams and stages mapped")
+    return Exit.OK
+
+
+def _dims_map_team(settings: Settings, team_id: int | None, name: str | None, out: TextIO) -> Exit:
+    """Map one WhoScored team to the canonical dimension (curation path)."""
+    from dataderby.dims import ensure_team_mapping
+
+    if team_id is None or not name:
+        raise ConfigError("map-team requires --team-id and --name")
+    with exclusive_lock(_lock_path(settings)):
+        con = connect(settings.db_path)
+        try:
+            migrate(con)
+            canonical_id = ensure_team_mapping(con, team_id, name)
+        finally:
+            con.close()
+    _say(out, f"team {team_id} ({name}) -> {canonical_id}")
+    return Exit.OK
+
+
+def _dims_map_stage(settings: Settings, key: str | None, out: TextIO) -> Exit:
+    """Map one configured stage to the canonical dimension (curation path)."""
+    from dataderby.dims import ensure_stage_mapping
+
+    if key is None:
+        raise ConfigError("map-stage requires --stage")
+    spec = settings.stages.get(key)
+    if spec is None:
+        raise ConfigError(f"unknown stage {key!r}")
+    with exclusive_lock(_lock_path(settings)):
+        con = connect(settings.db_path)
+        try:
+            migrate(con)
+            canonical_id = ensure_stage_mapping(
+                con,
+                tournament_id=spec.whoscored_tournament_id,
+                season_id=spec.whoscored_season_id,
+                stage_id=spec.whoscored_stage_id,
+                tournament_name=spec.competition,
+                season_key=spec.season_key,
+                stage_code=spec.stage,
+                canonical_name=f"{spec.competition} {spec.season_key}",
+            )
+        finally:
+            con.close()
+    _say(out, f"stage {key} -> {canonical_id}")
     return Exit.OK
 
 
@@ -753,8 +829,22 @@ def _dry_run_one(
 
     memory = duckdb.connect(":memory:")
     try:
+        from dataderby.dims import ensure_stage_mapping, ensure_team_mapping
+
         memory.execute("SET TimeZone='UTC'")
         migrate(memory)
+        ensure_stage_mapping(
+            memory,
+            tournament_id=spec.whoscored_tournament_id,
+            season_id=spec.whoscored_season_id,
+            stage_id=spec.whoscored_stage_id,
+            tournament_name=spec.competition,
+            season_key=spec.season_key,
+            stage_code=spec.stage,
+            canonical_name=f"{spec.competition} {spec.season_key}",
+        )
+        for row in candidate.rows:
+            ensure_team_mapping(memory, row.whoscored_team_id, row.whoscored_team_name)
         failures = run_assertions(memory, candidate, standings, spec, run)
     finally:
         memory.close()
@@ -945,6 +1035,10 @@ def dispatch(args: argparse.Namespace, runtime: Runtime, out: TextIO) -> Exit:
     if args.command == "drift":
         return _drift(settings, args.stage, args.snapshot, out)
     if args.command == "dims":
+        if args.action == "map-team":
+            return _dims_map_team(settings, args.team_id, args.name, out)
+        if args.action == "map-stage":
+            return _dims_map_stage(settings, args.stage, out)
         return _dims_backfill(settings, out)
     raise ConfigError(f"unknown command: {args.command}")
 

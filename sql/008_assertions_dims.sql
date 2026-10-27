@@ -1,0 +1,31 @@
+-- Publish assertions for canonical identity (A23, A24).
+--
+-- This file is comment-only like 002 and 005: migrate() executes it safely,
+-- while validate.py reads the marker-delimited SQL below. Each query returns
+-- offending rows; an empty result means the assertion passed.
+--
+-- A23 and A24 assume curation owns identity: a team or stage with no mapping
+-- row blocks the publish, and the operator maps it (dataderby dims backfill
+-- or dataderby dims map-team) before retrying. Publish never invents mappings.
+
+-- @@A23|BLOCK
+-- SELECT whoscored_team_id, whoscored_team_name
+-- FROM _assert_team t
+-- WHERE NOT EXISTS (
+--     SELECT 1
+--     FROM team_source_key k
+--     WHERE k.source = 'whoscored'
+--       AND k.source_team_id = CAST(t.whoscored_team_id AS VARCHAR)
+-- )
+
+-- @@A24|BLOCK
+-- SELECT whoscored_tournament_id, whoscored_season_id, whoscored_stage_id
+-- FROM _assert_run r
+-- WHERE NOT EXISTS (
+--     SELECT 1
+--     FROM stage_source_key k
+--     WHERE k.source = 'whoscored'
+--       AND k.source_tournament_id = CAST(r.whoscored_tournament_id AS VARCHAR)
+--       AND k.source_season_id = CAST(r.whoscored_season_id AS VARCHAR)
+--       AND k.source_stage_id = CAST(r.whoscored_stage_id AS VARCHAR)
+-- )

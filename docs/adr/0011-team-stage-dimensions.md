@@ -1,9 +1,9 @@
 # ADR 0011: Conformed team and stage dimensions with source mappings
 
-**Status:** building (team half merged as P1; stage half pending)
+**Status:** complete (P1 team half + P2 stage half merged)
 **Date:** 2026-10-27
 **Decides:** `dim_team` + `dim_stage` shape for multi-source support
-**Builds:** `docs/reports/dim-team-p1.md` (team half)
+**Builds:** `docs/reports/dim-team-p1.md` (team half), `docs/reports/dim-stage-p2.md` (stage half)
 
 ## Context
 

@@ -71,6 +71,7 @@ def insert_facts(
     candidate: Candidate,
     standings: StandingsCandidate,
     snapshot_id: str,
+    team_ids: dict[int, str],
 ) -> tuple[int, int]:
     """Insert team and standings facts using literal ``VALUES`` rows.
 
@@ -82,6 +83,8 @@ def insert_facts(
         candidate: Validated feed candidate.
         standings: Validated standings companion; empty for no-table stages.
         snapshot_id: Header id that owns the facts.
+        team_ids: Canonical id per WhoScored team id; every candidate team
+            must resolve (assertions A23/A24 run before this).
 
     Returns:
         ``(team_rows, standings_rows)`` actually inserted.
@@ -90,6 +93,7 @@ def insert_facts(
         "snapshot_id",
         "whoscored_team_id",
         "whoscored_team_name",
+        "dataderby_team_id",
         *MEASURE_COLUMNS,
     )
     team_values = [
@@ -97,6 +101,7 @@ def insert_facts(
             snapshot_id,
             row.whoscored_team_id,
             row.whoscored_team_name,
+            team_ids[row.whoscored_team_id],
             *(row.measures[column] for column in MEASURE_COLUMNS),
         )
         for row in candidate.rows
@@ -111,6 +116,7 @@ def insert_facts(
         "snapshot_id",
         "whoscored_team_id",
         "whoscored_team_name",
+        "dataderby_team_id",
         *STANDINGS_MEASURES,
     )
     standings_values = [
@@ -118,6 +124,7 @@ def insert_facts(
             snapshot_id,
             row.whoscored_team_id,
             row.whoscored_team_name,
+            team_ids[row.whoscored_team_id],
             *(row.measures[column] for column in STANDINGS_MEASURES),
         )
         for row in standings.rows
@@ -307,6 +314,49 @@ def _mark_failed_run(
         _update_run(con, run_id, outcome, error_code=outcome, error_detail=detail)
 
 
+def _ensure_canonical_ids(
+    con: duckdb.DuckDBPyConnection,
+    candidate: Candidate,
+    spec: StageSpec,
+) -> tuple[str, dict[int, str]]:
+    """Ensure canonical stage and team ids for a candidate, then return them.
+
+    A first publish cannot block on unknown teams: no facts exist yet to
+    backfill mappings from, so creation here is mechanical, not curation.
+    Source ids are stable, so insert-if-missing is deterministic. Curation
+    still owns names (drift review), renames (update), and second sources
+    (manual mapping rows). Assertions A23 and A24 run after this and verify
+    every staged row resolves.
+
+    Args:
+        con: Connection inside the publish transaction.
+        candidate: Validated feed candidate.
+        spec: Configured stage.
+
+    Returns:
+        The stage canonical id and one canonical team id per candidate team.
+    """
+    from dataderby.dims import ensure_stage_mapping, ensure_team_mapping
+
+    stage_id = ensure_stage_mapping(
+        con,
+        tournament_id=spec.whoscored_tournament_id,
+        season_id=spec.whoscored_season_id,
+        stage_id=spec.whoscored_stage_id,
+        tournament_name=spec.competition,
+        season_key=spec.season_key,
+        stage_code=spec.stage,
+        canonical_name=f"{spec.competition} {spec.season_key}",
+    )
+    team_ids = {
+        row.whoscored_team_id: ensure_team_mapping(
+            con, row.whoscored_team_id, row.whoscored_team_name
+        )
+        for row in candidate.rows
+    }
+    return stage_id, team_ids
+
+
 def publish(
     con: duckdb.DuckDBPyConnection,
     candidate: Candidate,
@@ -366,6 +416,7 @@ def publish(
 
     con.execute("BEGIN")
     try:
+        stage_canonical_id, team_ids = _ensure_canonical_ids(con, candidate, spec)
         failures = run_assertions(
             con,
             candidate,
@@ -392,8 +443,9 @@ def publish(
                 snapshot_id, parent_snapshot_id, whoscored_tournament_id,
                 whoscored_season_id, whoscored_stage_id, season_key,
                 content_fingerprint, canonical_version, observed_at, accepted_at,
-                capture_span_seconds, is_opta, whoscored_page_url, run_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
+                capture_span_seconds, is_opta, whoscored_page_url, run_id,
+                dataderby_stage_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (parent_snapshot_id, content_fingerprint) DO NOTHING
             RETURNING snapshot_id
             """,
@@ -411,6 +463,7 @@ def publish(
                 candidate.is_opta,
                 run.page.url,
                 run.run_id,
+                stage_canonical_id,
             ],
         ).fetchall()
 
@@ -427,7 +480,7 @@ def publish(
             con.execute("COMMIT")
             return Outcome.NO_CHANGE
 
-        insert_facts(con, candidate, standings, snapshot_id)
+        insert_facts(con, candidate, standings, snapshot_id, team_ids)
         _upsert_checkpoint(
             con,
             spec,

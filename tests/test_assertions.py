@@ -12,6 +12,7 @@ import pytest
 from dataderby.config import StageSpec
 from dataderby.contract import View
 from dataderby.db import connect, migrate
+from dataderby.dims import ensure_stage_mapping, ensure_team_mapping
 from dataderby.fetch import Capture
 from dataderby.landing import LandingResult
 from dataderby.page import PageCapture
@@ -38,6 +39,18 @@ _PAGE_URL = (
 def con(tmp_path: Path) -> Iterator[duckdb.DuckDBPyConnection]:
     connection = connect(tmp_path / "test.duckdb")
     migrate(connection)
+    for team_id in _TEAMS:
+        ensure_team_mapping(connection, team_id, f"Team {team_id}")
+    ensure_stage_mapping(
+        connection,
+        tournament_id=_SPEC.whoscored_tournament_id,
+        season_id=_SPEC.whoscored_season_id,
+        stage_id=_SPEC.whoscored_stage_id,
+        tournament_name=_SPEC.competition,
+        season_key=_SPEC.season_key,
+        stage_code=_SPEC.stage,
+        canonical_name=f"{_SPEC.competition} {_SPEC.season_key}",
+    )
     try:
         yield connection
     finally:
@@ -153,7 +166,7 @@ def test_assertion_file_loads_all_contract_ids() -> None:
     definitions = load_assertions()
     ids = [definition.assertion_id for definition in definitions]
 
-    assert set(ids) == {*(f"A{number}" for number in range(1, 23)), "A7U"}
+    assert set(ids) == {*(f"A{number}" for number in range(1, 23)), "A7U", "A23", "A24"}
     assert len(ids) == len(set(ids))
     assert {definition.action for definition in definitions} == {
         Action.BLOCK,
