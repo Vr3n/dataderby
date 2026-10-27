@@ -147,6 +147,7 @@ dataderby/
 │   ├── db.py                 connect, migrate, transaction
 │   ├── lock.py               exclusive pipeline lock
 │   ├── observe.py            append-only JSONL events
+│   ├── schedule.py           staleness check, heartbeat ping, scheduled-run wrapper logic
 │   ├── cli.py                run, probe, replay, verify, freshness, stages
 │   ├── __main__.py           python -m dataderby
 │   └── fixtures/             the separate fixture-calendar pipeline

@@ -9,6 +9,7 @@ the network and to write under `data/`, which normal code is not.
 | `capture_live_stage.py` | Captures one stage and writes a redacted fixture for tests. | The chosen fixture directory (committed only after review). | No. |
 | `dagster.ps1` | Starts the Dagster UI for the fixture-calendar pipeline. | `data/dagster/` | No. |
 | `check_robots.py` | Fetches `robots.txt` and prints its status, date, SHA-256, and body. | Nothing | No — one network request. |
+| `scheduled_run.py` | Runs `dataderby run`, pings the heartbeat monitor on success, alerts on any non-zero exit. | Nothing outside the pipeline's own paths | No — runs the live pipeline. |
 
 ## Rules
 

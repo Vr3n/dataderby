@@ -33,7 +33,9 @@ Reports for a single change that is not a build phase.
 | Fetch policy | [Fetch policy](fetch-policy.md) | complete |
 | Points adjustments | [Points adjustments](points-adjustments.md) | complete |
 | Points adjustments (deck) | [Companion slides](../slides/points-adjustments-slides.html) | complete |
+| Schedule and freshness alert | [Schedule and alert](schedule-alert.md) | complete |
 | SQL and schema (deck) | [Companion slides](../slides/sql-schema-slides.html) | complete |
+| SQL schema slides refresh | [Tables slide, highlighting, counts](sql-schema-slides-refresh.md) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.

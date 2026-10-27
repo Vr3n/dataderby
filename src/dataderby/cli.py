@@ -51,6 +51,7 @@ from dataderby.parse import (
 )
 from dataderby.parse_standings import check_team_sets, parse_views
 from dataderby.publish import Outcome, publish, reconcile
+from dataderby.schedule import STALE_AFTER_HOURS, evaluate_freshness
 from dataderby.standings import RawStandingsRow, StandingsParseError, decode_view
 from dataderby.validate import (
     AssertionFailure,
@@ -157,6 +158,20 @@ def _build_parser() -> argparse.ArgumentParser:
     freshness = sub.add_parser("freshness", help="read v_pipeline_freshness")
     with_config(freshness)
     freshness.add_argument("--json", action="store_true", help="machine-readable output")
+    freshness.add_argument(
+        "--check",
+        action="store_true",
+        help="exit 6 when any stage is stale; see --max-age-hours",
+    )
+    freshness.add_argument(
+        "--max-age-hours",
+        type=float,
+        default=STALE_AFTER_HOURS,
+        help=(
+            "staleness ceiling in hours for --check "
+            f"(default {STALE_AFTER_HOURS}, provisional until E5 measures the lag)"
+        ),
+    )
 
     stages = sub.add_parser("stages", help="inspect the stage registry")
     with_config(stages)
@@ -180,9 +195,18 @@ def _stages_list(settings: Settings, out: TextIO) -> Exit:
     return Exit.OK
 
 
-def _freshness(settings: Settings, as_json: bool, out: TextIO) -> Exit:
+def _freshness(
+    settings: Settings,
+    as_json: bool,
+    out: TextIO,
+    *,
+    check: bool = False,
+    max_age_hours: float = STALE_AFTER_HOURS,
+) -> Exit:
     if not settings.db_path.exists():
         raise ConfigError(f"database does not exist: {settings.db_path}")
+    if check and max_age_hours <= 0:
+        raise ConfigError(f"--max-age-hours must be positive, got {max_age_hours}")
 
     con = connect(settings.db_path, read_only=True)
     try:
@@ -204,6 +228,12 @@ def _freshness(settings: Settings, as_json: bool, out: TextIO) -> Exit:
     finally:
         con.close()
 
+    evaluated = evaluate_freshness(rows, max_age_seconds=max_age_hours * 3600) if check else ()
+    by_stage = {
+        (e.whoscored_tournament_id, e.whoscored_season_id, e.whoscored_stage_id): e
+        for e in evaluated
+    }
+
     if as_json:
         payload = [
             {
@@ -215,15 +245,43 @@ def _freshness(settings: Settings, as_json: bool, out: TextIO) -> Exit:
                 "last_outcome": row[5],
                 "attempt_count": row[6],
                 "accepted_snapshots": row[7],
+                **(
+                    {
+                        "stale": by_stage[(row[0], row[1], row[2])].stale,
+                        "max_age_seconds": max_age_hours * 3600,
+                    }
+                    if check
+                    else {}
+                ),
             }
             for row in rows
         ]
         _say(out, json.dumps(payload, indent=2))
+        if check and any(entry["stale"] for entry in payload):
+            return Exit.INTERNAL
         return Exit.OK
 
     if not rows:
         _say(out, "no accepted snapshots")
-        return Exit.OK
+        return Exit.INTERNAL if check else Exit.OK
+
+    if check:
+        header = (
+            f"{'TOURNAMENT':>10} {'SEASON':>7} {'STAGE':>6} "
+            f"{'AGE_S':>8} {'OUTCOME':12} {'SNAPSHOTS':>9} {'STATUS':6}"
+        )
+        _say(out, header)
+        for row in rows:
+            age = "-" if row[4] is None else str(row[4])
+            outcome = row[5] or "-"
+            status = "STALE" if by_stage[(row[0], row[1], row[2])].stale else "fresh"
+            _say(
+                out,
+                f"{row[0]:10} {row[1]:7} {row[2]:6} {age:>8} {outcome:12} {row[7]:9} {status:6}",
+            )
+        stale = sum(1 for entry in evaluated if entry.stale)
+        _say(out, f"{stale} of {len(evaluated)} stages stale (older than {max_age_hours:g} h)")
+        return Exit.INTERNAL if stale else Exit.OK
 
     header = (
         f"{'TOURNAMENT':>10} {'SEASON':>7} {'STAGE':>6} "
@@ -753,7 +811,9 @@ def dispatch(args: argparse.Namespace, runtime: Runtime, out: TextIO) -> Exit:
     if args.command == "stages":
         return _stages_list(settings, out)
     if args.command == "freshness":
-        return _freshness(settings, args.json, out)
+        return _freshness(
+            settings, args.json, out, check=args.check, max_age_hours=args.max_age_hours
+        )
     if args.command == "verify":
         return _verify(settings, args.snapshot, args.address, out)
     if args.command == "replay":

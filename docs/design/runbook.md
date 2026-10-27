@@ -1,0 +1,118 @@
+# Runbook: schedule, freshness, and recovery
+
+**Status:** operational from 2026-10-27. Thresholds are provisional until
+experiment E5 measures the real publication lag (issue #8).
+
+## What runs on a timer
+
+One command, once a day, plus post-match sweeps. OS-level scheduling is enough:
+one pipeline, one schedule, one writer. No orchestrator until a second source
+or a cross-pipeline dependency exists.
+
+| When | What | Why |
+|---|---|---|
+| `06:00 IST` daily | `uv run python scripts/scheduled_run.py --config config/stages.toml` | catches overnight results, late corrections, multi-day moves |
+| last kickoff `+2 h` and `+6 h` | same command, only for competitions with a fixture in the last 24 h | provisional: catch the result and any late correction; E5 replaces the offsets with a measured p95 |
+
+## Install
+
+Windows Task Scheduler, daily at 06:00 IST:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "uv" `
+  -Argument "run python C:\Users\Viren\codes\dataderby\scripts\scheduled_run.py --config C:\Users\Viren\codes\dataderby\config\stages.toml" `
+  -WorkingDirectory "C:\Users\Viren\codes\dataderby"
+$trigger = New-ScheduledTaskTrigger -Daily -At 06:00
+Register-ScheduledTask -TaskName "dataderby-daily" -Action $action -Trigger $trigger
+```
+
+cron elsewhere (06:00 IST = 00:30 UTC):
+
+```cron
+30 0 * * * cd /opt/dataderby && uv run python scripts/scheduled_run.py --config config/stages.toml >> data/logs/scheduler.log 2>&1
+```
+
+The task must run as a user with a desktop session or a virtual display: the
+feed only answers inside the site's own browser page (issue #14).
+
+## Disable
+
+```powershell
+Disable-ScheduledTask -TaskName "dataderby-daily"
+```
+
+```cron
+# comment out the dataderby line in crontab -e
+```
+
+Disabling the timer is the expected response to a source outage: it stops
+burning the request budget while keeping the database queryable.
+
+## Freshness and thresholds
+
+`dataderby freshness --check` marks every stage `STALE` or `fresh` against a
+ceiling and exits `6` when any stage is stale:
+
+```bash
+uv run dataderby freshness --check --config config/stages.toml
+uv run dataderby freshness --check --max-age-hours 12 --json --config config/stages.toml
+```
+
+The default ceiling is **36 hours**: the daily heartbeat runs every 24 h, so
+36 h tolerates one missed run plus a slow retry. A stage that never succeeded
+(`last_success_at` is `NULL`) is always stale. An age exactly at the ceiling is
+still fresh; the ceiling is a grace period, not a tripwire. Replace the number
+with last-kickoff-plus-p95 once E5 reports.
+
+Run the check on its own timer (for example hourly) and alert on a non-zero
+exit. That is the absence detector: it fires when runs stop happening, which a
+failure alert cannot catch.
+
+## Alerts
+
+Two different failures, two different detectors:
+
+| Failure | Detector | Signal |
+|---|---|---|
+| the run fails | `scheduled_run.py` | alert line on stderr, optional POST to `DATADERBY_ALERT_URL`; the run's exit code is preserved |
+| the scheduler dies | dead-man's switch | `scheduled_run.py` pings `DATADERBY_HEARTBEAT_URL` on success; the monitor alerts when no ping arrives in the window |
+
+Set the heartbeat URL in the task environment:
+
+```powershell
+$env:DATADERBY_HEARTBEAT_URL = "https://monitor.example/ping/dataderby"
+```
+
+Without a URL the script logs `ok (no heartbeat URL set, skipping ping)` and
+still exits `0`. A failed ping never changes the run's outcome.
+
+## Exit codes
+
+Fixed by `plans/v1-build-plan.md` §11:
+
+| Code | Meaning | First response |
+|---|---|---|
+| `0` | ok, or `no_change` | none; check the WARN lines |
+| `2` | a feed could not be fetched | read the stderr line; check the source and the request budget |
+| `3` | publish or parse was blocked | read which assertion id; a BLOCK is a data problem, a WARN is not |
+| `4` | configuration or usage | fix the invocation; includes a bad stage key and a bad `--max-age-hours` |
+| `5` | another process holds the lock | the previous run overran; treat as a failure signal, not a retry hint |
+| `6` | internal failure, or a verification mismatch | includes `freshness --check` finding a stale stage |
+
+## Recovery
+
+| Situation | Action |
+|---|---|
+| stale stage | run `dataderby run --stage <key>` by hand, then `freshness --check` to confirm |
+| blocked run (`3`) | read the assertion id in stderr; fix the data or the rule, never delete the test |
+| crashed run | `dataderby verify` to find the half-written state; `reconcile` repairs the ledger on the next run |
+| locked (`5`) | do not delete the lock file while a run may be alive; wait, then check the process |
+| source outage | disable the timer; the database stays queryable; re-enable and run once by hand |
+
+## Where the evidence lives
+
+- Run ledger: `ingestion_run` table (`running` → `accepted` / `no_change` / `blocked` / `failed`).
+- Raw bundles: `data/raw/<tournament>/<season>/<stage>/<timestamp>/` with SHA-256 sidecars.
+- JSON-lines logs: `data/logs/<UTC date>.jsonl`, including `publish.warning` lines.
+- Freshness: `v_pipeline_freshness` (`age_seconds`, `last_outcome`, `attempt_count`).
+- Scheduler output: `data/logs/scheduler.log` (cron) or the Task Scheduler history tab.
