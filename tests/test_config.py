@@ -115,10 +115,14 @@ log_dir = "var/logs"
 def test_repository_stage_registry_loads() -> None:
     settings = load_settings(Path("config/stages.toml"))
 
-    assert len(settings.stages) == 12
+    assert len(settings.stages) == 295
+    assert sum(1 for spec in settings.stages.values() if spec.active) == 12
     assert settings.stages["la-liga-2026-2027"].expected_teams == 20
     # Live page on 2026-10-26 shows 36 teams; the feed is empty (see
     # docs/reports/all-league-capture.md).
     assert settings.stages["conference-league-2026-2027"].expected_teams == 36
+    assert settings.stages["epl-1999-2000"].whoscored_stage_id == 2
+    assert settings.stages["championship-2013-2014"].has_league_table is False
     assert all(spec.stage in spec.expected_stages for spec in settings.stages.values())
-    assert len({spec.whoscored_stage_id for spec in settings.stages.values()}) == 12
+    assert len({spec.whoscored_stage_id for spec in settings.stages.values()}) == 295
+    assert len({spec.key for spec in settings.stages.values()}) == 295

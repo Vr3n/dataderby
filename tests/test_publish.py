@@ -367,6 +367,20 @@ def test_insert_facts_uses_names_verbatim(
     assert name == "O'Reilly"
 
 
+def test_publish_without_a_table_writes_team_facts_only(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    spec = _SPEC.model_copy(update={"has_league_table": False})
+    run = _run_at("run_no_table", _NOW)
+    _insert_run(con, run, spec)
+    candidate = build_candidate(list(run.feeds), spec)
+    standings = StandingsCandidate(rows=())
+
+    assert publish(con, candidate, standings, spec, run) is Outcome.ACCEPTED
+    assert _count(con, "fact_team_snapshot") == 20
+    assert _count(con, "fact_standings_snapshot") == 0
+
+
 def test_reconcile_accepts_committed_and_abandons_uncommitted_runs(
     con: duckdb.DuckDBPyConnection,
 ) -> None:

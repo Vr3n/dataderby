@@ -564,3 +564,3703 @@ expected_teams = 20
 whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/2/stages/2/show/england-premier-league-1999-2000"
 has_league_table = true
 active = false
+[[stage]]
+key = "bundesliga-2025-2026"
+whoscored_tournament_id = 3
+whoscored_season_id = 10720
+whoscored_stage_id = 24478
+season_key = "2025-2026"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/10720/stages/24478/show/germany-bundesliga-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2024-2025"
+whoscored_tournament_id = 3
+whoscored_season_id = 10365
+whoscored_stage_id = 23471
+season_key = "2024-2025"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/10365/stages/23471/show/germany-bundesliga-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2023-2024"
+whoscored_tournament_id = 3
+whoscored_season_id = 9649
+whoscored_stage_id = 22128
+season_key = "2023-2024"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/9649/stages/22128/show/germany-bundesliga-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2022-2023"
+whoscored_tournament_id = 3
+whoscored_season_id = 9120
+whoscored_stage_id = 21026
+season_key = "2022-2023"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/9120/stages/21026/show/germany-bundesliga-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2021-2022"
+whoscored_tournament_id = 3
+whoscored_season_id = 8667
+whoscored_stage_id = 19862
+season_key = "2021-2022"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/8667/stages/19862/show/germany-bundesliga-2021-2022"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2020-2021"
+whoscored_tournament_id = 3
+whoscored_season_id = 8279
+whoscored_stage_id = 18762
+season_key = "2020-2021"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/8279/stages/18762/show/germany-bundesliga-2020-2021"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2019-2020"
+whoscored_tournament_id = 3
+whoscored_season_id = 7872
+whoscored_stage_id = 17682
+season_key = "2019-2020"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/7872/stages/17682/show/germany-bundesliga-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2018-2019"
+whoscored_tournament_id = 3
+whoscored_season_id = 7405
+whoscored_stage_id = 16427
+season_key = "2018-2019"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/7405/stages/16427/show/germany-bundesliga-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2017-2018"
+whoscored_tournament_id = 3
+whoscored_season_id = 6902
+whoscored_stage_id = 15243
+season_key = "2017-2018"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/6902/stages/15243/show/germany-bundesliga-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2016-2017"
+whoscored_tournament_id = 3
+whoscored_season_id = 6392
+whoscored_stage_id = 13872
+season_key = "2016-2017"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/6392/stages/13872/show/germany-bundesliga-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2015-2016"
+whoscored_tournament_id = 3
+whoscored_season_id = 5870
+whoscored_stage_id = 12559
+season_key = "2015-2016"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/5870/stages/12559/show/germany-bundesliga-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2014-2015"
+whoscored_tournament_id = 3
+whoscored_season_id = 4336
+whoscored_stage_id = 9192
+season_key = "2014-2015"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/4336/stages/9192/show/germany-bundesliga-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2013-2014"
+whoscored_tournament_id = 3
+whoscored_season_id = 3863
+whoscored_stage_id = 7806
+season_key = "2013-2014"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/3863/stages/7806/show/germany-bundesliga-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2012-2013"
+whoscored_tournament_id = 3
+whoscored_season_id = 3424
+whoscored_stage_id = 6576
+season_key = "2012-2013"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/3424/stages/6576/show/germany-bundesliga-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2011-2012"
+whoscored_tournament_id = 3
+whoscored_season_id = 2949
+whoscored_stage_id = 5492
+season_key = "2011-2012"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/2949/stages/5492/show/germany-bundesliga-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2010-2011"
+whoscored_tournament_id = 3
+whoscored_season_id = 2520
+whoscored_stage_id = 4448
+season_key = "2010-2011"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/2520/stages/4448/show/germany-bundesliga-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2009-2010"
+whoscored_tournament_id = 3
+whoscored_season_id = 1903
+whoscored_stage_id = 3181
+season_key = "2009-2010"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/1903/stages/3181/show/germany-bundesliga-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2008-2009"
+whoscored_tournament_id = 3
+whoscored_season_id = 1535
+whoscored_stage_id = 2532
+season_key = "2008-2009"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/1535/stages/2532/show/germany-bundesliga-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2007-2008"
+whoscored_tournament_id = 3
+whoscored_season_id = 1253
+whoscored_stage_id = 2021
+season_key = "2007-2008"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/1253/stages/2021/show/germany-bundesliga-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2006-2007"
+whoscored_tournament_id = 3
+whoscored_season_id = 673
+whoscored_stage_id = 945
+season_key = "2006-2007"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/673/stages/945/show/germany-bundesliga-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2005-2006"
+whoscored_tournament_id = 3
+whoscored_season_id = 812
+whoscored_stage_id = 1180
+season_key = "2005-2006"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/812/stages/1180/show/germany-bundesliga-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2004-2005"
+whoscored_tournament_id = 3
+whoscored_season_id = 564
+whoscored_stage_id = 762
+season_key = "2004-2005"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/564/stages/762/show/germany-bundesliga-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2003-2004"
+whoscored_tournament_id = 3
+whoscored_season_id = 395
+whoscored_stage_id = 502
+season_key = "2003-2004"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/395/stages/502/show/germany-bundesliga-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2002-2003"
+whoscored_tournament_id = 3
+whoscored_season_id = 284
+whoscored_stage_id = 344
+season_key = "2002-2003"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/284/stages/344/show/germany-bundesliga-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2001-2002"
+whoscored_tournament_id = 3
+whoscored_season_id = 162
+whoscored_stage_id = 180
+season_key = "2001-2002"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/162/stages/180/show/germany-bundesliga-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-2000-2001"
+whoscored_tournament_id = 3
+whoscored_season_id = 76
+whoscored_stage_id = 78
+season_key = "2000-2001"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/76/stages/78/show/germany-bundesliga-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "bundesliga-1999-2000"
+whoscored_tournament_id = 3
+whoscored_season_id = 3
+whoscored_stage_id = 3
+season_key = "1999-2000"
+competition = "Bundesliga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/81/tournaments/3/seasons/3/stages/3/show/germany-bundesliga-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2025-2026"
+whoscored_tournament_id = 4
+whoscored_season_id = 10803
+whoscored_stage_id = 24622
+season_key = "2025-2026"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/10803/stages/24622/show/spain-laliga-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2024-2025"
+whoscored_tournament_id = 4
+whoscored_season_id = 10317
+whoscored_stage_id = 23401
+season_key = "2024-2025"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/10317/stages/23401/show/spain-laliga-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2023-2024"
+whoscored_tournament_id = 4
+whoscored_season_id = 9682
+whoscored_stage_id = 22176
+season_key = "2023-2024"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/9682/stages/22176/show/spain-laliga-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2022-2023"
+whoscored_tournament_id = 4
+whoscored_season_id = 9149
+whoscored_stage_id = 21073
+season_key = "2022-2023"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/9149/stages/21073/show/spain-laliga-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2021-2022"
+whoscored_tournament_id = 4
+whoscored_season_id = 8681
+whoscored_stage_id = 19895
+season_key = "2021-2022"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/8681/stages/19895/show/spain-laliga-2021-2022"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2020-2021"
+whoscored_tournament_id = 4
+whoscored_season_id = 8321
+whoscored_stage_id = 18851
+season_key = "2020-2021"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/8321/stages/18851/show/spain-laliga-2020-2021"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2019-2020"
+whoscored_tournament_id = 4
+whoscored_season_id = 7889
+whoscored_stage_id = 17702
+season_key = "2019-2020"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/7889/stages/17702/show/spain-laliga-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2018-2019"
+whoscored_tournament_id = 4
+whoscored_season_id = 7466
+whoscored_stage_id = 16546
+season_key = "2018-2019"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/7466/stages/16546/show/spain-laliga-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2017-2018"
+whoscored_tournament_id = 4
+whoscored_season_id = 6960
+whoscored_stage_id = 15375
+season_key = "2017-2018"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/6960/stages/15375/show/spain-laliga-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2016-2017"
+whoscored_tournament_id = 4
+whoscored_season_id = 6436
+whoscored_stage_id = 13955
+season_key = "2016-2017"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/6436/stages/13955/show/spain-laliga-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2015-2016"
+whoscored_tournament_id = 4
+whoscored_season_id = 5933
+whoscored_stage_id = 12647
+season_key = "2015-2016"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/5933/stages/12647/show/spain-laliga-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2014-2015"
+whoscored_tournament_id = 4
+whoscored_season_id = 5435
+whoscored_stage_id = 11363
+season_key = "2014-2015"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/5435/stages/11363/show/spain-laliga-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2013-2014"
+whoscored_tournament_id = 4
+whoscored_season_id = 3922
+whoscored_stage_id = 7920
+season_key = "2013-2014"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/3922/stages/7920/show/spain-laliga-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2012-2013"
+whoscored_tournament_id = 4
+whoscored_season_id = 3470
+whoscored_stage_id = 6652
+season_key = "2012-2013"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/3470/stages/6652/show/spain-laliga-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2011-2012"
+whoscored_tournament_id = 4
+whoscored_season_id = 3004
+whoscored_stage_id = 5577
+season_key = "2011-2012"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/3004/stages/5577/show/spain-laliga-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2010-2011"
+whoscored_tournament_id = 4
+whoscored_season_id = 2596
+whoscored_stage_id = 4624
+season_key = "2010-2011"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/2596/stages/4624/show/spain-laliga-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2009-2010"
+whoscored_tournament_id = 4
+whoscored_season_id = 1929
+whoscored_stage_id = 3218
+season_key = "2009-2010"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/1929/stages/3218/show/spain-laliga-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2008-2009"
+whoscored_tournament_id = 4
+whoscored_season_id = 1562
+whoscored_stage_id = 2573
+season_key = "2008-2009"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/1562/stages/2573/show/spain-laliga-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2007-2008"
+whoscored_tournament_id = 4
+whoscored_season_id = 1297
+whoscored_stage_id = 2089
+season_key = "2007-2008"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/1297/stages/2089/show/spain-laliga-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2006-2007"
+whoscored_tournament_id = 4
+whoscored_season_id = 693
+whoscored_stage_id = 966
+season_key = "2006-2007"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/693/stages/966/show/spain-laliga-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2005-2006"
+whoscored_tournament_id = 4
+whoscored_season_id = 861
+whoscored_stage_id = 1237
+season_key = "2005-2006"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/861/stages/1237/show/spain-laliga-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2004-2005"
+whoscored_tournament_id = 4
+whoscored_season_id = 610
+whoscored_stage_id = 836
+season_key = "2004-2005"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/610/stages/836/show/spain-laliga-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2003-2004"
+whoscored_tournament_id = 4
+whoscored_season_id = 442
+whoscored_stage_id = 555
+season_key = "2003-2004"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/442/stages/555/show/spain-laliga-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2002-2003"
+whoscored_tournament_id = 4
+whoscored_season_id = 308
+whoscored_stage_id = 368
+season_key = "2002-2003"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/308/stages/368/show/spain-laliga-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2001-2002"
+whoscored_tournament_id = 4
+whoscored_season_id = 201
+whoscored_stage_id = 223
+season_key = "2001-2002"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/201/stages/223/show/spain-laliga-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-2000-2001"
+whoscored_tournament_id = 4
+whoscored_season_id = 94
+whoscored_stage_id = 106
+season_key = "2000-2001"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/94/stages/106/show/spain-laliga-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "laliga-1999-2000"
+whoscored_tournament_id = 4
+whoscored_season_id = 4
+whoscored_stage_id = 4
+season_key = "1999-2000"
+competition = "LaLiga"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/206/tournaments/4/seasons/4/stages/4/show/spain-laliga-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2025-2026"
+whoscored_tournament_id = 5
+whoscored_season_id = 10732
+whoscored_stage_id = 24500
+season_key = "2025-2026"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/10732/stages/24500/show/italy-serie-a-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2024-2025"
+whoscored_tournament_id = 5
+whoscored_season_id = 10375
+whoscored_stage_id = 23490
+season_key = "2024-2025"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/10375/stages/23490/show/italy-serie-a-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2023-2024"
+whoscored_tournament_id = 5
+whoscored_season_id = 9659
+whoscored_stage_id = 22143
+season_key = "2023-2024"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/9659/stages/22143/show/italy-serie-a-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2022-2023"
+whoscored_tournament_id = 5
+whoscored_season_id = 9159
+whoscored_stage_id = 21087
+season_key = "2022-2023"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/9159/stages/21087/show/italy-serie-a-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2021-2022"
+whoscored_tournament_id = 5
+whoscored_season_id = 8735
+whoscored_stage_id = 19982
+season_key = "2021-2022"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/8735/stages/19982/show/italy-serie-a-2021-2022"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2020-2021"
+whoscored_tournament_id = 5
+whoscored_season_id = 8330
+whoscored_stage_id = 18873
+season_key = "2020-2021"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/8330/stages/18873/show/italy-serie-a-2020-2021"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2019-2020"
+whoscored_tournament_id = 5
+whoscored_season_id = 7928
+whoscored_stage_id = 17835
+season_key = "2019-2020"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/7928/stages/17835/show/italy-serie-a-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2018-2019"
+whoscored_tournament_id = 5
+whoscored_season_id = 7468
+whoscored_stage_id = 16548
+season_key = "2018-2019"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/7468/stages/16548/show/italy-serie-a-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2017-2018"
+whoscored_tournament_id = 5
+whoscored_season_id = 6974
+whoscored_stage_id = 15404
+season_key = "2017-2018"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/6974/stages/15404/show/italy-serie-a-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2016-2017"
+whoscored_tournament_id = 5
+whoscored_season_id = 6461
+whoscored_stage_id = 14014
+season_key = "2016-2017"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/6461/stages/14014/show/italy-serie-a-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2015-2016"
+whoscored_tournament_id = 5
+whoscored_season_id = 5970
+whoscored_stage_id = 12770
+season_key = "2015-2016"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/5970/stages/12770/show/italy-serie-a-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2014-2015"
+whoscored_tournament_id = 5
+whoscored_season_id = 5441
+whoscored_stage_id = 11369
+season_key = "2014-2015"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/5441/stages/11369/show/italy-serie-a-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2013-2014"
+whoscored_tournament_id = 5
+whoscored_season_id = 3978
+whoscored_stage_id = 8019
+season_key = "2013-2014"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/3978/stages/8019/show/italy-serie-a-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2012-2013"
+whoscored_tournament_id = 5
+whoscored_season_id = 3512
+whoscored_stage_id = 6739
+season_key = "2012-2013"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/3512/stages/6739/show/italy-serie-a-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2011-2012"
+whoscored_tournament_id = 5
+whoscored_season_id = 3054
+whoscored_stage_id = 5667
+season_key = "2011-2012"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/3054/stages/5667/show/italy-serie-a-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2010-2011"
+whoscored_tournament_id = 5
+whoscored_season_id = 2626
+whoscored_stage_id = 4659
+season_key = "2010-2011"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/2626/stages/4659/show/italy-serie-a-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+# 2009/10 feeds omit Parma (24341) while the table includes them; A1 passes
+# on 20 rows but check_team_sets refuses the mismatch. Do not schedule.
+# Serie A 2009/10-2014/15 feeds omit Parma (24341) while the table includes them; do not schedule.
+key = "seriea-2009-2010"
+whoscored_tournament_id = 5
+whoscored_season_id = 1957
+whoscored_stage_id = 3277
+season_key = "2009-2010"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/1957/stages/3277/show/italy-serie-a-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2008-2009"
+whoscored_tournament_id = 5
+whoscored_season_id = 1558
+whoscored_stage_id = 2569
+season_key = "2008-2009"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/1558/stages/2569/show/italy-serie-a-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2007-2008"
+whoscored_tournament_id = 5
+whoscored_season_id = 1293
+whoscored_stage_id = 2085
+season_key = "2007-2008"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/1293/stages/2085/show/italy-serie-a-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2006-2007"
+whoscored_tournament_id = 5
+whoscored_season_id = 687
+whoscored_stage_id = 959
+season_key = "2006-2007"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/687/stages/959/show/italy-serie-a-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2005-2006"
+whoscored_tournament_id = 5
+whoscored_season_id = 857
+whoscored_stage_id = 1233
+season_key = "2005-2006"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/857/stages/1233/show/italy-serie-a-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2004-2005"
+whoscored_tournament_id = 5
+whoscored_season_id = 619
+whoscored_stage_id = 19137
+season_key = "2004-2005"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/619/stages/19137/show/italy-serie-a-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2003-2004"
+whoscored_tournament_id = 5
+whoscored_season_id = 440
+whoscored_stage_id = 553
+season_key = "2003-2004"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/440/stages/553/show/italy-serie-a-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2002-2003"
+whoscored_tournament_id = 5
+whoscored_season_id = 319
+whoscored_stage_id = 469
+season_key = "2002-2003"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/319/stages/469/show/italy-serie-a-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2001-2002"
+whoscored_tournament_id = 5
+whoscored_season_id = 200
+whoscored_stage_id = 222
+season_key = "2001-2002"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/200/stages/222/show/italy-serie-a-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-2000-2001"
+whoscored_tournament_id = 5
+whoscored_season_id = 96
+whoscored_stage_id = 161
+season_key = "2000-2001"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/96/stages/161/show/italy-serie-a-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "seriea-1999-2000"
+whoscored_tournament_id = 5
+whoscored_season_id = 5
+whoscored_stage_id = 6907
+season_key = "1999-2000"
+competition = "Serie A"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/108/tournaments/5/seasons/5/stages/6907/show/italy-serie-a-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2025-2026"
+whoscored_tournament_id = 7
+whoscored_season_id = 10784
+whoscored_stage_id = 24580
+season_key = "2025-2026"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/10784/stages/24580/show/england-championship-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2024-2025"
+whoscored_tournament_id = 7
+whoscored_season_id = 10343
+whoscored_stage_id = 24355
+season_key = "2024-2025"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/10343/stages/24355/show/england-championship-2024-2025"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2023-2024"
+whoscored_tournament_id = 7
+whoscored_season_id = 9622
+whoscored_stage_id = 23160
+season_key = "2023-2024"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/9622/stages/23160/show/england-championship-2023-2024"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2022-2023"
+whoscored_tournament_id = 7
+whoscored_season_id = 9141
+whoscored_stage_id = 21990
+season_key = "2022-2023"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/9141/stages/21990/show/england-championship-2022-2023"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2021-2022"
+whoscored_tournament_id = 7
+whoscored_season_id = 8619
+whoscored_stage_id = 20802
+season_key = "2021-2022"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/8619/stages/20802/show/england-championship-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2020-2021"
+whoscored_tournament_id = 7
+whoscored_season_id = 8304
+whoscored_stage_id = 19661
+season_key = "2020-2021"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/8304/stages/19661/show/england-championship-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2019-2020"
+whoscored_tournament_id = 7
+whoscored_season_id = 7840
+whoscored_stage_id = 18673
+season_key = "2019-2020"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/7840/stages/18673/show/england-championship-2019-2020"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2018-2019"
+whoscored_tournament_id = 7
+whoscored_season_id = 7379
+whoscored_stage_id = 17369
+season_key = "2018-2019"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/7379/stages/17369/show/england-championship-2018-2019"
+has_league_table = false
+active = false
+
+[[stage]]
+# 2017/18 page carries the full table; the neighboring seasons are stubs.
+key = "championship-2017-2018"
+whoscored_tournament_id = 7
+whoscored_season_id = 6848
+whoscored_stage_id = 15177
+season_key = "2017-2018"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/6848/stages/15177/show/england-championship-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2016-2017"
+whoscored_tournament_id = 7
+whoscored_season_id = 6365
+whoscored_stage_id = 14976
+season_key = "2016-2017"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/6365/stages/14976/show/england-championship-2016-2017"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2015-2016"
+whoscored_tournament_id = 7
+whoscored_season_id = 5827
+whoscored_stage_id = 13644
+season_key = "2015-2016"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/5827/stages/13644/show/england-championship-2015-2016"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2014-2015"
+whoscored_tournament_id = 7
+whoscored_season_id = 4312
+whoscored_stage_id = 12309
+season_key = "2014-2015"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/4312/stages/12309/show/england-championship-2014-2015"
+has_league_table = false
+active = false
+
+[[stage]]
+# 2013/14 page is a stub with no standings table; team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "championship-2013-2014"
+whoscored_tournament_id = 7
+whoscored_season_id = 3859
+whoscored_stage_id = 9012
+season_key = "2013-2014"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/3859/stages/9012/show/england-championship-2013-2014"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "championship-2012-2013"
+whoscored_tournament_id = 7
+whoscored_season_id = 3390
+whoscored_stage_id = 7607
+season_key = "2012-2013"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/3390/stages/7607/show/england-championship-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2011-2012"
+whoscored_tournament_id = 7
+whoscored_season_id = 2936
+whoscored_stage_id = 6319
+season_key = "2011-2012"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/2936/stages/6319/show/england-championship-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2010-2011"
+whoscored_tournament_id = 7
+whoscored_season_id = 2460
+whoscored_stage_id = 5354
+season_key = "2010-2011"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/2460/stages/5354/show/england-championship-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2009-2010"
+whoscored_tournament_id = 7
+whoscored_season_id = 1853
+whoscored_stage_id = 4213
+season_key = "2009-2010"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/1853/stages/4213/show/england-championship-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2008-2009"
+whoscored_tournament_id = 7
+whoscored_season_id = 1509
+whoscored_stage_id = 3033
+season_key = "2008-2009"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/1509/stages/3033/show/england-championship-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2007-2008"
+whoscored_tournament_id = 7
+whoscored_season_id = 1259
+whoscored_stage_id = 2370
+season_key = "2007-2008"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/1259/stages/2370/show/england-championship-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2006-2007"
+whoscored_tournament_id = 7
+whoscored_season_id = 676
+whoscored_stage_id = 1862
+season_key = "2006-2007"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/676/stages/1862/show/england-championship-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2005-2006"
+whoscored_tournament_id = 7
+whoscored_season_id = 818
+whoscored_stage_id = 1441
+season_key = "2005-2006"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/818/stages/1441/show/england-championship-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2004-2005"
+whoscored_tournament_id = 7
+whoscored_season_id = 568
+whoscored_stage_id = 1072
+season_key = "2004-2005"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/568/stages/1072/show/england-championship-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2003-2004"
+whoscored_tournament_id = 7
+whoscored_season_id = 410
+whoscored_stage_id = 673
+season_key = "2003-2004"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/410/stages/673/show/england-championship-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2002-2003"
+whoscored_tournament_id = 7
+whoscored_season_id = 286
+whoscored_stage_id = 461
+season_key = "2002-2003"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/286/stages/461/show/england-championship-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2001-2002"
+whoscored_tournament_id = 7
+whoscored_season_id = 181
+whoscored_stage_id = 5207
+season_key = "2001-2002"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/181/stages/5207/show/england-championship-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-2000-2001"
+whoscored_tournament_id = 7
+whoscored_season_id = 77
+whoscored_stage_id = 5208
+season_key = "2000-2001"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/77/stages/5208/show/england-championship-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "championship-1999-2000"
+whoscored_tournament_id = 7
+whoscored_season_id = 7
+whoscored_stage_id = 5206
+season_key = "1999-2000"
+competition = "Championship"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/7/seasons/7/stages/5206/show/england-championship-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2025-2026"
+whoscored_tournament_id = 8
+whoscored_season_id = 10785
+whoscored_stage_id = 24581
+season_key = "2025-2026"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/10785/stages/24581/show/england-league-one-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leagueone-2024-2025"
+whoscored_tournament_id = 8
+whoscored_season_id = 10342
+whoscored_stage_id = 24356
+season_key = "2024-2025"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/10342/stages/24356/show/england-league-one-2024-2025"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leagueone-2023-2024"
+whoscored_tournament_id = 8
+whoscored_season_id = 9623
+whoscored_stage_id = 23161
+season_key = "2023-2024"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/9623/stages/23161/show/england-league-one-2023-2024"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leagueone-2022-2023"
+whoscored_tournament_id = 8
+whoscored_season_id = 9142
+whoscored_stage_id = 21986
+season_key = "2022-2023"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/9142/stages/21986/show/england-league-one-2022-2023"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leagueone-2021-2022"
+whoscored_tournament_id = 8
+whoscored_season_id = 8620
+whoscored_stage_id = 20803
+season_key = "2021-2022"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/8620/stages/20803/show/england-league-one-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leagueone-2020-2021"
+whoscored_tournament_id = 8
+whoscored_season_id = 8305
+whoscored_stage_id = 19705
+season_key = "2020-2021"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/8305/stages/19705/show/england-league-one-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+# 23 clubs: Bury expelled August 2019, season completed with 23.
+# 2019/20 curtailed (COVID): the page carries a single final table the
+# parser does not read, so team performance publishes without standings,
+# knockout-style. Feed cohort is full and validated.
+key = "leagueone-2019-2020"
+whoscored_tournament_id = 8
+whoscored_season_id = 7841
+whoscored_stage_id = 18549
+season_key = "2019-2020"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 23
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/7841/stages/18549/show/england-league-one-2019-2020"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "leagueone-2018-2019"
+whoscored_tournament_id = 8
+whoscored_season_id = 7380
+whoscored_stage_id = 16391
+season_key = "2018-2019"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/7380/stages/16391/show/england-league-one-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2017-2018"
+whoscored_tournament_id = 8
+whoscored_season_id = 6849
+whoscored_stage_id = 16219
+season_key = "2017-2018"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/6849/stages/16219/show/england-league-one-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2016-2017"
+whoscored_tournament_id = 8
+whoscored_season_id = 6366
+whoscored_stage_id = 14956
+season_key = "2016-2017"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/6366/stages/14956/show/england-league-one-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2015-2016"
+whoscored_tournament_id = 8
+whoscored_season_id = 5828
+whoscored_stage_id = 13645
+season_key = "2015-2016"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/5828/stages/13645/show/england-league-one-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2014-2015"
+whoscored_tournament_id = 8
+whoscored_season_id = 4313
+whoscored_stage_id = 12308
+season_key = "2014-2015"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/4313/stages/12308/show/england-league-one-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2013-2014"
+whoscored_tournament_id = 8
+whoscored_season_id = 3860
+whoscored_stage_id = 9013
+season_key = "2013-2014"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/3860/stages/9013/show/england-league-one-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2012-2013"
+whoscored_tournament_id = 8
+whoscored_season_id = 3392
+whoscored_stage_id = 7580
+season_key = "2012-2013"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/3392/stages/7580/show/england-league-one-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2011-2012"
+whoscored_tournament_id = 8
+whoscored_season_id = 2938
+whoscored_stage_id = 6347
+season_key = "2011-2012"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/2938/stages/6347/show/england-league-one-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2010-2011"
+whoscored_tournament_id = 8
+whoscored_season_id = 2461
+whoscored_stage_id = 5352
+season_key = "2010-2011"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/2461/stages/5352/show/england-league-one-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2009-2010"
+whoscored_tournament_id = 8
+whoscored_season_id = 1852
+whoscored_stage_id = 4225
+season_key = "2009-2010"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/1852/stages/4225/show/england-league-one-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2008-2009"
+whoscored_tournament_id = 8
+whoscored_season_id = 1507
+whoscored_stage_id = 3031
+season_key = "2008-2009"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/1507/stages/3031/show/england-league-one-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2007-2008"
+whoscored_tournament_id = 8
+whoscored_season_id = 1260
+whoscored_stage_id = 2368
+season_key = "2007-2008"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/1260/stages/2368/show/england-league-one-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2006-2007"
+whoscored_tournament_id = 8
+whoscored_season_id = 674
+whoscored_stage_id = 1859
+season_key = "2006-2007"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/674/stages/1859/show/england-league-one-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2005-2006"
+whoscored_tournament_id = 8
+whoscored_season_id = 822
+whoscored_stage_id = 1447
+season_key = "2005-2006"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/822/stages/1447/show/england-league-one-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2004-2005"
+whoscored_tournament_id = 8
+whoscored_season_id = 572
+whoscored_stage_id = 1071
+season_key = "2004-2005"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/572/stages/1071/show/england-league-one-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2003-2004"
+whoscored_tournament_id = 8
+whoscored_season_id = 412
+whoscored_stage_id = 676
+season_key = "2003-2004"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/412/stages/676/show/england-league-one-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2002-2003"
+whoscored_tournament_id = 8
+whoscored_season_id = 287
+whoscored_stage_id = 462
+season_key = "2002-2003"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/287/stages/462/show/england-league-one-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2001-2002"
+whoscored_tournament_id = 8
+whoscored_season_id = 182
+whoscored_stage_id = 4410
+season_key = "2001-2002"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/182/stages/4410/show/england-league-one-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-2000-2001"
+whoscored_tournament_id = 8
+whoscored_season_id = 78
+whoscored_stage_id = 4411
+season_key = "2000-2001"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/78/stages/4411/show/england-league-one-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leagueone-1999-2000"
+whoscored_tournament_id = 8
+whoscored_season_id = 8
+whoscored_stage_id = 5202
+season_key = "1999-2000"
+competition = "League One"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/8/seasons/8/stages/5202/show/england-league-one-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2025-2026"
+whoscored_tournament_id = 9
+whoscored_season_id = 10786
+whoscored_stage_id = 24582
+season_key = "2025-2026"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/10786/stages/24582/show/england-league-two-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2024-2025"
+whoscored_tournament_id = 9
+whoscored_season_id = 10344
+whoscored_stage_id = 23429
+season_key = "2024-2025"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/10344/stages/23429/show/england-league-two-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leaguetwo-2023-2024"
+whoscored_tournament_id = 9
+whoscored_season_id = 9621
+whoscored_stage_id = 23162
+season_key = "2023-2024"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/9621/stages/23162/show/england-league-two-2023-2024"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leaguetwo-2022-2023"
+whoscored_tournament_id = 9
+whoscored_season_id = 9143
+whoscored_stage_id = 21991
+season_key = "2022-2023"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/9143/stages/21991/show/england-league-two-2022-2023"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leaguetwo-2021-2022"
+whoscored_tournament_id = 9
+whoscored_season_id = 8621
+whoscored_stage_id = 20804
+season_key = "2021-2022"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/8621/stages/20804/show/england-league-two-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "leaguetwo-2020-2021"
+whoscored_tournament_id = 9
+whoscored_season_id = 8306
+whoscored_stage_id = 19704
+season_key = "2020-2021"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/8306/stages/19704/show/england-league-two-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+# 2019/20 curtailed (COVID): the page carries a single final table the
+# parser does not read, so team performance publishes without standings,
+# knockout-style. Feed cohort is full and validated.
+key = "leaguetwo-2019-2020"
+whoscored_tournament_id = 9
+whoscored_season_id = 7842
+whoscored_stage_id = 18538
+season_key = "2019-2020"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/7842/stages/18538/show/england-league-two-2019-2020"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "leaguetwo-2018-2019"
+whoscored_tournament_id = 9
+whoscored_season_id = 7381
+whoscored_stage_id = 17396
+season_key = "2018-2019"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/7381/stages/17396/show/england-league-two-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2017-2018"
+whoscored_tournament_id = 9
+whoscored_season_id = 6850
+whoscored_stage_id = 16220
+season_key = "2017-2018"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/6850/stages/16220/show/england-league-two-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2016-2017"
+whoscored_tournament_id = 9
+whoscored_season_id = 6367
+whoscored_stage_id = 15002
+season_key = "2016-2017"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/6367/stages/15002/show/england-league-two-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2015-2016"
+whoscored_tournament_id = 9
+whoscored_season_id = 5829
+whoscored_stage_id = 13646
+season_key = "2015-2016"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/5829/stages/13646/show/england-league-two-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2014-2015"
+whoscored_tournament_id = 9
+whoscored_season_id = 4314
+whoscored_stage_id = 12307
+season_key = "2014-2015"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/4314/stages/12307/show/england-league-two-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2013-2014"
+whoscored_tournament_id = 9
+whoscored_season_id = 3857
+whoscored_stage_id = 9014
+season_key = "2013-2014"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/3857/stages/9014/show/england-league-two-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2012-2013"
+whoscored_tournament_id = 9
+whoscored_season_id = 3394
+whoscored_stage_id = 7579
+season_key = "2012-2013"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/3394/stages/7579/show/england-league-two-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2011-2012"
+whoscored_tournament_id = 9
+whoscored_season_id = 2933
+whoscored_stage_id = 6348
+season_key = "2011-2012"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/2933/stages/6348/show/england-league-two-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2010-2011"
+whoscored_tournament_id = 9
+whoscored_season_id = 2462
+whoscored_stage_id = 5353
+season_key = "2010-2011"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/2462/stages/5353/show/england-league-two-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2009-2010"
+whoscored_tournament_id = 9
+whoscored_season_id = 1857
+whoscored_stage_id = 4224
+season_key = "2009-2010"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/1857/stages/4224/show/england-league-two-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2008-2009"
+whoscored_tournament_id = 9
+whoscored_season_id = 1515
+whoscored_stage_id = 3032
+season_key = "2008-2009"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/1515/stages/3032/show/england-league-two-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2007-2008"
+whoscored_tournament_id = 9
+whoscored_season_id = 1261
+whoscored_stage_id = 2372
+season_key = "2007-2008"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/1261/stages/2372/show/england-league-two-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2006-2007"
+whoscored_tournament_id = 9
+whoscored_season_id = 668
+whoscored_stage_id = 1864
+season_key = "2006-2007"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/668/stages/1864/show/england-league-two-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2005-2006"
+whoscored_tournament_id = 9
+whoscored_season_id = 823
+whoscored_stage_id = 1448
+season_key = "2005-2006"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/823/stages/1448/show/england-league-two-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2004-2005"
+whoscored_tournament_id = 9
+whoscored_season_id = 573
+whoscored_stage_id = 1073
+season_key = "2004-2005"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/573/stages/1073/show/england-league-two-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2003-2004"
+whoscored_tournament_id = 9
+whoscored_season_id = 413
+whoscored_stage_id = 675
+season_key = "2003-2004"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/413/stages/675/show/england-league-two-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2002-2003"
+whoscored_tournament_id = 9
+whoscored_season_id = 288
+whoscored_stage_id = 463
+season_key = "2002-2003"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/288/stages/463/show/england-league-two-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2001-2002"
+whoscored_tournament_id = 9
+whoscored_season_id = 183
+whoscored_stage_id = 5203
+season_key = "2001-2002"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/183/stages/5203/show/england-league-two-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-2000-2001"
+whoscored_tournament_id = 9
+whoscored_season_id = 79
+whoscored_stage_id = 5205
+season_key = "2000-2001"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/79/stages/5205/show/england-league-two-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "leaguetwo-1999-2000"
+whoscored_tournament_id = 9
+whoscored_season_id = 9
+whoscored_stage_id = 5204
+season_key = "1999-2000"
+competition = "League Two"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 24
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/9/seasons/9/stages/5204/show/england-league-two-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "ucl-2025-2026"
+whoscored_tournament_id = 12
+whoscored_season_id = 10903
+whoscored_stage_id = 24797
+season_key = "2025-2026"
+competition = "Champions League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 36
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/10903/stages/24797/show/europe-champions-league-2025-2026"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "ucl-2024-2025"
+whoscored_tournament_id = 12
+whoscored_season_id = 10456
+whoscored_stage_id = 24083
+season_key = "2024-2025"
+competition = "Champions League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 36
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/10456/stages/24083/show/europe-champions-league-2024-2025"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "eredivisie-2025-2026"
+whoscored_tournament_id = 13
+whoscored_season_id = 10752
+whoscored_stage_id = 24542
+season_key = "2025-2026"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/10752/stages/24542/show/netherlands-eredivisie-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2024-2025"
+whoscored_tournament_id = 13
+whoscored_season_id = 10321
+whoscored_stage_id = 23405
+season_key = "2024-2025"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/10321/stages/23405/show/netherlands-eredivisie-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2023-2024"
+whoscored_tournament_id = 13
+whoscored_season_id = 9705
+whoscored_stage_id = 22225
+season_key = "2023-2024"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/9705/stages/22225/show/netherlands-eredivisie-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2022-2023"
+whoscored_tournament_id = 13
+whoscored_season_id = 9112
+whoscored_stage_id = 21021
+season_key = "2022-2023"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/9112/stages/21021/show/netherlands-eredivisie-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2021-2022"
+whoscored_tournament_id = 13
+whoscored_season_id = 8625
+whoscored_stage_id = 20892
+season_key = "2021-2022"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/8625/stages/20892/show/netherlands-eredivisie-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2020-2021"
+whoscored_tournament_id = 13
+whoscored_season_id = 8187
+whoscored_stage_id = 19720
+season_key = "2020-2021"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/8187/stages/19720/show/netherlands-eredivisie-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "eredivisie-2019-2020"
+whoscored_tournament_id = 13
+whoscored_season_id = 7815
+whoscored_stage_id = 17594
+season_key = "2019-2020"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/7815/stages/17594/show/netherlands-eredivisie-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2018-2019"
+whoscored_tournament_id = 13
+whoscored_season_id = 7354
+whoscored_stage_id = 16360
+season_key = "2018-2019"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/7354/stages/16360/show/netherlands-eredivisie-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2017-2018"
+whoscored_tournament_id = 13
+whoscored_season_id = 6826
+whoscored_stage_id = 15148
+season_key = "2017-2018"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/6826/stages/15148/show/netherlands-eredivisie-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2016-2017"
+whoscored_tournament_id = 13
+whoscored_season_id = 6331
+whoscored_stage_id = 15035
+season_key = "2016-2017"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/6331/stages/15035/show/netherlands-eredivisie-2016-2017"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2015-2016"
+whoscored_tournament_id = 13
+whoscored_season_id = 5810
+whoscored_stage_id = 13622
+season_key = "2015-2016"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/5810/stages/13622/show/netherlands-eredivisie-2015-2016"
+has_league_table = false
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2014-2015"
+whoscored_tournament_id = 13
+whoscored_season_id = 4289
+whoscored_stage_id = 12386
+season_key = "2014-2015"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/4289/stages/12386/show/netherlands-eredivisie-2014-2015"
+has_league_table = false
+active = false
+
+[[stage]]
+# 2013/14 page is a stub with no standings table; team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "eredivisie-2013-2014"
+whoscored_tournament_id = 13
+whoscored_season_id = 3851
+whoscored_stage_id = 9026
+season_key = "2013-2014"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/3851/stages/9026/show/netherlands-eredivisie-2013-2014"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "eredivisie-2012-2013"
+whoscored_tournament_id = 13
+whoscored_season_id = 3370
+whoscored_stage_id = 7645
+season_key = "2012-2013"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/3370/stages/7645/show/netherlands-eredivisie-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2011-2012"
+whoscored_tournament_id = 13
+whoscored_season_id = 2941
+whoscored_stage_id = 6351
+season_key = "2011-2012"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/2941/stages/6351/show/netherlands-eredivisie-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2010-2011"
+whoscored_tournament_id = 13
+whoscored_season_id = 2442
+whoscored_stage_id = 5371
+season_key = "2010-2011"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/2442/stages/5371/show/netherlands-eredivisie-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2009-2010"
+whoscored_tournament_id = 13
+whoscored_season_id = 1861
+whoscored_stage_id = 4212
+season_key = "2009-2010"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/1861/stages/4212/show/netherlands-eredivisie-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2008-2009"
+whoscored_tournament_id = 13
+whoscored_season_id = 1553
+whoscored_stage_id = 3052
+season_key = "2008-2009"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/1553/stages/3052/show/netherlands-eredivisie-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2007-2008"
+whoscored_tournament_id = 13
+whoscored_season_id = 1280
+whoscored_stage_id = 2357
+season_key = "2007-2008"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/1280/stages/2357/show/netherlands-eredivisie-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2006-2007"
+whoscored_tournament_id = 13
+whoscored_season_id = 688
+whoscored_stage_id = 1854
+season_key = "2006-2007"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/688/stages/1854/show/netherlands-eredivisie-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2005-2006"
+whoscored_tournament_id = 13
+whoscored_season_id = 834
+whoscored_stage_id = 1407
+season_key = "2005-2006"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/834/stages/1407/show/netherlands-eredivisie-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2004-2005"
+whoscored_tournament_id = 13
+whoscored_season_id = 588
+whoscored_stage_id = 795
+season_key = "2004-2005"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/588/stages/795/show/netherlands-eredivisie-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2003-2004"
+whoscored_tournament_id = 13
+whoscored_season_id = 426
+whoscored_stage_id = 539
+season_key = "2003-2004"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/426/stages/539/show/netherlands-eredivisie-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2002-2003"
+whoscored_tournament_id = 13
+whoscored_season_id = 294
+whoscored_stage_id = 354
+season_key = "2002-2003"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/294/stages/354/show/netherlands-eredivisie-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2001-2002"
+whoscored_tournament_id = 13
+whoscored_season_id = 187
+whoscored_stage_id = 209
+season_key = "2001-2002"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/187/stages/209/show/netherlands-eredivisie-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-2000-2001"
+whoscored_tournament_id = 13
+whoscored_season_id = 83
+whoscored_stage_id = 87
+season_key = "2000-2001"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/83/stages/87/show/netherlands-eredivisie-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "eredivisie-1999-2000"
+whoscored_tournament_id = 13
+whoscored_season_id = 13
+whoscored_stage_id = 13
+season_key = "1999-2000"
+competition = "Eredivisie"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/155/tournaments/13/seasons/13/stages/13/show/netherlands-eredivisie-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "ligue1-2025-2026"
+whoscored_tournament_id = 22
+whoscored_season_id = 10792
+whoscored_stage_id = 24609
+season_key = "2025-2026"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/10792/stages/24609/show/france-ligue-1-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "ligue1-2024-2025"
+whoscored_tournament_id = 22
+whoscored_season_id = 10329
+whoscored_stage_id = 23414
+season_key = "2024-2025"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/10329/stages/23414/show/france-ligue-1-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "ligue1-2023-2024"
+whoscored_tournament_id = 22
+whoscored_season_id = 9635
+whoscored_stage_id = 22105
+season_key = "2023-2024"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/9635/stages/22105/show/france-ligue-1-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+# Pre-2023 Ligue 1 feeds are systematically broken (split team ids across
+# feeds, 18 rows for 20-team cohorts). 2023/24+ validates clean.
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2022-2023"
+whoscored_tournament_id = 22
+whoscored_season_id = 9129
+whoscored_stage_id = 21037
+season_key = "2022-2023"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/9129/stages/21037/show/france-ligue-1-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2021-2022"
+whoscored_tournament_id = 22
+whoscored_season_id = 8671
+whoscored_stage_id = 19866
+season_key = "2021-2022"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/8671/stages/19866/show/france-ligue-1-2021-2022"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2020-2021"
+whoscored_tournament_id = 22
+whoscored_season_id = 8185
+whoscored_stage_id = 18594
+season_key = "2020-2021"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/8185/stages/18594/show/france-ligue-1-2020-2021"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2019-2020"
+whoscored_tournament_id = 22
+whoscored_season_id = 7814
+whoscored_stage_id = 17593
+season_key = "2019-2020"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/7814/stages/17593/show/france-ligue-1-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2018-2019"
+whoscored_tournament_id = 22
+whoscored_season_id = 7344
+whoscored_stage_id = 16348
+season_key = "2018-2019"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/7344/stages/16348/show/france-ligue-1-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2017-2018"
+whoscored_tournament_id = 22
+whoscored_season_id = 6833
+whoscored_stage_id = 15155
+season_key = "2017-2018"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/6833/stages/15155/show/france-ligue-1-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2016-2017"
+whoscored_tournament_id = 22
+whoscored_season_id = 6318
+whoscored_stage_id = 13768
+season_key = "2016-2017"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/6318/stages/13768/show/france-ligue-1-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2015-2016"
+whoscored_tournament_id = 22
+whoscored_season_id = 5830
+whoscored_stage_id = 12501
+season_key = "2015-2016"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/5830/stages/12501/show/france-ligue-1-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2014-2015"
+whoscored_tournament_id = 22
+whoscored_season_id = 4279
+whoscored_stage_id = 9105
+season_key = "2014-2015"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/4279/stages/9105/show/france-ligue-1-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2013-2014"
+whoscored_tournament_id = 22
+whoscored_season_id = 3836
+whoscored_stage_id = 7771
+season_key = "2013-2014"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/3836/stages/7771/show/france-ligue-1-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2012-2013"
+whoscored_tournament_id = 22
+whoscored_season_id = 3356
+whoscored_stage_id = 6476
+season_key = "2012-2013"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/3356/stages/6476/show/france-ligue-1-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2011-2012"
+whoscored_tournament_id = 22
+whoscored_season_id = 2920
+whoscored_stage_id = 5451
+season_key = "2011-2012"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/2920/stages/5451/show/france-ligue-1-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2010-2011"
+whoscored_tournament_id = 22
+whoscored_season_id = 2417
+whoscored_stage_id = 4273
+season_key = "2010-2011"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/2417/stages/4273/show/france-ligue-1-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2009-2010"
+whoscored_tournament_id = 22
+whoscored_season_id = 1839
+whoscored_stage_id = 3099
+season_key = "2009-2010"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/1839/stages/3099/show/france-ligue-1-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2008-2009"
+whoscored_tournament_id = 22
+whoscored_season_id = 1520
+whoscored_stage_id = 2515
+season_key = "2008-2009"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/1520/stages/2515/show/france-ligue-1-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2007-2008"
+whoscored_tournament_id = 22
+whoscored_season_id = 1236
+whoscored_stage_id = 2001
+season_key = "2007-2008"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/1236/stages/2001/show/france-ligue-1-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2006-2007"
+whoscored_tournament_id = 22
+whoscored_season_id = 677
+whoscored_stage_id = 949
+season_key = "2006-2007"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/677/stages/949/show/france-ligue-1-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2005-2006"
+whoscored_tournament_id = 22
+whoscored_season_id = 787
+whoscored_stage_id = 1152
+season_key = "2005-2006"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/787/stages/1152/show/france-ligue-1-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2004-2005"
+whoscored_tournament_id = 22
+whoscored_season_id = 563
+whoscored_stage_id = 761
+season_key = "2004-2005"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/563/stages/761/show/france-ligue-1-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2003-2004"
+whoscored_tournament_id = 22
+whoscored_season_id = 394
+whoscored_stage_id = 501
+season_key = "2003-2004"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/394/stages/501/show/france-ligue-1-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2002-2003"
+whoscored_tournament_id = 22
+whoscored_season_id = 269
+whoscored_stage_id = 325
+season_key = "2002-2003"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/269/stages/325/show/france-ligue-1-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2001-2002"
+whoscored_tournament_id = 22
+whoscored_season_id = 161
+whoscored_stage_id = 179
+season_key = "2001-2002"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/161/stages/179/show/france-ligue-1-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-2000-2001"
+whoscored_tournament_id = 22
+whoscored_season_id = 63
+whoscored_stage_id = 63
+season_key = "2000-2001"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/63/stages/63/show/france-ligue-1-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+# Ligue 1 before 2023/24: systematic feed gaps (split ids, 18 rows for 20-team seasons); do not schedule.
+key = "ligue1-1999-2000"
+whoscored_tournament_id = 22
+whoscored_season_id = 22
+whoscored_stage_id = 22
+season_key = "1999-2000"
+competition = "Ligue 1"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 18
+whoscored_page_url = "https://www.whoscored.com/regions/74/tournaments/22/seasons/22/stages/22/show/france-ligue-1-1999-2000"
+has_league_table = true
+active = false
+
+[[stage]]
+# Archived stub page (no standings table); team feeds are full.
+# Team performance publishes without standings, knockout-style.
+key = "uel-2025-2026"
+whoscored_tournament_id = 30
+whoscored_season_id = 10904
+whoscored_stage_id = 24799
+season_key = "2025-2026"
+competition = "Europa League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 36
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/10904/stages/24799/show/europe-europa-league-2025-2026"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "uel-2024-2025"
+whoscored_tournament_id = 30
+whoscored_season_id = 10458
+whoscored_stage_id = 23665
+season_key = "2024-2025"
+competition = "Europa League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 36
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/10458/stages/23665/show/europe-europa-league-2024-2025"
+has_league_table = true
+active = false
+[[stage]]
+# Group era: the page carries no league table (eight groups, not one cohort).
+# Team performance publishes without standings, knockout-style: 32 team facts,
+# 0 standings facts. check_team_sets is skipped for no-table stages.
+key = "ucl-2023-2024"
+whoscored_tournament_id = 12
+whoscored_season_id = 9664
+whoscored_stage_id = 22686
+season_key = "2023-2024"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/9664/stages/22686/show/europe-champions-league-2023-2024"
+has_league_table = false
+active = false
+
+[[stage]]
+# Source inconsistency: away feeds use unknown id 2247 where the other six
+# feeds use 2647 (Union SG). A4 blocks; do not schedule until the source
+# agrees with itself.
+key = "uel-2023-2024"
+whoscored_tournament_id = 30
+whoscored_season_id = 9778
+whoscored_stage_id = 22687
+season_key = "2023-2024"
+competition = "Europa League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/9778/stages/22687/show/europe-europa-league-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "ucl-2022-2023"
+whoscored_tournament_id = 12
+whoscored_season_id = 9086
+whoscored_stage_id = 20969
+season_key = "2022-2023"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/9086/stages/20969/show/europe-champions-league-2022-2023"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2021-2022"
+whoscored_tournament_id = 12
+whoscored_season_id = 8623
+whoscored_stage_id = 20265
+season_key = "2021-2022"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/8623/stages/20265/show/europe-champions-league-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2020-2021"
+whoscored_tournament_id = 12
+whoscored_season_id = 8177
+whoscored_stage_id = 19130
+season_key = "2020-2021"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/8177/stages/19130/show/europe-champions-league-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2019-2020"
+whoscored_tournament_id = 12
+whoscored_season_id = 7804
+whoscored_stage_id = 18065
+season_key = "2019-2020"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/7804/stages/18065/show/europe-champions-league-2019-2020"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2018-2019"
+whoscored_tournament_id = 12
+whoscored_season_id = 7352
+whoscored_stage_id = 16651
+season_key = "2018-2019"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/7352/stages/16651/show/europe-champions-league-2018-2019"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2017-2018"
+whoscored_tournament_id = 12
+whoscored_season_id = 6842
+whoscored_stage_id = 15619
+season_key = "2017-2018"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/6842/stages/15619/show/europe-champions-league-2017-2018"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2016-2017"
+whoscored_tournament_id = 12
+whoscored_season_id = 6349
+whoscored_stage_id = 14361
+season_key = "2016-2017"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/6349/stages/14361/show/europe-champions-league-2016-2017"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2015-2016"
+whoscored_tournament_id = 12
+whoscored_season_id = 5848
+whoscored_stage_id = 13185
+season_key = "2015-2016"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/5848/stages/13185/show/europe-champions-league-2015-2016"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2014-2015"
+whoscored_tournament_id = 12
+whoscored_season_id = 4333
+whoscored_stage_id = 11810
+season_key = "2014-2015"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/4333/stages/11810/show/europe-champions-league-2014-2015"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2013-2014"
+whoscored_tournament_id = 12
+whoscored_season_id = 3872
+whoscored_stage_id = 8462
+season_key = "2013-2014"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/3872/stages/8462/show/europe-champions-league-2013-2014"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2012-2013"
+whoscored_tournament_id = 12
+whoscored_season_id = 3416
+whoscored_stage_id = 7228
+season_key = "2012-2013"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/3416/stages/7228/show/europe-champions-league-2012-2013"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2011-2012"
+whoscored_tournament_id = 12
+whoscored_season_id = 2944
+whoscored_stage_id = 6021
+season_key = "2011-2012"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/2944/stages/6021/show/europe-champions-league-2011-2012"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2010-2011"
+whoscored_tournament_id = 12
+whoscored_season_id = 2474
+whoscored_stage_id = 5021
+season_key = "2010-2011"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/2474/stages/5021/show/europe-champions-league-2010-2011"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2009-2010"
+whoscored_tournament_id = 12
+whoscored_season_id = 1868
+whoscored_stage_id = 3571
+season_key = "2009-2010"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/1868/stages/3571/show/europe-champions-league-2009-2010"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2022-2023"
+whoscored_tournament_id = 30
+whoscored_season_id = 9087
+whoscored_stage_id = 20979
+season_key = "2022-2023"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/9087/stages/20979/show/europe-europa-league-2022-2023"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2021-2022"
+whoscored_tournament_id = 30
+whoscored_season_id = 8741
+whoscored_stage_id = 20266
+season_key = "2021-2022"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/8741/stages/20266/show/europe-europa-league-2021-2022"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2020-2021"
+whoscored_tournament_id = 30
+whoscored_season_id = 8178
+whoscored_stage_id = 19164
+season_key = "2020-2021"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/8178/stages/19164/show/europe-europa-league-2020-2021"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2019-2020"
+whoscored_tournament_id = 30
+whoscored_season_id = 7805
+whoscored_stage_id = 18066
+season_key = "2019-2020"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/7805/stages/18066/show/europe-europa-league-2019-2020"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2018-2019"
+whoscored_tournament_id = 30
+whoscored_season_id = 7353
+whoscored_stage_id = 16786
+season_key = "2018-2019"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/7353/stages/16786/show/europe-europa-league-2018-2019"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2017-2018"
+whoscored_tournament_id = 30
+whoscored_season_id = 6843
+whoscored_stage_id = 15617
+season_key = "2017-2018"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/6843/stages/15617/show/europe-europa-league-2017-2018"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2016-2017"
+whoscored_tournament_id = 30
+whoscored_season_id = 6275
+whoscored_stage_id = 14368
+season_key = "2016-2017"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/6275/stages/14368/show/europe-europa-league-2016-2017"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2015-2016"
+whoscored_tournament_id = 30
+whoscored_season_id = 5849
+whoscored_stage_id = 13186
+season_key = "2015-2016"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/5849/stages/13186/show/europe-europa-league-2015-2016"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2014-2015"
+whoscored_tournament_id = 30
+whoscored_season_id = 4332
+whoscored_stage_id = 11811
+season_key = "2014-2015"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/4332/stages/11811/show/europe-europa-league-2014-2015"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2013-2014"
+whoscored_tournament_id = 30
+whoscored_season_id = 3871
+whoscored_stage_id = 8466
+season_key = "2013-2014"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/3871/stages/8466/show/europe-europa-league-2013-2014"
+has_league_table = false
+active = false
+
+[[stage]]
+# UEL group era has split team ids across feeds (e.g. 2247 vs 2647); do not schedule.
+key = "uel-2012-2013"
+whoscored_tournament_id = 30
+whoscored_season_id = 3418
+whoscored_stage_id = 7229
+season_key = "2012-2013"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/3418/stages/7229/show/europe-europa-league-2012-2013"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "uel-2011-2012"
+whoscored_tournament_id = 30
+whoscored_season_id = 2945
+whoscored_stage_id = 6026
+season_key = "2011-2012"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/2945/stages/6026/show/europe-europa-league-2011-2012"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "uel-2010-2011"
+whoscored_tournament_id = 30
+whoscored_season_id = 2469
+whoscored_stage_id = 5022
+season_key = "2010-2011"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/2469/stages/5022/show/europe-europa-league-2010-2011"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "uel-2009-2010"
+whoscored_tournament_id = 30
+whoscored_season_id = 1869
+whoscored_stage_id = 3572
+season_key = "2009-2010"
+competition = "Europa League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 48
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/30/seasons/1869/stages/3572/show/europe-europa-league-2009-2010"
+has_league_table = false
+active = false
+[[stage]]
+key = "ucl-2008-2009"
+whoscored_tournament_id = 12
+whoscored_season_id = 1458
+whoscored_stage_id = 2742
+season_key = "2008-2009"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/1458/stages/2742/show/europe-champions-league-2008-2009"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2007-2008"
+whoscored_tournament_id = 12
+whoscored_season_id = 1194
+whoscored_stage_id = 2246
+season_key = "2007-2008"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/1194/stages/2246/show/europe-champions-league-2007-2008"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2006-2007"
+whoscored_tournament_id = 12
+whoscored_season_id = 968
+whoscored_stage_id = 1686
+season_key = "2006-2007"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/968/stages/1686/show/europe-champions-league-2006-2007"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2005-2006"
+whoscored_tournament_id = 12
+whoscored_season_id = 762
+whoscored_stage_id = 1347
+season_key = "2005-2006"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/762/stages/1347/show/europe-champions-league-2005-2006"
+has_league_table = false
+active = false
+
+[[stage]]
+key = "ucl-2004-2005"
+whoscored_tournament_id = 12
+whoscored_season_id = 527
+whoscored_stage_id = 979
+season_key = "2004-2005"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/527/stages/979/show/europe-champions-league-2004-2005"
+has_league_table = false
+active = false
+
+[[stage]]
+# 2003/04-2008/09 UCL group feeds are empty (same pre-2009 source gap as the
+# domestic leagues). Group era backfill starts 2009/10. Do not schedule.
+key = "ucl-2003-2004"
+whoscored_tournament_id = 12
+whoscored_season_id = 374
+whoscored_stage_id = 626
+season_key = "2003-2004"
+competition = "Champions League"
+stage = "group"
+expected_stages = ["group"]
+expected_teams = 32
+whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/12/seasons/374/stages/626/show/europe-champions-league-2003-2004"
+has_league_table = false
+active = false

@@ -700,7 +700,8 @@ def _replay(
     )
     candidate = build_candidate(list(feeds), spec)
     standings = parse_views(page, spec)
-    check_team_sets(candidate, standings)
+    if spec.has_league_table:
+        check_team_sets(candidate, standings)
     replayed = fingerprint(candidate, standings)
 
     if check_only:
@@ -825,7 +826,8 @@ def _dry_run_one(
     )
     candidate = build_candidate(list(feeds), spec)
     standings = parse_views(page, spec)
-    check_team_sets(candidate, standings)
+    if spec.has_league_table:
+        check_team_sets(candidate, standings)
 
     memory = duckdb.connect(":memory:")
     try:
@@ -902,7 +904,8 @@ def _run(
                 )
                 candidate = build_candidate(list(landed.feeds), spec)
                 standings = parse_views(landed.page, spec)
-                check_team_sets(candidate, standings)
+                if spec.has_league_table:
+                    check_team_sets(candidate, standings)
                 outcome = publish(
                     con,
                     candidate,
