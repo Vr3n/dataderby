@@ -34,6 +34,7 @@ Reports for a single change that is not a build phase.
 | Points adjustments | [Points adjustments](points-adjustments.md) | complete |
 | Points adjustments (deck) | [Companion slides](../slides/points-adjustments-slides.html) | complete |
 | Schedule and freshness alert | [Schedule and alert](schedule-alert.md) | complete |
+| Post-publish drift checks | [Drift checks](drift-checks.md) | complete |
 | SQL and schema (deck) | [Companion slides](../slides/sql-schema-slides.html) | complete |
 | SQL schema slides refresh | [Tables slide, highlighting, counts](sql-schema-slides-refresh.md) | complete |
 

@@ -37,6 +37,7 @@ from dataderby.canonical import fingerprint
 from dataderby.config import Settings, StageSpec, load_settings
 from dataderby.contract import SECTIONS, VIEWS, View
 from dataderby.db import MigrationError, connect, migrate
+from dataderby.drift import check_drift, record_drift
 from dataderby.fetch import Capture, FetchBlocked, FetchError, RequestBudget, SchemaDrift
 from dataderby.landing import LandingResult, land_stage
 from dataderby.lock import LockHeld, exclusive_lock
@@ -176,6 +177,17 @@ def _build_parser() -> argparse.ArgumentParser:
     stages = sub.add_parser("stages", help="inspect the stage registry")
     with_config(stages)
     stages.add_argument("action", choices=["list"])
+
+    drift = sub.add_parser(
+        "drift",
+        help="compare a committed snapshot with its predecessor; never blocks",
+    )
+    with_config(drift)
+    drift.add_argument("--stage", help="stage key; default is every configured stage")
+    drift.add_argument(
+        "--snapshot",
+        help="check this snapshot id instead of the newest (must be the newest to compare)",
+    )
 
     return parser
 
@@ -800,6 +812,61 @@ def _probe(
     return Exit.OK
 
 
+def _drift(settings: Settings, key: str | None, snapshot: str | None, out: TextIO) -> Exit:
+    """Compare committed snapshots with their predecessors.
+
+    A finding is recorded to the JSONL run log and printed, but the exit code
+    stays ``0``: drift never rolls back a commit and never blocks the next
+    run. A human reads the finding and decides.
+    """
+    if not settings.db_path.exists():
+        raise ConfigError(f"database does not exist: {settings.db_path}")
+
+    con = connect(settings.db_path)
+    try:
+        migrate(con)
+        for stage_key in _keys(settings, key):
+            spec = settings.stages[stage_key]
+            if snapshot is not None and key is None:
+                raise ConfigError("--snapshot requires --stage")
+            target = snapshot
+            if target is None:
+                newest = con.execute(
+                    """
+                    SELECT snapshot_id
+                    FROM competition_snapshot
+                    WHERE whoscored_tournament_id = ?
+                      AND whoscored_season_id = ?
+                      AND whoscored_stage_id = ?
+                    ORDER BY observed_at DESC, accepted_at DESC, snapshot_id DESC
+                    LIMIT 1
+                    """,
+                    [
+                        spec.whoscored_tournament_id,
+                        spec.whoscored_season_id,
+                        spec.whoscored_stage_id,
+                    ],
+                ).fetchone()
+                if newest is None:
+                    _say(out, f"{stage_key}: no snapshots, nothing to compare")
+                    continue
+                target = str(newest[0])
+            findings = check_drift(con, spec, target)
+            record_drift(
+                findings,
+                snapshot_id=target,
+                stage_key=stage_key,
+                log_dir=settings.log_dir,
+            )
+            if not findings:
+                _say(out, f"{stage_key}: no drift in {target}")
+            for finding in findings:
+                _say(out, f"{stage_key}: DRIFT {finding.check}: {finding.detail}")
+    finally:
+        con.close()
+    return Exit.OK
+
+
 def _probe_rows(capture: Capture) -> int:
     """Count team rows without building the full candidate."""
     return len(parse_capture(capture.section, capture.view, capture.body))
@@ -829,6 +896,8 @@ def dispatch(args: argparse.Namespace, runtime: Runtime, out: TextIO) -> Exit:
         )
     if args.command == "probe":
         return _probe(settings, args.stage, runtime, out)
+    if args.command == "drift":
+        return _drift(settings, args.stage, args.snapshot, out)
     raise ConfigError(f"unknown command: {args.command}")
 
 

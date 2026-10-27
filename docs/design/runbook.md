@@ -109,6 +109,34 @@ Fixed by `plans/v1-build-plan.md` §11:
 | locked (`5`) | do not delete the lock file while a run may be alive; wait, then check the process |
 | source outage | disable the timer; the database stays queryable; re-enable and run once by hand |
 
+## Post-publish drift checks
+
+Assertions run before commit. `dataderby drift` runs after: it compares the
+newest committed snapshot of each stage with its predecessor and reports what
+changed. A finding never rolls back the commit and never blocks the next run.
+
+```bash
+uv run dataderby drift --config config/stages.toml
+uv run dataderby drift --stage epl-2026-2027 --config config/stages.toml
+```
+
+`scripts/scheduled_run.py` runs `drift` automatically after every accepted run
+and routes `DRIFT` lines to the alert channel. The findings are also written to
+the JSONL log as `drift.check` events.
+
+| Check | Catches | Expected response |
+|---|---|---|
+| `row_count` | a sweep that published fewer teams than the previous snapshot | compare with the source table; a real relegation/promotion boundary needs a registry update, anything else is a source or parse problem |
+| `team_set` | a renamed or swapped `whoscored_team_id` | confirm the id on the source page; fix the parse or record the rename |
+| `null_rate` | a source column that silently went empty (null fraction up > 0.10) | check the feed payload; a widened gate page looks exactly like this |
+| `observed_lag` | a snapshot accepted > 6 h after it was observed | check for a stuck run or a replayed old bundle |
+| `baseline` | the snapshot is unknown, not newest, or the first for its stage | not drift; informational only |
+
+Thresholds live in one table, `THRESHOLDS` in `src/dataderby/drift.py`.
+Distribution drift (a units change that keeps the shape valid) is not checked:
+season measures are cumulative, so any fixed threshold false-positives every
+matchday. It needs a baselined rate-of-change model first.
+
 ## Where the evidence lives
 
 - Run ledger: `ingestion_run` table (`running` → `accepted` / `no_change` / `blocked` / `failed`).

@@ -6,6 +6,14 @@
 # task, never a guess.
 #
 # Source map and measured team counts: docs/whoscored-competition-links.md.
+#
+# Knockout deferral (recorded 2026-10-27, issue #10): the 2026/27 knockout
+# stages do not exist on the source yet; the league phase is what runs. No
+# knockout or final stage id is recorded here, and none may be guessed. When
+# the draw appears, capture each competition's stage list with the evidence
+# (page, date, label) and add the ids with the correct `kind`. The NULL
+# standings behaviour for a table-less stage is already pinned by
+# test_latest_team_with_standings_joins_on_ids_and_keeps_knockout_nulls.
 
 [settings]
 db_path = "data/dataderby.duckdb"

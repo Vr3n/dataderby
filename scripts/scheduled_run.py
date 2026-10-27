@@ -39,6 +39,37 @@ def _post(url: str, payload: bytes, timeout_seconds: float) -> bool:
         return False
 
 
+def _post_run_drift(args: argparse.Namespace, timeout_seconds: float) -> bool:
+    """Run ``dataderby drift`` after an accepted run; ``True`` when drift printed.
+
+    Drift never changes the run's outcome: findings are recorded to the JSONL
+    log by the command itself, and this wrapper only routes them to the alert
+    channel. A drift command that fails is reported, not hidden.
+    """
+    command = [sys.executable, "-m", "dataderby", "drift", "--config", str(args.config)]
+    if args.stage:
+        command += ["--stage", args.stage]
+    try:
+        completed = subprocess.run(
+            command,
+            timeout=timeout_seconds,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f"scheduled_run: drift check failed: {exc}", file=sys.stderr)
+        return False
+    drifted = "DRIFT" in (completed.stdout or "")
+    print((completed.stdout or "").rstrip())
+    if completed.returncode != 0:
+        print(
+            f"scheduled_run: drift check exited {completed.returncode}",
+            file=sys.stderr,
+        )
+    return drifted
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("config/stages.toml"))
@@ -67,6 +98,7 @@ def main() -> int:
         print("scheduled_run: run timed out", file=sys.stderr)
 
     if code == 0:
+        drifted = _post_run_drift(args, timeout_seconds=120.0)
         if args.heartbeat_url:
             from dataderby.schedule import ping_heartbeat
 
@@ -74,6 +106,12 @@ def main() -> int:
             print(f"scheduled_run: heartbeat {'sent' if ok else 'FAILED'}")
         else:
             print("scheduled_run: ok (no heartbeat URL set, skipping ping)")
+        if drifted and args.alert_url:
+            _post(
+                args.alert_url,
+                b"dataderby drift detected after an accepted run",
+                timeout_seconds=10.0,
+            )
         return 0
 
     message = f"dataderby scheduled run failed with exit {code}".encode()
