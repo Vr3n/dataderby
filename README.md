@@ -78,6 +78,30 @@ one-page summary is [`docs/reports/p8-summary.md`](docs/reports/p8-summary.md).
 The schema is applied through a checksummed ledger (`schema_migration`), so an
 applied SQL file is never re-run and never silently edited.
 
+## Data contract
+
+What the WhoScored pipeline's data can and cannot answer:
+
+| It can | It cannot |
+|---|---|
+| cumulative season measures per team (20–36 teams per snapshot) | per-match attribution — there is no match grain, only snapshots |
+| league-table state per snapshot: rank, points, form, W/D/L | event data — no goals, cards, or substitutions as events |
+| when something was observed (`observed_at`) and accepted (`accepted_at`) | expected goals (xG) or any model output |
+| whether the table moved between snapshots (`v_snapshot_delta`) | why a deduction was applied — only the gap is recorded |
+| which deductions exist (`v_points_adjustments`) | future fixtures — the fixture calendar is a separate slice |
+
+Snapshots land on the schedule in [`docs/design/runbook.md`](docs/design/runbook.md):
+daily at 06:00 IST plus provisional post-match sweeps. A snapshot is one
+observation, never a live table.
+
+## Source use
+
+WhoScored data is captured politely (1.2 s pacing, per-run request budget,
+`Retry-After` honoured) and kept as raw evidence, not republished. The licence
+posture, the robots record, and what may and may not leave the pipeline are in
+[`docs/adr/0006-source-use.md`](docs/adr/0006-source-use.md). Review that ADR
+before any derived data is shared or published.
+
 ## Layout
 
 ```

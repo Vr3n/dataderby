@@ -137,6 +137,38 @@ Distribution drift (a units change that keeps the shape valid) is not checked:
 season measures are cumulative, so any fixed threshold false-positives every
 matchday. It needs a baselined rate-of-change model first.
 
+## Backup and restore
+
+Back up the irreplaceable layer, not the derived one. `data/raw/` holds the
+only copy of what the source said; the `.duckdb` file can be rebuilt from it
+with `replay`. The first instinct on call is to back up the database. Do not.
+
+```powershell
+$env:DATADERBY_BACKUP_DIR = "D:\dataderby-backup"
+uv run python scripts/backup_raw.py
+```
+
+Run it on the same timer as the daily heartbeat (after the run), or at least
+daily. The script copies every raw file with its SHA-256 sidecar and verifies
+each copy by hash; it exits `1` on any mismatch.
+
+Restore drill (do this once, write the result in the v1-gate report):
+
+```powershell
+# 1. pick one raw bundle from the backup
+# 2. replay it into a scratch database and compare fingerprints
+uv run dataderby replay --run-id <run_id> --raw-dir <backup>/<bundle> --check
+```
+
+A replay that prints the published content fingerprint proves the backup is
+sufficient: raw plus code rebuilds history. If the drill ever fails, the
+backup schedule is broken, not the database.
+
+The source-use licence posture is one click away at all times:
+[`docs/adr/0006-source-use.md`](../adr/0006-source-use.md). Raw bundles are
+kept, not republished; derived data stays inside this pipeline until that ADR
+is reviewed.
+
 ## Where the evidence lives
 
 - Run ledger: `ingestion_run` table (`running` → `accepted` / `no_change` / `blocked` / `failed`).
