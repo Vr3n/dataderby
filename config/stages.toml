@@ -179,3 +179,388 @@ expected_stages = ["league", "knockout", "final"]
 expected_teams = 36
 whoscored_page_url = "https://www.whoscored.com/regions/250/tournaments/715/seasons/11296/stages/25802/show/europe-conference-league-2026-2027"
 has_league_table = true
+# EPL history, discovered 27 Oct 2026 (scripts/discover_epl_seasons.py).
+# Capturable: 2009/2010 (season 1849, stage 3115) through 2025/2026.
+# Not schedulable: 1999/2000 (2/2) through 2008/2009 (1539/2539). Their nine
+# team feeds return teamTableStats: [] while standings serve fine, so A1
+# blocks with 0 teams. Same source-side gap class as the conference league
+# note above. Standings-only backfill is rejected: the contract is team facts
+# plus table rows, never a 0-team publish. All history stages stay
+# active = false: one-shot explicit runs only, never the polling set.
+[[stage]]
+key = "epl-2025-2026"
+whoscored_tournament_id = 2
+whoscored_season_id = 10743
+whoscored_stage_id = 24533
+season_key = "2025-2026"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/10743/stages/24533/show/england-premier-league-2025-2026"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2024-2025"
+whoscored_tournament_id = 2
+whoscored_season_id = 10316
+whoscored_stage_id = 23400
+season_key = "2024-2025"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/10316/stages/23400/show/england-premier-league-2024-2025"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2023-2024"
+whoscored_tournament_id = 2
+whoscored_season_id = 9618
+whoscored_stage_id = 22076
+season_key = "2023-2024"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/9618/stages/22076/show/england-premier-league-2023-2024"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2022-2023"
+whoscored_tournament_id = 2
+whoscored_season_id = 9075
+whoscored_stage_id = 20934
+season_key = "2022-2023"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/9075/stages/20934/show/england-premier-league-2022-2023"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2021-2022"
+whoscored_tournament_id = 2
+whoscored_season_id = 8618
+whoscored_stage_id = 19793
+season_key = "2021-2022"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/8618/stages/19793/show/england-premier-league-2021-2022"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2020-2021"
+whoscored_tournament_id = 2
+whoscored_season_id = 8228
+whoscored_stage_id = 18685
+season_key = "2020-2021"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/8228/stages/18685/show/england-premier-league-2020-2021"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2019-2020"
+whoscored_tournament_id = 2
+whoscored_season_id = 7811
+whoscored_stage_id = 17590
+season_key = "2019-2020"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/7811/stages/17590/show/england-premier-league-2019-2020"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2018-2019"
+whoscored_tournament_id = 2
+whoscored_season_id = 7361
+whoscored_stage_id = 16368
+season_key = "2018-2019"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/7361/stages/16368/show/england-premier-league-2018-2019"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2017-2018"
+whoscored_tournament_id = 2
+whoscored_season_id = 6829
+whoscored_stage_id = 15151
+season_key = "2017-2018"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/6829/stages/15151/show/england-premier-league-2017-2018"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2016-2017"
+whoscored_tournament_id = 2
+whoscored_season_id = 6335
+whoscored_stage_id = 13796
+season_key = "2016-2017"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/6335/stages/13796/show/england-premier-league-2016-2017"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2015-2016"
+whoscored_tournament_id = 2
+whoscored_season_id = 5826
+whoscored_stage_id = 12496
+season_key = "2015-2016"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/5826/stages/12496/show/england-premier-league-2015-2016"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2014-2015"
+whoscored_tournament_id = 2
+whoscored_season_id = 4311
+whoscored_stage_id = 9155
+season_key = "2014-2015"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/4311/stages/9155/show/england-premier-league-2014-2015"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2013-2014"
+whoscored_tournament_id = 2
+whoscored_season_id = 3853
+whoscored_stage_id = 7794
+season_key = "2013-2014"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/3853/stages/7794/show/england-premier-league-2013-2014"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2012-2013"
+whoscored_tournament_id = 2
+whoscored_season_id = 3389
+whoscored_stage_id = 6531
+season_key = "2012-2013"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/3389/stages/6531/show/england-premier-league-2012-2013"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2011-2012"
+whoscored_tournament_id = 2
+whoscored_season_id = 2935
+whoscored_stage_id = 5476
+season_key = "2011-2012"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/2935/stages/5476/show/england-premier-league-2011-2012"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2010-2011"
+whoscored_tournament_id = 2
+whoscored_season_id = 2458
+whoscored_stage_id = 4345
+season_key = "2010-2011"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/2458/stages/4345/show/england-premier-league-2010-2011"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2009-2010"
+whoscored_tournament_id = 2
+whoscored_season_id = 1849
+whoscored_stage_id = 3115
+season_key = "2009-2010"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/1849/stages/3115/show/england-premier-league-2009-2010"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2008-2009"
+whoscored_tournament_id = 2
+whoscored_season_id = 1539
+whoscored_stage_id = 2539
+season_key = "2008-2009"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/1539/stages/2539/show/england-premier-league-2008-2009"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2007-2008"
+whoscored_tournament_id = 2
+whoscored_season_id = 1256
+whoscored_stage_id = 2025
+season_key = "2007-2008"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/1256/stages/2025/show/england-premier-league-2007-2008"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2006-2007"
+whoscored_tournament_id = 2
+whoscored_season_id = 667
+whoscored_stage_id = 937
+season_key = "2006-2007"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/667/stages/937/show/england-premier-league-2006-2007"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2005-2006"
+whoscored_tournament_id = 2
+whoscored_season_id = 836
+whoscored_stage_id = 1208
+season_key = "2005-2006"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/836/stages/1208/show/england-premier-league-2005-2006"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2004-2005"
+whoscored_tournament_id = 2
+whoscored_season_id = 594
+whoscored_stage_id = 803
+season_key = "2004-2005"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/594/stages/803/show/england-premier-league-2004-2005"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2003-2004"
+whoscored_tournament_id = 2
+whoscored_season_id = 429
+whoscored_stage_id = 542
+season_key = "2003-2004"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/429/stages/542/show/england-premier-league-2003-2004"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2002-2003"
+whoscored_tournament_id = 2
+whoscored_season_id = 299
+whoscored_stage_id = 359
+season_key = "2002-2003"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/299/stages/359/show/england-premier-league-2002-2003"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2001-2002"
+whoscored_tournament_id = 2
+whoscored_season_id = 191
+whoscored_stage_id = 213
+season_key = "2001-2002"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/191/stages/213/show/england-premier-league-2001-2002"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-2000-2001"
+whoscored_tournament_id = 2
+whoscored_season_id = 85
+whoscored_stage_id = 89
+season_key = "2000-2001"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/85/stages/89/show/england-premier-league-2000-2001"
+has_league_table = true
+active = false
+
+[[stage]]
+key = "epl-1999-2000"
+whoscored_tournament_id = 2
+whoscored_season_id = 2
+whoscored_stage_id = 2
+season_key = "1999-2000"
+competition = "Premier League"
+stage = "league"
+expected_stages = ["league"]
+expected_teams = 20
+whoscored_page_url = "https://www.whoscored.com/regions/252/tournaments/2/seasons/2/stages/2/show/england-premier-league-1999-2000"
+has_league_table = true
+active = false

@@ -41,6 +41,7 @@ Reports for a single change that is not a build phase.
 | Dims plan | [Team + stage dims plan](dim-tables-plan.md) | proposed |
 | Dim team P1 | [006, backfill, archived split](dim-team-p1.md) | complete |
 | Dim stage P2 | [007-009, publish wiring, view cutover](dim-stage-p2.md) | complete |
+| EPL history | [2009/10-2025/26 backfill](epl-history-backfill.md) | complete |
 
 Every report follows [`TEMPLATE.md`](TEMPLATE.md). The rule is in
 [`AGENTS.md`](../../AGENTS.md#documentation): a change without a report is not done.
